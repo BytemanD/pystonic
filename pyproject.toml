@@ -3,17 +3,17 @@ name = "pystonic"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-authors = [
-    { name = "BytemanD", email = "byteman.d@outlook.com" }
-]
+authors = [{ name = "BytemanD", email = "byteman.d@outlook.com" }]
 requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.28.1",
     "humanize>=4.15.0",
     "loguru>=0.7.3",
+    "prettytable>=3.17.0",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.13.1",
     "requests>=2.32.5",
+    "termcolor>=3.3.0",
 ]
 
 [project.scripts]
@@ -28,6 +28,10 @@ dev = [
     "pytest>=9.0.2",
     "ruff>=0.15.4",
 ]
+
+[[tool.uv.index]]
+name = "tencent"
+url = "http://mirrors.cloud.tencent.com/pypi/simple"
 
 [tool.pytest]
 minversion = "9.0"

@@ -100,24 +100,24 @@ def move_files(
 
 @overload
 def file_size(path: Path | str, natural: Literal[False] = False) -> int:
-    """处理整数"""
+    """获取文件大小, 单位: 字节"""
     ...
 
 
 @overload
 def file_size(path: Path | str, natural: Literal[True]) -> str:
-    """处理字符串"""
+    """获取文件大小, 返回人类可读字符串"""
     ...
 
 
 def file_size(path: Path | str, natural=False) -> int | str:
-    """获取文件大小，单位字节
+    """获取文件大小
 
     Args:
         path (Union[Path, str]): 文件路径
 
     Returns:
-        int: 文件大小，单位字节
+        int | str: 文件大小
     """
     file_path = Path(path)
     if not file_path.exists() or not file_path.is_file():

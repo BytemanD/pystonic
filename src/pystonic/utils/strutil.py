@@ -12,7 +12,7 @@ def str2bool(value: str, strict=False) -> bool:
     return value.lower() in _TRUE_VALUES
 
 
-class IPVersion(Enum):
+class IPVersion(str, Enum):
     V4 = "v4"
     V6 = "v6"
 
