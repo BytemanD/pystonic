@@ -15,7 +15,7 @@ DEFAULT_FORMAT = (
 
 
 class LogConfig(BaseModel):
-    level: str = "INFO"
+    level: str = "WARNING"
     file: Optional[str] = None
     format: str = DEFAULT_FORMAT
     colorize: Optional[bool] = None

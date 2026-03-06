@@ -1,9 +1,9 @@
 [project]
 name = "pystonic"
 version = "0.1.0"
-description = "Add your description here"
+description = "Python 应用基石"
 readme = "README.md"
-authors = [{ name = "BytemanD", email = "byteman.d@outlook.com" }]
+authors = [{ name = "BytemanD", email = "byteman.e@outlook.com" }]
 requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.28.1",
