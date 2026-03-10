@@ -2,8 +2,12 @@ import io
 import os
 import platform
 import shutil
+import socket
+import subprocess
 import sys
 from pathlib import Path
+
+from loguru import logger
 
 
 def is_windows():
@@ -32,5 +36,28 @@ def dot_config():
 def cpu_count():
     return os.cpu_count()
 
+
 def disk_usage(path: Path):
     return shutil.disk_usage(path)
+
+
+def execute(cmd, check=True, success_codes=None):
+    logger.debug("RUN: {}", cmd)
+    status, output = subprocess.getstatusoutput(cmd)
+    if check and status not in (success_codes or [0]):
+        raise subprocess.CalledProcessError(status, cmd=cmd, output=output)
+    return status, output
+
+
+def hostname():
+    return socket.gethostname()
+
+def ip_address():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return socket.gethostbyname(hostname())
