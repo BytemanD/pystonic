@@ -10,6 +10,7 @@ def _do_something(x):
     for i in range(5):
         logger.info(f"foo {i}")
 
+
 def test_logger():
     context.setvars(name="main_task")
     logger.debug("test log ...")

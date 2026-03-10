@@ -19,6 +19,9 @@ class LogConfig(BaseModel):
     file: Optional[str] = None
     format: str = DEFAULT_FORMAT
     colorize: Optional[bool] = None
+    rotation: str = "10 MB"
+    retention: str = "30 days"
+    compression: str = "zip"
     custom_extra: List[str] = []
 
 
@@ -34,6 +37,10 @@ def setup_logger(config: LogConfig):
         kwargs["format"] = config.format
     if config.colorize:
         kwargs["colorize"] = config.colorize
+    if config.file:
+        kwargs["rotation"] = config.rotation
+        kwargs["retention"] = config.retention
+        kwargs["compression"] = config.compression
     logger.remove()
     logger.add(
         config.file if config.file else sys.stdout,
