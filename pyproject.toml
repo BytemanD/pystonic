@@ -1,6 +1,6 @@
 [project]
 name = "pystonic"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Python 应用基石"
 readme = "README.md"
 authors = [{ name = "BytemanD", email = "byteman.e@outlook.com" }]
@@ -10,17 +10,18 @@ dependencies = [
     "humanize>=4.15.0",
     "loguru>=0.7.3",
     "prettytable>=3.17.0",
-    "pydantic>=2.12.5",
     "pydantic-settings[toml]>=2.13.1",
     "requests>=2.32.5",
     "termcolor>=3.3.0",
     "toml>=0.10.2",
 ]
 
-
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
 [dependency-groups]
 dev = ["pytest>=9.0.2", "ruff>=0.15.4"]

@@ -28,6 +28,22 @@ def test_conf_save_with_single_file():
         assert file_conf.get("log").get("level") == "TRACE"
 
 
+def test_conf_save_with_chinese():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        toml_file = Path(tmpdir, "test.toml")
+
+        conf = BaseAppConfig.setup(
+            {"log": {"level": "TRACE", "format": "中文"}},
+            toml_files=toml_file,
+        )
+        conf.save()
+
+        assert toml_file.exists()
+        file_conf = toml.load(toml_file)
+        assert file_conf.get("log").get("level") == "TRACE"
+        assert file_conf.get("log").get("format") == "中文"
+
+
 def test_conf_save_skip():
     conf = BaseAppConfig.setup({"log": {"level": "TRACE"}})
     conf.save()

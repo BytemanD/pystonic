@@ -1,6 +1,6 @@
 import sys
 from functools import partial
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 from loguru import logger
 from pydantic import BaseModel
@@ -15,7 +15,7 @@ DEFAULT_FORMAT = (
 
 
 class LogConfig(BaseModel):
-    level: str = "WARNING"
+    level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "EROR"] = "WARNING"
     file: Optional[str] = None
     format: str = DEFAULT_FORMAT
     colorize: Optional[bool] = None

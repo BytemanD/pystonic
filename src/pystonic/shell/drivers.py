@@ -1,11 +1,10 @@
 import abc
-import logging
 import os
 import platform
 import tempfile
 from enum import Enum
 
-LOG = logging.getLogger(__name__)
+from loguru import logger
 
 
 class Cmd(str, Enum):
@@ -23,7 +22,7 @@ class ExecuteDriver(abc.ABC):
         self.architecture = platform.architecture()
 
     def execute(self, code_block: str):
-        LOG.debug("code block: %s", code_block)
+        logger.debug("code block: {}", code_block)
         with tempfile.NamedTemporaryFile(
             mode="w", delete=False, suffix=self.SCRIPT_SUFFIX
         ) as file:
@@ -31,12 +30,12 @@ class ExecuteDriver(abc.ABC):
             file.flush()
             file.close()
             try:
-                LOG.debug("Run file: %s", file.name)
+                logger.debug("Run file: {}", file.name)
                 os.system(self.file_command(file.name))
             except Exception:
-                LOG.exception("Failed to run code block")
+                logger.exception("Failed to run code block")
             finally:
-                LOG.debug("Remove file: %s", file.name)
+                logger.debug("Remove file: {}", file.name)
                 os.remove(file.name)
 
     @abc.abstractmethod
