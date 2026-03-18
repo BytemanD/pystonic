@@ -52,6 +52,7 @@ def execute(cmd, check=True, success_codes=None):
 def hostname():
     return socket.gethostname()
 
+
 def ip_address():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -60,4 +60,3 @@ def add_console_handler(level: str, config: LogConfig):
     if config.colorize:
         kwargs["colorize"] = config.colorize
     logger.add(sys.stdout, level=level.upper(), **kwargs)
-

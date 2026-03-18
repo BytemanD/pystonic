@@ -1,6 +1,6 @@
 [project]
 name = "pystonic"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python 应用基石"
 readme = "README.md"
 authors = [{ name = "BytemanD", email = "byteman.e@outlook.com" }]
@@ -11,23 +11,19 @@ dependencies = [
     "loguru>=0.7.3",
     "prettytable>=3.17.0",
     "pydantic>=2.12.5",
-    "pydantic-settings>=2.13.1",
+    "pydantic-settings[toml]>=2.13.1",
     "requests>=2.32.5",
     "termcolor>=3.3.0",
+    "toml>=0.10.2",
 ]
 
-[project.scripts]
-pystonic = "pystonic:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
-dev = [
-    "pytest>=9.0.2",
-    "ruff>=0.15.4",
-]
+dev = ["pytest>=9.0.2", "ruff>=0.15.4"]
 
 [[tool.uv.index]]
 name = "tencent"
