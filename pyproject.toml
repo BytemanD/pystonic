@@ -29,12 +29,12 @@ dev = ["pytest>=9.0.2", "ruff>=0.15.4"]
 [[tool.uv.index]]
 name = "tencent"
 url = "http://mirrors.cloud.tencent.com/pypi/simple"
-# default = true
 
 [[tool.uv.index]]
 name = "testpypi"
 url = "https://test.pypi.org/simple"
 publish-url = "https://test.pypi.org/legacy/"
+explicit = true
 
 
 [tool.pytest]
