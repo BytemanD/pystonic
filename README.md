@@ -74,3 +74,11 @@ pytest
 # 代码检查
 ruff check .
 ```
+
+
+## 发布
+
+```bash
+uv build --clear
+uv publish -v --index testpypi --username __token__ --password <your token>
+```
