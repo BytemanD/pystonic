@@ -1,8 +1,9 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 
 import toml
 from loguru import logger
+from pydantic import BaseModel
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -43,15 +44,6 @@ class BaseAppConfig(BaseSettings):
             init_settings,
         )
 
-    @classmethod
-    def setup(cls, values: Optional[dict] = None, toml_files: List[Path] = []):
-        cls.model_config["toml_file"] = toml_files
-        config = cls.model_validate(values or {})
-        setup_logger(config.log)
-
-        httpclient._DEFAULT_CONF = config.http_client
-        return config
-
     def get_conf_file(self) -> Optional[Path]:
         for file in self.model_config.get("toml_file") or []:
             if file.exists():
@@ -80,3 +72,30 @@ class BaseAppConfig(BaseSettings):
             toml.dump(
                 self.model_dump(mode="json", exclude_defaults=exclude_defaults), f
             )
+
+    @classmethod
+    def set(
+        cls,
+        init_settings: Optional[Union[BaseModel, Dict]] = None,
+        toml_files: List[Path] = [],
+    ):
+        cls._init_settings = init_settings
+        if toml_files:
+            cls.model_config["toml_file"] = toml_files
+
+    @classmethod
+    def setup(cls):
+        _init_settings = getattr(cls, "_init_settings", None)
+        if _init_settings is None:
+            init_settings = {}
+        elif isinstance(_init_settings, dict):
+            init_settings = _init_settings
+        else:
+            init_settings = _init_settings.model_dump(
+                mode="json", exclude_defaults=True, exclude_unset=True
+            )
+
+        config = cls.model_validate(init_settings)
+        setup_logger(config.log)
+        httpclient._DEFAULT_CONF = config.http_client
+        return config

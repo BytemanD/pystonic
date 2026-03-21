@@ -4,12 +4,17 @@ from pathlib import Path
 import toml
 
 from pystonic.conf import BaseAppConfig
+from pystonic.log import LogConfig
 
 
 def test_conf_save():
     with tempfile.TemporaryDirectory() as tmpdir:
         toml_file = Path(tmpdir, "test.toml")
-        conf = BaseAppConfig.setup({"log": {"level": "TRACE"}}, toml_files=[toml_file])
+        BaseAppConfig.set(
+            init_settings=BaseAppConfig(log=LogConfig(level="TRACE")),
+            toml_files=[toml_file],
+        )
+        conf = BaseAppConfig.setup()
         conf.save()
         assert toml_file.exists()
 
@@ -20,7 +25,11 @@ def test_conf_save():
 def test_conf_save_with_single_file():
     with tempfile.TemporaryDirectory() as tmpdir:
         toml_file = Path(tmpdir, "test.toml")
-        conf = BaseAppConfig.setup({"log": {"level": "TRACE"}}, toml_files=toml_file)
+        BaseAppConfig.set(
+            init_settings={"log": {"level": "TRACE"}},
+            toml_files=[toml_file],
+        )
+        conf = BaseAppConfig.setup()
         conf.save()
         assert toml_file.exists()
 
@@ -32,10 +41,11 @@ def test_conf_save_with_chinese():
     with tempfile.TemporaryDirectory() as tmpdir:
         toml_file = Path(tmpdir, "test.toml")
 
-        conf = BaseAppConfig.setup(
+        BaseAppConfig.set(
             {"log": {"level": "TRACE", "format": "中文"}},
             toml_files=toml_file,
         )
+        conf = BaseAppConfig.setup()
         conf.save()
 
         assert toml_file.exists()
@@ -45,5 +55,6 @@ def test_conf_save_with_chinese():
 
 
 def test_conf_save_skip():
-    conf = BaseAppConfig.setup({"log": {"level": "TRACE"}})
+    BaseAppConfig.set({"log": {"level": "TRACE"}})
+    conf = BaseAppConfig.setup()
     conf.save()
