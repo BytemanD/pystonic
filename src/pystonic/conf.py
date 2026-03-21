@@ -77,11 +77,13 @@ class BaseAppConfig(BaseSettings):
     def set(
         cls,
         init_settings: Optional[Union[BaseModel, Dict]] = None,
-        toml_files: List[Path] = [],
+        toml_files: Union[Path, List[Path]] = [],
     ):
         cls._init_settings = init_settings
         if toml_files:
-            cls.model_config["toml_file"] = toml_files
+            cls.model_config["toml_file"] = (
+                toml_files if isinstance(toml_files, list) else [toml_files]
+            )
 
     @classmethod
     def setup(cls):
