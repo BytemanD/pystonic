@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional
 
 import toml
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -11,8 +11,13 @@ from pydantic_settings import (
     TomlConfigSettingsSource,
 )
 
-from pystonic.log import LogConfig, setup_logger
+from pystonic import log
+from pystonic.log import LogConfig
 from pystonic.utils import httpclient
+
+
+class FrozenModel(BaseModel):
+    model_config = ConfigDict(frozen=True)
 
 
 class BaseAppConfig(BaseSettings):
@@ -23,6 +28,7 @@ class BaseAppConfig(BaseSettings):
         env_file_encoding="utf-8",
         env_nested_delimiter=".",
         extra="ignore",
+        frozen=True,
     )
     http_client: httpclient.HTTPClientConfig = httpclient.HTTPClientConfig()
     log: LogConfig = LogConfig()
@@ -73,31 +79,22 @@ class BaseAppConfig(BaseSettings):
                 self.model_dump(mode="json", exclude_defaults=exclude_defaults), f
             )
 
-    @classmethod
-    def set(
-        cls,
-        init_settings: Optional[Union[BaseModel, Dict]] = None,
-        toml_files: Union[Path, List[Path]] = [],
-    ):
-        cls._init_settings = init_settings
-        if toml_files:
-            cls.model_config["toml_file"] = (
-                toml_files if isinstance(toml_files, list) else [toml_files]
-            )
+    def setup(self):
+        log.setup_logger(self.log)
+        httpclient._DEFAULT_CONF = self.http_client
 
     @classmethod
-    def setup(cls):
-        _init_settings = getattr(cls, "_init_settings", None)
-        if _init_settings is None:
-            init_settings = {}
-        elif isinstance(_init_settings, dict):
-            init_settings = _init_settings
-        else:
-            init_settings = _init_settings.model_dump(
-                mode="json", exclude_defaults=True, exclude_unset=True
-            )
-
-        config = cls.model_validate(init_settings)
-        setup_logger(config.log)
-        httpclient._DEFAULT_CONF = config.http_client
+    def init(cls, init_settings: Dict = {}):
+        config = cls.model_validate(
+            init_settings or getattr(cls, "_in_init_settingsit", {})
+        )
+        config.setup()
         return config
+
+
+def setup(init_settings={}, toml_file=None):
+    BaseAppConfig._init_settings = init_settings
+    if toml_file:
+        BaseAppConfig.model_config["toml_file"] = (
+            toml_file if isinstance(toml_file, list) else [toml_file]
+        )
