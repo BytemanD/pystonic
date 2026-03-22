@@ -14,8 +14,8 @@ from pystonic.log import LogConfig
 def test_conf_setup_with_init_settings(mocker: MockerFixture):
     mocker.patch("pystonic.log.setup_logger")
 
-    conf.setup(init_settings={"log": {"level": "TRACE"}})
-    new_config = BaseAppConfig.init({"log": {"level": "TRACE"}})
+    conf.BaseAppConfig.setup(init_settings={"log": {"level": "TRACE"}})
+    new_config = BaseAppConfig.model_validate({"log": {"level": "TRACE"}})
 
     assert new_config.log.level == "TRACE"
 
@@ -25,8 +25,8 @@ def test_conf_setup_with_one_toml_file(mocker: MockerFixture):
 
     with tempfile.TemporaryDirectory() as tmpdir:
         toml_file = Path(tmpdir, "test.toml")
-        conf.setup(toml_file=toml_file)
-        new_conf = BaseAppConfig.init(
+        conf.BaseAppConfig.setup(toml_file=toml_file)
+        new_conf = BaseAppConfig.model_validate(
             {"log": {"level": "TRACE", "format": "中文 message {}"}}
         )
         new_conf.save()
@@ -43,7 +43,7 @@ def test_conf_setup_with_multi_toml_files(mocker: MockerFixture):
 
     with tempfile.TemporaryDirectory() as tmpdir:
         toml_file = Path(tmpdir, "test.toml")
-        conf.setup(
+        conf.BaseAppConfig.setup(
             init_settings={"log": {"level": "TRACE"}},
             toml_file=[toml_file],
         )
@@ -58,15 +58,13 @@ def test_conf_setup_with_multi_toml_files(mocker: MockerFixture):
 
 
 def test_conf_init_without_setup():
-    delattr(BaseAppConfig, "_init_settings")
-
-    new_config = BaseAppConfig.init()
+    new_config = BaseAppConfig.model_validate({})
     new_config.save()
     assert new_config.log.level == "WARNING"
 
 
 def test_conf_update_disable():
-    new_conf = BaseAppConfig.init()
+    new_conf = BaseAppConfig.model_validate()
 
     with pytest.raises(ValidationError):
         new_conf.log = LogConfig(level="TRACE")
