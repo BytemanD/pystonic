@@ -3,7 +3,7 @@ from functools import partial
 from typing import Dict, List, Literal, Optional
 
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from pystonic import context
 
@@ -15,6 +15,8 @@ DEFAULT_FORMAT = (
 
 
 class LogConfig(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"] = "WARNING"
     file: Optional[str] = None
     format: str = DEFAULT_FORMAT

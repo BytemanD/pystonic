@@ -3,8 +3,7 @@ from typing import Dict, List, Optional
 
 import httpx
 from loguru import logger
-from pydantic import BaseModel
-
+from pydantic import BaseModel, ConfigDict
 
 TYPE_WWW_FORM = "application/x-www-form-urlencoded"
 TYPE_JSON = "application/json"
@@ -25,6 +24,8 @@ _resp_detail = """
 
 
 class HTTPClientConfig(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     log_response_detail: bool = True
     timeout: int = 60
     retries: int = 0
