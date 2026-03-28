@@ -1,6 +1,5 @@
 import sys
-from functools import partial
-from typing import Dict, List, Literal, Optional
+from typing import List, Literal, Optional
 
 from loguru import logger
 from pydantic import BaseModel, ConfigDict
@@ -27,11 +26,6 @@ class LogConfig(BaseModel):
     custom_extra: List[str] = []
 
 
-def _context_patcher(extra_keys: List[str], record: Dict):
-    ctx_value = " ".join([str(context.getvar(x) or "-") for x in extra_keys])
-    record.update(extra={"context": ctx_value or "-"})
-
-
 def setup_logger(config: LogConfig):
     """Setup logging configuration."""
     kwargs = {}
@@ -49,9 +43,15 @@ def setup_logger(config: LogConfig):
         level=config.level.upper(),
         **kwargs,
     )
+
+    def _context_patcher(record):
+        extra_keys = ["trace"] + config.custom_extra
+        ctx_value = " ".join([str(context.getvar(x) or "-") for x in extra_keys])
+        record.update(extra={"context": ctx_value or "-"})
+
     logger.configure(
         extra={"context": "-"},
-        patcher=partial(_context_patcher, ["trace"] + config.custom_extra),
+        patcher=_context_patcher,
     )
 
 
