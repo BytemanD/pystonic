@@ -170,7 +170,7 @@ class TestExecuteDriverBase:
     def test_execute_driver_is_abstract(self):
         """测试 ExecuteDriver 是抽象类"""
         with pytest.raises(TypeError):
-            ExecuteDriver()
+            ExecuteDriver()  # type: ignore[abstract]
 
     def test_execute_driver_subclass_must_implement_abstract(self):
         """测试子类必须实现抽象方法"""
@@ -179,7 +179,7 @@ class TestExecuteDriverBase:
             pass
 
         with pytest.raises(TypeError):
-            IncompleteDriver()
+            IncompleteDriver()  # type: ignore[abstract]
 
 
 class TestDriverPlatformCompatibility:
