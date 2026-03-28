@@ -34,8 +34,8 @@ def test_conf_setup_with_one_toml_file(mocker: MockerFixture):
 
         assert new_conf.get_conf_file() == toml_file
         file_conf = toml.load(toml_file)
-        assert file_conf.get("log").get("level") == "TRACE"
-        assert file_conf.get("log").get("format") == "中文 message {}"
+        assert file_conf.get("log", {}).get("level") == "TRACE"
+        assert file_conf.get("log", {}).get("format") == "中文 message {}"
 
 
 def test_conf_setup_with_multi_toml_files(mocker: MockerFixture):
@@ -48,13 +48,15 @@ def test_conf_setup_with_multi_toml_files(mocker: MockerFixture):
             toml_file=[toml_file],
         )
         new_config = BaseAppConfig.model_validate(
-            BaseAppConfig(log=LogConfig(level="TRACE").model_dump(mode="json"))
+            BaseAppConfig(log=LogConfig.model_validate({"level": "TRACE"})).model_dump(
+                mode="json"
+            )
         )
         new_config.save()
         assert toml_file.exists()
 
         file_conf = toml.load(toml_file)
-        assert file_conf.get("log").get("level") == "TRACE"
+        assert file_conf.get("log", {}).get("level") == "TRACE"
 
 
 def test_conf_init_without_setup():
@@ -64,7 +66,7 @@ def test_conf_init_without_setup():
 
 
 def test_conf_update_disable():
-    new_conf = BaseAppConfig.model_validate()
+    new_conf = BaseAppConfig.model_validate({})
 
     with pytest.raises(ValidationError):
         new_conf.log = LogConfig(level="TRACE")
@@ -75,9 +77,9 @@ def test_conf_update_disable():
     class FooConfig(FrozenModel):
         bar: str = ""
 
-    class FooConfig(BaseAppConfig):
+    class BarConfig(BaseAppConfig):
         foo: FooConfig = FooConfig()
 
-    new_conf = FooConfig()
+    new_conf = BarConfig()
     with pytest.raises(ValidationError):
         new_conf.foo.bar = "bar"

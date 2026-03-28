@@ -13,7 +13,7 @@ from pydantic_settings import (
 
 from pystonic import log
 from pystonic.log import LogConfig
-from pystonic.utils import httpclient
+from pystonic.core import httpclient
 
 
 class FrozenModel(BaseModel):
@@ -69,9 +69,9 @@ class BaseAppConfig(BaseSettings):
         httpclient._DEFAULT_CONF = self.http_client
 
     @classmethod
-    def model_validate(cls, init_settings: Optional[Any] = None):
+    def new(cls, init_settings: Optional[Any] = None):
         config = super().model_validate(
-            init_settings if init_settings is not None else cls.get_init_settings()
+            init_settings if init_settings is not None else cls.get_init_settings(),
         )
         config.init_hook()
         return config
@@ -82,11 +82,13 @@ class BaseAppConfig(BaseSettings):
         if not files:
             return None
 
+        if isinstance(files, (Path, str)):
+            return Path(files)
         for file in files:
-            if file.exists():
-                return file
+            if Path(file).exists():
+                return Path(file)
 
-        return files[0]
+        return Path(files[0])
 
     @classmethod
     def get_init_settings(cls) -> Dict:

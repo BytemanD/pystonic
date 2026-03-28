@@ -41,14 +41,6 @@ def disk_usage(path: Path):
     return shutil.disk_usage(path)
 
 
-def execute(cmd, check=True, success_codes=None):
-    logger.debug("RUN: {}", cmd)
-    status, output = subprocess.getstatusoutput(cmd)
-    if check and status not in (success_codes or [0]):
-        raise subprocess.CalledProcessError(status, cmd=cmd, output=output)
-    return status, output
-
-
 def hostname():
     return socket.gethostname()
 
@@ -62,3 +54,17 @@ def ip_address():
         return ip
     except Exception:
         return socket.gethostbyname(hostname())
+
+
+def execute(
+    cmd,
+    check=True,
+    shell=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+):
+    logger.debug("RUN: {}", cmd)
+    process = subprocess.run(
+        cmd, check=check, shell=shell, stdout=stdout, stderr=stderr
+    )
+    return process.returncode, process.stdout, process.stderr

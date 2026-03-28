@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from pystonic.utils import textutil
+from pystonic.core import textutil
 
 
 @pytest.mark.parametrize(

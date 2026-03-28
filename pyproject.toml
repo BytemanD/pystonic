@@ -9,11 +9,18 @@ dependencies = [
     "httpx>=0.28.1",
     "humanize>=4.15.0",
     "loguru>=0.7.3",
-    "prettytable>=3.17.0",
+    "pydantic",
     "pydantic-settings[toml]>=2.13.1",
-    "requests>=2.32.5",
     "termcolor>=3.3.0",
     "toml>=0.10.2",
+]
+
+[project.optional-dependencies]
+rich = [
+    "rich>=14.3.3",
+]
+prettytable = [
+    "prettytable>=3.17.0",
 ]
 
 [build-system]

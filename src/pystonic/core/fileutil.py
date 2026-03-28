@@ -33,24 +33,30 @@ def create_text(
     return file_path
 
 
-@overload
-def move_files(
-    src: Path,
-    dst: Path,
-    dry_run: Literal[False],
-    recursive: bool = False,
-    if_exists: IfExists | str = IfExists.raise_error,
-) -> None: ...
+# @overload
+# def move_files(
+#     src: Path,
+#     dst: Path,
+# ) -> None: ...
+
+# @overload
+# def move_files(
+#     src: Path,
+#     dst: Path,
+#     dry_run: Literal[False],
+#     recursive: bool = False,
+#     if_exists: IfExists | str = IfExists.raise_error,
+# ) -> None: ...
 
 
-@overload
-def move_files(
-    src: Path,
-    dst: Path,
-    dry_run: Literal[True],
-    recursive: bool = False,
-    if_exists: IfExists | str = IfExists.raise_error,
-) -> List[Tuple[Path, Path]]: ...
+# @overload
+# def move_files(
+#     src: Path,
+#     dst: Path,
+#     dry_run: Literal[True],
+#     recursive: bool = False,
+#     if_exists: IfExists | str = IfExists.raise_error,
+# ) -> None: ...
 
 
 def move_files(
@@ -89,7 +95,8 @@ def move_files(
         files_to_move.append((file, dst.joinpath(file.name)))
 
     if dry_run:
-        return files_to_move
+        logger.warning("move files: {} to {}", files_to_move, dst)
+        return
     for file, dst_file in files_to_move:
         if dst_file.exists():
             if if_exists == IfExists.overwrite:

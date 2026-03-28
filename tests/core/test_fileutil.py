@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from pystonic.utils.fileutil import create_text, move_files
+from pystonic.core.fileutil import create_text, move_files
 
 
 def test_move_single_file():

@@ -1,11 +1,11 @@
+from collections.abc import Sequence
 from typing import Generator, List, Optional
 
-import prettytable
+from prettytable import PrettyTable, TableStyle
+from pydantic import BaseModel
 
-TableStyle = prettytable.TableStyle
 
-
-class DataTable(prettytable.PrettyTable):
+class DataTable(PrettyTable):
     """DataTable class for displaying data in a table format"""
 
     def __init__(
@@ -45,7 +45,7 @@ class DataTable(prettytable.PrettyTable):
     def length(self):
         return len(self.rows)
 
-    def pages(self, page_size=50) -> Generator[prettytable.PrettyTable, None, None]:
+    def pages(self, page_size=50) -> Generator[PrettyTable, None, None]:
         for start in range(0, len(self.rows), page_size):
             self.start = start
             self.end = start + page_size
@@ -53,3 +53,18 @@ class DataTable(prettytable.PrettyTable):
 
     def reset_page(self):
         self.start, self.end = 0, len(self.rows)
+
+
+def make_data_table(
+    columns: List[str],
+    items: Sequence[BaseModel],
+    style: Optional[TableStyle] = None,
+    autoindex: bool = False,
+) -> PrettyTable:
+    """Create a DataTable instance"""
+    table = PrettyTable(columns, style=style)
+    for item in items:
+        table.add_row([getattr(item, column) for column in columns])
+    if autoindex:
+        table.add_autoindex()
+    return table
