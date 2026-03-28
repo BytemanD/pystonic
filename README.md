@@ -51,22 +51,25 @@ client = default_client(base_url="https://api.example.com")
 response = client.get("/users")
 ```
 
-### 工具模块
+### 核心模块
 
 | 模块 | 说明 |
 |------|------|
-| `command` | 系统命令执行 |
 | `fileutil` | 文件操作工具 |
-| `strutil` | 字符串工具（IP验证、布尔转换） |
-| `table` | 表格显示（基于 prettytable） |
+| `strutil` | 字符串工具（IP 验证、布尔转换） |
 | `input` | 用户交互输入 |
+| `system` | 系统信息（CPU、磁盘、网络等） |
+| `textutil` | 文本处理工具 |
+| `funcutil` | 函数工具 |
+| `pkg` | 包管理工具 |
+| `code` | 代码质量检查（格式化、测试） |
 
 
 ## 开发
 
 ```bash
 # 安装依赖
-pip install -e .
+uv sync --all-extras
 
 # 运行测试
 pytest
@@ -75,6 +78,30 @@ pytest
 ruff check .
 ```
 
+### 代码质量工具
+
+使用内置的代码质量检查工具：
+
+```python
+from pystonic.tools.code import check_code
+
+# 运行格式化和 lint 检查
+check_code()
+
+# 运行测试
+check_code(test=True)
+
+# 运行测试并查看覆盖率
+check_code(test=True, cover=True)
+```
+
+或者使用命令行：
+
+```bash
+python -m pystonic.tools.code check
+python -m pystonic.tools.code check --test
+python -m pystonic.tools.code check --test --cover
+```
 
 ## 发布
 
