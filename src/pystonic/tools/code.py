@@ -30,9 +30,7 @@ def check_code(test=False, cover=False, cover_path="src", cover_fail_under=80):
             if not is_package_installed("pytest_cov"):
                 print("❌ Error: pytest-cov is not installed. Please install it first.")
                 return
-            pytest_cmd += (
-                f" --cov=src --cov-report=term --cov-fail-under={cover_fail_under}"
-            )
+            pytest_cmd += f" --cov={cover_path} --cov-report=term --cov-fail-under={cover_fail_under}"
 
         commands.append(pytest_cmd)
 

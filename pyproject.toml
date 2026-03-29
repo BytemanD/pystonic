@@ -9,8 +9,8 @@ dependencies = [
     "httpx>=0.28.1",
     "humanize>=4.15.0",
     "loguru>=0.7.3",
-    "pydantic",
     "pydantic-settings[toml]>=2.13.1",
+    "python-dateutil>=2.9.0.post0",
     "termcolor>=3.3.0",
     "toml>=0.10.2",
 ]
@@ -21,6 +21,11 @@ rich = [
 ]
 prettytable = [
     "prettytable>=3.17.0",
+]
+gitstats = [
+    "click>=8.3.1",
+    "gitpython>=3.1.46",
+    "rich>=14.3.3",
 ]
 
 [build-system]
