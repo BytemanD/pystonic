@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import List
 
-from git import Repo, Commit
+from git import Commit, Repo
 from pydantic import BaseModel
+
 from pystonic.core import dateutil
 
 

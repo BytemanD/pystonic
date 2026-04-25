@@ -1,4 +1,3 @@
-import argparse
 import html
 import html.parser
 import re
@@ -76,20 +75,3 @@ def sync_files_from_http_server(url: str, output: str, parttern: re.Pattern = No
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_bytes(resp.content)
     logger.success("download done.")
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="sync files from http server",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument("url", help="url of http server")
-    parser.add_argument("output", help="Output directory")
-    parser.add_argument("-m", "--match", default=".*", help="Match with regex")
-    args = parser.parse_args()
-
-    sync_files_from_http_server(args.url, args.output, parttern=re.compile(args.match))
-
-
-if __name__ == "__main__":
-    main()

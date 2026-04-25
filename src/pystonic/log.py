@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 from pystonic import context
 
+VERBOSE_LEVELS = ["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"]
 DEFAULT_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
     "<level>{level: <8}</level> | "
@@ -26,23 +27,29 @@ class LogConfig(BaseModel):
     custom_extra: List[str] = []
 
 
-def setup_logger(config: LogConfig):
+def setup_logger(
+    config: LogConfig, versbose: Optional[int] = None, remove: bool = False
+):
     """Setup logging configuration."""
-    kwargs = {}
-    if config.format:
-        kwargs["format"] = config.format
-    if config.colorize:
-        kwargs["colorize"] = config.colorize
+    if remove:
+        logger.remove()
+    if versbose is not None:
+        logger.add(
+            sys.stdout,
+            level=VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, versbose)],
+            format=config.format,
+            colorize=True,
+        )
     if config.file:
-        kwargs["rotation"] = config.rotation
-        kwargs["retention"] = config.retention
-        kwargs["compression"] = config.compression
-    logger.remove()
-    logger.add(
-        config.file if config.file else sys.stdout,
-        level=config.level.upper(),
-        **kwargs,
-    )
+        logger.add(
+            config.file,
+            level=config.level.upper(),
+            format=config.format,
+            colorize=config.colorize,
+            rotation=config.rotation,
+            retention=config.retention,
+            compression=config.compression,
+        )
 
     def _context_patcher(record):
         extra_keys = ["trace"] + config.custom_extra
@@ -53,12 +60,3 @@ def setup_logger(config: LogConfig):
         extra={"context": "-"},
         patcher=_context_patcher,
     )
-
-
-def add_console_handler(level: str, config: LogConfig):
-    kwargs = {}
-    if config.format:
-        kwargs["format"] = config.format
-    if config.colorize:
-        kwargs["colorize"] = config.colorize
-    logger.add(sys.stdout, level=level.upper(), **kwargs)

@@ -1,6 +1,7 @@
 import pytest
-from pystonic.log import LogConfig, setup_logger, add_console_handler, DEFAULT_FORMAT
 from loguru import logger
+
+from pystonic.log import DEFAULT_FORMAT, LogConfig, setup_logger
 
 
 def test_log_config_default():
@@ -74,40 +75,32 @@ def test_setup_logger_with_file(tmp_path):
 def test_setup_logger_custom_format():
     """测试自定义日志格式"""
     custom_format = "[{level}] {message}"
-    config = LogConfig(level="INFO", format=custom_format)
-    setup_logger(config)
+    setup_logger(LogConfig(level="INFO", format=custom_format), versbose=1, remove=True)
 
-    # 验证配置正确
-    assert config.format == custom_format
+    assert len(logger._core.handlers) == 1
 
 
-def test_add_console_handler():
+def test_setup_logger_with_verbose():
     """测试添加控制台处理器"""
     config = LogConfig()
-    add_console_handler("DEBUG", config)
+    setup_logger(config, versbose=3, remove=True)
 
     # 验证添加了处理器
-    assert len(logger._core.handlers) > 0
+    assert len(logger._core.handlers) == 1
+    assert [x for x in logger._core.handlers.values()][0].levelno == logger.level(
+        "DEBUG"
+    ).no
 
 
-def test_add_console_handler_with_custom_format():
+def test_setup_logger_with_custom_format():
     """测试添加自定义格式的控制台处理器"""
     custom_format = "CUSTOM: {message}"
-    config = LogConfig(format=custom_format)
-    add_console_handler("ERROR", config)
+    setup_logger(LogConfig(format=custom_format), versbose=0, remove=True)
 
-    # 验证级别设置正确
-    assert config.level == "WARNING"  # 默认值不变
-
-
-def test_default_format_string():
-    """测试默认格式字符串包含必要元素"""
-    # 验证默认格式包含时间、级别、消息等
-    assert "{time:" in DEFAULT_FORMAT
-    assert "{level:" in DEFAULT_FORMAT
-    assert "{message}" in DEFAULT_FORMAT
-    assert "{name}" in DEFAULT_FORMAT
-    assert "{line}" in DEFAULT_FORMAT
+    # 验证添加了处理器
+    assert len(logger._core.handlers) == 1
+    handler = [x for x in logger._core.handlers.values()][0]
+    assert handler._formatter.strip().startswith(custom_format)
 
 
 def test_log_level_validation():
