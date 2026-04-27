@@ -1,9 +1,10 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+from urllib.parse import quote_plus
 
 import toml
 from loguru import logger
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, SecretStr
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -12,12 +13,44 @@ from pydantic_settings import (
 )
 
 from pystonic import log
-from pystonic.log import LogConfig
 from pystonic.core import httpclient
+from pystonic.log import LogConfig
 
 
 class FrozenModel(BaseModel):
     model_config = ConfigDict(frozen=True)
+
+
+class DBConfig(BaseModel):
+    # connection: str = "mysql+pymysql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}?charset={self.charset}"
+    connection: str = "sqlite:///data/develop.db"
+    host: str = "localhost"
+    port: int = 3306
+    user: str = "root"
+    password: SecretStr = SecretStr("")
+    database: str = "develop"
+    charset: str = "utf8mb4"
+
+    # Connection pool settings
+    pool_size: int = 10
+    max_overflow: int = 20
+    pool_timeout: int = 30
+    pool_recycle: int = 3600
+    echo: bool = False
+
+    @property
+    def url(self):
+        db_url = self.connection.format(
+            host=self.host,
+            port=self.port,
+            user=quote_plus(self.user),
+            password=quote_plus(self.password.get_secret_value()),
+            database=self.database,
+            charset=self.charset,
+        )
+        if db_url.startswith("sqlite:"):
+            file = Path(db_url.replace("sqlite:///", ""))
+            file.parent.mkdir(parents=True, exist_ok=True)
 
 
 class BaseAppConfig(BaseSettings):
@@ -32,6 +65,8 @@ class BaseAppConfig(BaseSettings):
     )
     http_client: httpclient.HTTPClientConfig = httpclient.HTTPClientConfig()
     log: LogConfig = LogConfig()
+
+    db: DBConfig = DBConfig()
 
     @classmethod
     def settings_customise_sources(

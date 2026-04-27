@@ -30,6 +30,9 @@ gitstats = [
     "gitpython>=3.1.46",
     "rich>=14.3.3",
 ]
+orm = [
+    "sqlalchemy>=2.0.49",
+]
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]
