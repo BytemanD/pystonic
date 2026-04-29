@@ -51,6 +51,7 @@ class DBConfig(BaseModel):
         if db_url.startswith("sqlite:"):
             file = Path(db_url.replace("sqlite:///", ""))
             file.parent.mkdir(parents=True, exist_ok=True)
+        return db_url
 
 
 class BaseAppConfig(BaseSettings):
