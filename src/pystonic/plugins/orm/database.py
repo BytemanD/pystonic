@@ -18,6 +18,7 @@ class TableColumn(BaseModel):
     indexed: bool = False
     unique: bool = False
 
+
 Base = declarative_base()
 
 _engine: Engine = None

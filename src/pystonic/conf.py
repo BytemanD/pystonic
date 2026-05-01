@@ -102,6 +102,7 @@ class BaseAppConfig(BaseSettings):
 
     def init_hook(self):
         log.setup_logger(self.log)
+        log.setup_logging(self.log)
         httpclient._DEFAULT_CONF = self.http_client
 
     @classmethod

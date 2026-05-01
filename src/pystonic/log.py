@@ -1,4 +1,6 @@
+import logging
 import sys
+from pathlib import Path
 from typing import List, Literal, Optional
 
 from loguru import logger
@@ -21,6 +23,7 @@ class LogConfig(BaseModel):
     file: Optional[str] = None
     format: str = DEFAULT_FORMAT
     colorize: Optional[bool] = None
+    encoding: str = "utf-8"
     rotation: str = "10 MB"
     retention: str = "30 days"
     compression: str = "zip"
@@ -39,8 +42,10 @@ def setup_logger(
             level=VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, versbose)],
             format=config.format,
             colorize=True,
+            encoding=config.encoding,
         )
     if config.file:
+        Path(config.file).parent.mkdir(parents=True, exist_ok=True)
         logger.add(
             config.file,
             level=config.level.upper(),
@@ -49,6 +54,7 @@ def setup_logger(
             rotation=config.rotation,
             retention=config.retention,
             compression=config.compression,
+            encoding=config.encoding,
         )
 
     def _context_patcher(record):
@@ -59,4 +65,13 @@ def setup_logger(
     logger.configure(
         extra={"context": "-"},
         patcher=_context_patcher,
+    )
+
+
+def setup_logging(config: LogConfig):
+    logging.basicConfig(
+        filename=config.file or sys.stdout,
+        level="DEBUG" if config.level == "TRACE" else config.level,
+        format="%(asctime)s | %(levelname)s | %(name)s - %(message)s",
+        encoding=config,
     )

@@ -20,7 +20,9 @@ class Command(CommandPlugin):
         subparsers = parser_root.add_subparsers(dest="subcommand", required=True)
 
         parser_lines = subparsers.add_parser("lines")
-        parser_lines.add_argument("date_range", nargs='*', help="date range to get lines for")
+        parser_lines.add_argument(
+            "date_range", nargs="*", help="date range to get lines for"
+        )
         parser_lines.add_argument(
             "-s",
             "--sort-by",
@@ -33,7 +35,9 @@ class Command(CommandPlugin):
         )
 
         parser_commits = subparsers.add_parser("commits")
-        parser_commits.add_argument("date_range", nargs='*', help="date range to get lines for")
+        parser_commits.add_argument(
+            "date_range", nargs="*", help="date range to get lines for"
+        )
 
     def run(self, args):
         if args.subcommand == "lines":
