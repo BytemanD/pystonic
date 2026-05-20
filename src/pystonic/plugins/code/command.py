@@ -22,10 +22,14 @@ class Command(CommandPlugin):
 
     @hookimpl
     def register_subcommand(self, subparsers: argparse._SubParsersAction):
-        parser_root = subparsers.add_parser(self.name)
+        parser_root = subparsers.add_parser(
+            self.name, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
         subparsers = parser_root.add_subparsers(dest="subcommand", required=True)
 
-        parser_check = subparsers.add_parser("check")
+        parser_check = subparsers.add_parser(
+            "check", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
 
         parser_check.add_argument(
             "-t",

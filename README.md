@@ -98,9 +98,9 @@ check_code(test=True, cover=True)
 或者使用命令行：
 
 ```bash
-python -m pystonic.tools.code check
-python -m pystonic.tools.code check --test
-python -m pystonic.tools.code check --test --cover
+python -m pystonic.cmd.pystonic code check
+python -m pystonic.cmd.pystonic code check --test
+python -m pystonic.cmd.pystonic code check --test --cover
 ```
 
 ## 发布

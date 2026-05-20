@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest.mock import Mock, patch
 from git import Repo, Commit
-from pystonic.extensions.gitstats.stats import (
+from pystonic.plugins.gitstats.utils import (
     CommitStats,
     CommitDetail,
     lines,
@@ -186,7 +186,7 @@ class TestCommitDetail:
 class TestLinesFunction:
     """测试 lines 函数"""
 
-    @patch("pystonic.extensions.gitstats.stats.Repo")
+    @patch("pystonic.plugins.gitstats.utils.Repo")
     def test_lines_basic(self, mock_repo_class):
         """测试基本的行数统计"""
         # 创建 mock repo 实例
@@ -259,7 +259,7 @@ class TestLinesFunction:
         # 验证 iter_commits 被正确调用
         mock_repo.iter_commits.assert_called_once_with(since=since, until=until)
 
-    @patch("pystonic.extensions.gitstats.stats.Repo")
+    @patch("pystonic.plugins.gitstats.utils.Repo")
     def test_lines_with_email_fallback(self, mock_repo_class):
         """测试使用邮箱作为作者名的情况"""
         mock_repo = Mock(spec=Repo)
@@ -282,7 +282,7 @@ class TestLinesFunction:
         assert len(result) == 1
         assert result[0].author == "anonymous@example.com"
 
-    @patch("pystonic.extensions.gitstats.stats.Repo")
+    @patch("pystonic.plugins.gitstats.utils.Repo")
     def test_lines_with_unknown_author(self, mock_repo_class):
         """测试作者信息全为空的情况"""
         mock_repo = Mock(spec=Repo)
@@ -305,7 +305,7 @@ class TestLinesFunction:
         assert len(result) == 1
         assert result[0].author == "Unknown"
 
-    @patch("pystonic.extensions.gitstats.stats.Repo")
+    @patch("pystonic.plugins.gitstats.utils.Repo")
     def test_lines_empty_repo(self, mock_repo_class):
         """测试空仓库（没有 commit）"""
         mock_repo = Mock(spec=Repo)
@@ -323,8 +323,8 @@ class TestLinesFunction:
 class TestCommitsFunction:
     """测试 commits 函数"""
 
-    @patch("pystonic.extensions.gitstats.stats.Repo")
-    @patch("pystonic.extensions.gitstats.stats.CommitDetail")
+    @patch("pystonic.plugins.gitstats.utils.Repo")
+    @patch("pystonic.plugins.gitstats.utils.CommitDetail")
     def test_commits_basic(self, mock_commit_detail, mock_repo_class):
         """测试基本的 commit 列表获取"""
         # 创建 mock repo 实例
@@ -370,8 +370,8 @@ class TestCommitsFunction:
         # 验证 iter_commits 被正确调用
         mock_repo.iter_commits.assert_called_once_with(since=since, until=until)
 
-    @patch("pystonic.extensions.gitstats.stats.Repo")
-    @patch("pystonic.extensions.gitstats.stats.CommitDetail")
+    @patch("pystonic.plugins.gitstats.utils.Repo")
+    @patch("pystonic.plugins.gitstats.utils.CommitDetail")
     def test_commits_empty(self, mock_commit_detail, mock_repo_class):
         """测试空仓库"""
         mock_repo = Mock(spec=Repo)

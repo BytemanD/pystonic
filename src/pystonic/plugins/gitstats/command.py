@@ -16,10 +16,14 @@ class Command(CommandPlugin):
 
     @hookimpl
     def register_subcommand(self, subparsers: argparse._SubParsersAction):
-        parser_root = subparsers.add_parser(self.name)
+        parser_root = subparsers.add_parser(
+            self.name, formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
         subparsers = parser_root.add_subparsers(dest="subcommand", required=True)
 
-        parser_lines = subparsers.add_parser("lines")
+        parser_lines = subparsers.add_parser(
+            "lines", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
         parser_lines.add_argument(
             "date_range", nargs="*", help="date range to get lines for"
         )
@@ -34,7 +38,9 @@ class Command(CommandPlugin):
             "--no-sort", action="store_true", help="Do not sort the results"
         )
 
-        parser_commits = subparsers.add_parser("commits")
+        parser_commits = subparsers.add_parser(
+            "commits", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
         parser_commits.add_argument(
             "date_range", nargs="*", help="date range to get lines for"
         )

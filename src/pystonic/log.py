@@ -42,7 +42,6 @@ def setup_logger(
             level=VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, versbose)],
             format=config.format,
             colorize=True,
-            encoding=config.encoding,
         )
     if config.file:
         Path(config.file).parent.mkdir(parents=True, exist_ok=True)
