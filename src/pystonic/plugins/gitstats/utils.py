@@ -16,6 +16,7 @@ class CommitStats(BaseModel):
 
 
 class CommitDetail(BaseModel):
+    hexsha: str = ""
     author: str = ""
     date: str = ""
     message: str = ""
@@ -24,13 +25,14 @@ class CommitDetail(BaseModel):
     @classmethod
     def from_git_commit(cls, commit: Commit):
         return cls(
+            hexsha=commit.hexsha,
             author=commit.author.name or commit.author.email or "Unknown",
             date=commit.authored_datetime.strftime(dateutil.FORMAT_DATETIME),
             message=(
                 commit.message.decode("utf-8")
                 if isinstance(commit.message, bytes)
                 else str(commit.message)
-            ),
+            ).strip(),
             changes=[
                 f"{x.change_type} {x.a_path}"
                 for x in commit.diff(commit.parents[0] if commit.parents else None)

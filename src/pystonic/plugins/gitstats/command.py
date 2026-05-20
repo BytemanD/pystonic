@@ -44,6 +44,9 @@ class Command(CommandPlugin):
         parser_commits.add_argument(
             "date_range", nargs="*", help="date range to get lines for"
         )
+        parser_commits.add_argument(
+            "--no-changes", action="store_true", help="Do not show changes"
+        )
 
     def run(self, args):
         if args.subcommand == "lines":
@@ -51,25 +54,16 @@ class Command(CommandPlugin):
                 date_range=args.date_range, sort_by=args.sort_by, no_sort=args.no_sort
             )
         else:
-            self._run_commits(date_range=args.date_range)
+            self._run_commits(date_range=args.date_range, no_changes=args.no_changes)
 
     def _run_lines(
         self, date_range: Set[str], sort_by: str = "total", no_sort: bool = False
     ):
-        """Show commit lines
-
-        \b
-        e.g.
-            git-rich-stats lines
-            git-rich-stats lines <today | yesterday | thisweek | thismonth>
-            git-rich-stats lines 2026-01-12 2026-01-22
-            ...
-        """
         console = Console()
         try:
             since, until = dateutil.parse_date_range(date_range)
-        except ValueError:
-            raise ValueError("parse date range error")
+        except ValueError as e:
+            raise ValueError(f"parse date range error: {e}")
 
         console.print(
             f"{since:%Y-%m-%d %H:%M:%S} ~ {until:%Y-%m-%d %H:%M:%S}",
@@ -100,14 +94,14 @@ class Command(CommandPlugin):
 
         console.print(table)
 
-    def _run_commits(self, date_range: Set[str]):
+    def _run_commits(self, date_range: Set[str], no_changes: bool = False):
         """Show commits"""
         console = Console()
 
         try:
             since, until = dateutil.parse_date_range(date_range)
-        except ValueError:
-            raise ValueError("parse date range error")
+        except ValueError as e:
+            raise ValueError(f"parse date range error: {e}")
         commit_detail_list = utils.commits(since, until)
 
         console.print(
@@ -116,19 +110,38 @@ class Command(CommandPlugin):
         )
         console.print()
         table = Table(
-            Column("Date"),
-            Column("Author", justify="left"),
-            Column("Message", justify="left"),
-            Column("Changes", justify="left", no_wrap=True),
+            *(
+                [
+                    Column("Date"),
+                    Column("Author", justify="left"),
+                    Column("Commit", justify="left"),
+                    Column("Message", justify="left"),
+                ]
+                + (
+                    [
+                        Column("Changes", justify="left", no_wrap=True),
+                    ]
+                    if not no_changes
+                    else []
+                )
+            ),
             title="Commit Details",
             show_lines=True,
         )
         for item in commit_detail_list:
             table.add_row(
-                item.date,
-                item.author,
-                Text(str(item.message), style="red" if "fix" in item.message else ""),
-                "\n".join(item.changes),
+                *(
+                    [
+                        item.date,
+                        item.author,
+                        item.hexsha,
+                        Text(
+                            str(item.message),
+                            style="yellow" if "fix" in item.message else "",
+                        ),
+                    ]
+                    + (["\n".join(item.changes)] if not no_changes else [])
+                )
             )
 
         console.print(table)
