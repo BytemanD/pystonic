@@ -109,3 +109,9 @@ python -m pystonic.tools.code check --test --cover
 uv build --clear
 uv publish -v --index testpypi --username __token__ --password <your token>
 ```
+
+
+## 参考
+
+[UV 安装](https://uv.doczh.com/getting-started/installation/#__tabbed_1_1)
+curl -LsSf https://astral.sh/uv/install.sh | sh
