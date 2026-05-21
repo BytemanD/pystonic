@@ -107,7 +107,7 @@ python -m pystonic.cmd.pystonic code check --test --cover
 
 ```bash
 uv build --clear
-uv publish -v --index testpypi --username __token__ --password <your token>
+uv publish -v --index testpypi -t <your token>
 ```
 
 
