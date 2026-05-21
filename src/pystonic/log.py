@@ -72,5 +72,5 @@ def setup_logging(config: LogConfig):
         filename=config.file or sys.stdout,
         level="DEBUG" if config.level == "TRACE" else config.level,
         format="%(asctime)s | %(levelname)s | %(name)s - %(message)s",
-        encoding=config,
+        encoding=config.encoding,
     )
