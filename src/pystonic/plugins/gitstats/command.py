@@ -1,5 +1,5 @@
 import argparse
-from typing import Set
+from typing import Optional, Set
 
 from rich import box
 from rich.console import Console
@@ -9,6 +9,8 @@ from rich.text import Text
 from pystonic.core import dateutil
 from pystonic.core.plugin import CommandPlugin, hookimpl
 from pystonic.plugins.gitstats import utils
+
+from pystonic.extensions.rich import make_data_table
 
 
 class Command(CommandPlugin):
@@ -47,6 +49,7 @@ class Command(CommandPlugin):
         parser_commits.add_argument(
             "--no-changes", action="store_true", help="Do not show changes"
         )
+        parser_commits.add_argument("--author", "-a", help="Filter commits by author")
 
     def run(self, args):
         if args.subcommand == "lines":
@@ -54,7 +57,11 @@ class Command(CommandPlugin):
                 date_range=args.date_range, sort_by=args.sort_by, no_sort=args.no_sort
             )
         else:
-            self._run_commits(date_range=args.date_range, no_changes=args.no_changes)
+            self._run_commits(
+                date_range=args.date_range,
+                no_changes=args.no_changes,
+                author=args.author,
+            )
 
     def _run_lines(
         self, date_range: Set[str], sort_by: str = "total", no_sort: bool = False
@@ -94,7 +101,12 @@ class Command(CommandPlugin):
 
         console.print(table)
 
-    def _run_commits(self, date_range: Set[str], no_changes: bool = False):
+    def _run_commits(
+        self,
+        date_range: Set[str],
+        no_changes: bool = False,
+        author: Optional[str] = None,
+    ):
         """Show commits"""
         console = Console()
 
@@ -102,46 +114,31 @@ class Command(CommandPlugin):
             since, until = dateutil.parse_date_range(date_range)
         except ValueError as e:
             raise ValueError(f"parse date range error: {e}")
-        commit_detail_list = utils.commits(since, until)
+        commits = utils.commits(since, until, author=author)
 
         console.print(
             f"{since:%Y-%m-%d %H:%M:%S} ~ {until:%Y-%m-%d %H:%M:%S}",
             style="cyan underline",
         )
         console.print()
-        table = Table(
-            *(
-                [
-                    Column("Date"),
-                    Column("Author", justify="left"),
-                    Column("Commit", justify="left"),
-                    Column("Message", justify="left"),
-                ]
-                + (
-                    [
-                        Column("Changes", justify="left", no_wrap=True),
-                    ]
-                    if not no_changes
-                    else []
-                )
+        table = make_data_table(
+            [
+                Column("date"),
+                Column("author", justify="left"),
+                Column("commit", justify="left"),
+                Column("message", justify="left"),
+            ]
+            + (
+                [Column("changes", justify="left", no_wrap=True)]
+                if not no_changes
+                else []
             ),
+            commits,
+            slots={
+                "changes": lambda x: "\n".join(x.changes) if not no_changes else ""
+            },
             title="Commit Details",
             show_lines=True,
         )
-        for item in commit_detail_list:
-            table.add_row(
-                *(
-                    [
-                        item.date,
-                        item.author,
-                        item.hexsha,
-                        Text(
-                            str(item.message),
-                            style="yellow" if "fix" in item.message else "",
-                        ),
-                    ]
-                    + (["\n".join(item.changes)] if not no_changes else [])
-                )
-            )
 
         console.print(table)

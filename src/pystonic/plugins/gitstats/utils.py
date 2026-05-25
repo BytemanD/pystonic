@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from git import Commit, Repo
 from pydantic import BaseModel
@@ -57,9 +57,11 @@ def lines(since: datetime, until: datetime):
     return [x for x in commit_stats.values()]
 
 
-def commits(since: datetime, until: datetime):
+def commits(since: datetime, until: datetime, author: Optional[str] = None):
     repo = Repo()
-    return [
-        CommitDetail.from_git_commit(commit)
+    commits_list = [
+        commit
         for commit in repo.iter_commits(since=since, until=until)
+        if author is None or commit.author.name == author
     ]
+    return [CommitDetail.from_git_commit(commit) for commit in commits_list]

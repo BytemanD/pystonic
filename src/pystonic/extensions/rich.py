@@ -1,6 +1,7 @@
-from typing import List, Optional, Sequence, Union
+from typing import List, Literal, Optional, Sequence, Union
 
 from pydantic import BaseModel
+from rich import box
 from rich.console import Console
 from rich.prompt import Prompt
 
@@ -20,15 +21,44 @@ class DataTable:
 def make_data_table(
     columns: List[Union[Column, str]],
     items: Sequence[BaseModel],
+    none_value: Optional[str] = None,
+    header_format: Literal[None, 'title', 'upper'] = 'title',
+    slots: Optional[dict[str, callable]] = None,
     title: Optional[str] = None,
-    box: Optional[Box] = None,
+    box: Optional[Box] = box.HEAVY_HEAD,
     **table_settings,
 ) -> Table:
+    """Make a rich Table from items
+    Args:
+        columns: List of column names or Column objects
+        items: List of BaseModel items to display
+        none_value: Value to display for None fields
+        header_format: Format for the header ('title', 'upper', or None)
+        slots: Optional dict of field name to function for custom field value
+        title: Optional table title
+        box: Optional box style for the table
+        **table_settings: Additional settings for the Table constructor
+    """
+    fields = [str(x.header) if isinstance(x, Column) else x for x in columns]
+    table_columns = [x if isinstance(x, Column) else Column(x.title()) for x in columns]
+    if header_format:
+        for column in table_columns:
+            if not isinstance(column.header, str):
+                continue
+            if header_format == 'title':
+                column.header = column.header.title()
+            elif header_format == 'upper':
+                column.header = column.header.upper()
 
-    table_columns = [x if isinstance(x, Column) else Column(x) for x in columns]
     table = Table(*table_columns, box=box, title=title, **table_settings)
+
+    def _get_field_value(item: BaseModel, field_name: str):
+        if slots and field_name in slots:
+            return slots[field_name](item)
+        return getattr(item, field_name, none_value)
+
     for item in items:
-        table.add_row(*[str(getattr(item, str(x.header))) for x in table_columns])
+        table.add_row(*[str(_get_field_value(item, x)) for x in fields])
     return table
 
 
