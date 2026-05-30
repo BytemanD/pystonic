@@ -113,5 +113,13 @@ uv publish -v --index testpypi -t <your token>
 
 ## 参考
 
-[UV 安装](https://uv.doczh.com/getting-started/installation/#__tabbed_1_1)
+### uv
+
+```bash
+# windows
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+[UV 安装](https://uv.doczh.com/getting-started/installation/#__tabbed_1_1)
