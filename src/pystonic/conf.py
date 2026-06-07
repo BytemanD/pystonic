@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 from urllib.parse import quote_plus
 
 import toml
@@ -54,6 +54,30 @@ class DBConfig(BaseModel):
         return db_url
 
 
+class NacosConfig(BaseModel):
+    server_addr: str = "localhost:8848"
+    username: str = "nacos"
+    password: SecretStr = SecretStr("nacos")
+
+    retry_interval: Optional[int] = None
+
+
+class McpConfig(BaseModel):
+    """Mcp Server Configuration"""
+
+    name: str = "fastmcp"
+    instructions: Optional[str] = None
+    transport: Literal["stdio", "http", "sse", "streamable-http"] = "sse"
+    version: str = "1.0.0"
+
+    host: str = "0.0.0.0"
+    port: int = 18000
+
+    enable_nacos: bool = False
+    nacos: NacosConfig = NacosConfig()
+    proxy: Optional[str] = ""
+
+
 class BaseAppConfig(BaseSettings):
     """Base App Configuration"""
 
@@ -68,6 +92,7 @@ class BaseAppConfig(BaseSettings):
     log: LogConfig = LogConfig()
 
     db: DBConfig = DBConfig()
+    mcp: McpConfig = McpConfig()
 
     @classmethod
     def settings_customise_sources(

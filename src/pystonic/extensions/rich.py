@@ -22,7 +22,7 @@ def make_data_table(
     columns: List[Union[Column, str]],
     items: Sequence[BaseModel],
     none_value: Optional[str] = None,
-    header_format: Literal[None, 'title', 'upper'] = 'title',
+    header_format: Literal[None, "title", "upper"] = "title",
     slots: Optional[dict[str, callable]] = None,
     title: Optional[str] = None,
     box: Optional[Box] = box.HEAVY_HEAD,
@@ -45,9 +45,9 @@ def make_data_table(
         for column in table_columns:
             if not isinstance(column.header, str):
                 continue
-            if header_format == 'title':
+            if header_format == "title":
                 column.header = column.header.title()
-            elif header_format == 'upper':
+            elif header_format == "upper":
                 column.header = column.header.upper()
 
     table = Table(*table_columns, box=box, title=title, **table_settings)

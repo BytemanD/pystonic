@@ -134,9 +134,7 @@ class Command(CommandPlugin):
                 else []
             ),
             commits,
-            slots={
-                "changes": lambda x: "\n".join(x.changes) if not no_changes else ""
-            },
+            slots={"changes": lambda x: "\n".join(x.changes) if not no_changes else ""},
             title="Commit Details",
             show_lines=True,
         )
