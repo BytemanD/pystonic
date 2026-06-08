@@ -4,7 +4,7 @@ import uuid
 from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
 from nacos_mcp_wrapper.server.nacos_mcp import NacosMCP
 from fastmcp import FastMCP
-from pystonic.extensions.mcp import server
+from pystonic.mcp import server
 
 from pystonic.conf import McpConfig
 

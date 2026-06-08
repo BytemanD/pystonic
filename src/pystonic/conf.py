@@ -59,15 +59,24 @@ class NacosConfig(BaseModel):
     username: str = "nacos"
     password: SecretStr = SecretStr("nacos")
 
-    retry_interval: Optional[int] = None
+    namespace: str = "public"
+    group_name: str = "DEFAULT_GROUP"
+
+    retry_interval: Optional[int] = 10
+    log_level: str = "info"
+
+
+class McpProxyConfig(BaseModel):
+    target: Optional[str] = ""
+    client_log_level: str = "info"
 
 
 class McpConfig(BaseModel):
     """Mcp Server Configuration"""
 
-    name: str = "fastmcp"
-    instructions: Optional[str] = None
-    transport: Literal["stdio", "http", "sse", "streamable-http"] = "sse"
+    name: str = "pystonic-mcp-server"
+    instructions: str = ''
+    transport: Literal["stdio", "http", "sse", "streamable-http"] = "streamable-http"
     version: str = "1.0.0"
 
     host: str = "0.0.0.0"
@@ -75,7 +84,7 @@ class McpConfig(BaseModel):
 
     enable_nacos: bool = False
     nacos: NacosConfig = NacosConfig()
-    proxy: Optional[str] = ""
+    proxy: Optional[McpProxyConfig] = None
 
 
 class BaseAppConfig(BaseSettings):

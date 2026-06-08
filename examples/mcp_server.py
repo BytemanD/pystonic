@@ -10,7 +10,7 @@ mcp_server = FastMCP(
 
 @mcp_server.tool()
 def make_trace_id(prefix: Optional[str]='') -> str:
-    """生成Trace id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    """生成Trace id
     
     Args:
         prefix: 前缀

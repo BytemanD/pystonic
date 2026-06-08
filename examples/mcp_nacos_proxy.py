@@ -1,13 +1,11 @@
 from typing import Optional
 import uuid
 
-from nacos_mcp_wrapper.server.nacos_settings import NacosSettings
-from nacos_mcp_wrapper.server.nacos_mcp import NacosMCP
 from fastmcp.server import create_proxy
-from pystonic.extensions.mcp import server
+from pystonic.mcp import server
 
 from pystonic.conf import McpConfig
-from pystonic.extensions.mcp.proxy import NacosMCPProxy
+from pystonic.mcp.proxy302 import NacosMCPProxy
 
 
 conf = McpConfig(

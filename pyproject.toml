@@ -37,9 +37,9 @@ fastapi = [
     "fastapi>=0.136.3",
 ]
 mcp = [
-    "uvicorn>=0.35",
-    "fastmcp<=3.4.2",
-    "nacos-mcp-wrapper-python",
+    "fastmcp==3.4.2",
+    "nacos-sdk-python==2.0.9",
+    "nacos-maintainer-sdk-python==0.1.2"
 ]
 
 [build-system]
@@ -55,9 +55,6 @@ dev = [
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.15.1",
     "ruff>=0.15.4",
-]
-mcp = [
-    "nacos-mcp-wrapper-python>=1.1.0",
 ]
 
 [[tool.uv.index]]
