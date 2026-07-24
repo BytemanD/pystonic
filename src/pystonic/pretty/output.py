@@ -21,6 +21,10 @@ def print_models(
     fields: List[str] = None,
     headers: dict[str, Column] = {},
 ):
+    if not items:
+        Console().print("No items", style="yellow")
+        return
+
     if not fields:
         fields = [x for x in items[0].__class__.model_fields.keys()] if items else []
 

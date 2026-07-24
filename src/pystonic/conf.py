@@ -1,10 +1,11 @@
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Union
 from urllib.parse import quote_plus
 
 import toml
 from loguru import logger
-from pydantic import BaseModel, ConfigDict, SecretStr
+from pydantic import BaseModel, ConfigDict, HttpUrl, SecretStr
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -14,11 +15,34 @@ from pydantic_settings import (
 
 from pystonic import log
 from pystonic.core import httpclient
-from pystonic.log import LogConfig
+
+DEFAULT_CONF_FILE = [
+    Path("etc", "app.toml"),
+    Path.home().joinpath(".config", "pyproject", "app.toml"),
+]
+DEFAULT_FORMAT = (
+    "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
+    "<level>{level: <8}</level> | "
+    "<cyan>{name}:{line}</cyan> <level>[{extra[context]}]</level> - <level>{message}</level>"
+)
 
 
 class FrozenModel(BaseModel):
     model_config = ConfigDict(frozen=True)
+
+
+class LogConfig(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"] = "WARNING"
+    file: Optional[str] = None
+    format: str = DEFAULT_FORMAT
+    colorize: Optional[bool] = None
+    encoding: str = "utf-8"
+    rotation: str = "10 MB"
+    retention: str = "30 days"
+    compression: str = "zip"
+    custom_extra: List[str] = []
 
 
 class DBConfig(BaseModel):
@@ -75,7 +99,7 @@ class McpConfig(BaseModel):
     """Mcp Server Configuration"""
 
     name: str = "pystonic-mcp-server"
-    instructions: str = ''
+    instructions: str = ""
     transport: Literal["stdio", "http", "sse", "streamable-http"] = "streamable-http"
     version: str = "1.0.0"
 
@@ -87,6 +111,55 @@ class McpConfig(BaseModel):
     proxy: Optional[McpProxyConfig] = None
 
 
+class ProviderConfig(BaseModel):
+    name: str
+    base_url: HttpUrl
+    api_key: str = ""
+    model: str = ""
+    openai_use_responses: bool = True
+    extra_body: dict = {}
+
+    def set_enable_thinking(self, enable: bool):
+        if not self.extra_body:
+            self.extra_body = {}
+        self.extra_body["enable_thinking"] = enable
+
+
+class AgentSessionConfig(BaseModel):
+    store: str = "data"
+
+
+class AgentConfig(BaseModel):
+    system_prompt: str = "你是一个专业的AI助手"
+    max_turns: int = 100
+    openai_timeout: int = 180
+    session: AgentSessionConfig = AgentSessionConfig()
+    # stream: bool = True
+    default_provider: str = "alibaba"
+    providers: List[ProviderConfig] = [
+        ProviderConfig(
+            name="alibaba",
+            base_url=HttpUrl("https://dashscope.aliyuncs.com/compatible-mode/v1"),
+            model="qwen-plus",
+            api_key="",
+        ),
+        ProviderConfig(
+            name="zipu",
+            base_url=HttpUrl("https://open.bigmodel.cn/api/paas/v4"),
+            model="glm-4.7-flash",
+            openai_use_responses=False,
+            api_key="",
+        ),
+    ]
+
+    def get_provider(self, name: Optional[str] = None):
+        provider_name = name or self.default_provider
+        provider = next((p for p in self.providers if p.name == name), None)
+        if not provider:
+            raise ValueError(f"Provider '{provider_name}' not found in configuration")
+        return provider
+
+
 class BaseAppConfig(BaseSettings):
     """Base App Configuration"""
 
@@ -96,12 +169,14 @@ class BaseAppConfig(BaseSettings):
         env_nested_delimiter=".",
         extra="ignore",
         frozen=True,
+        toml_file=os.getenv("CONF_FILE") or DEFAULT_CONF_FILE,
     )
-    http_client: httpclient.HTTPClientConfig = httpclient.HTTPClientConfig()
     log: LogConfig = LogConfig()
-
     db: DBConfig = DBConfig()
+    http_client: httpclient.HTTPClientConfig = httpclient.HTTPClientConfig()
+
     mcp: McpConfig = McpConfig()
+    agent: AgentConfig = AgentConfig()
 
     @classmethod
     def settings_customise_sources(
@@ -178,3 +253,6 @@ class BaseAppConfig(BaseSettings):
             cls.model_config["toml_file"] = (
                 toml_file if isinstance(toml_file, list) else [toml_file]
             )
+
+
+CONF = BaseAppConfig()

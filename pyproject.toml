@@ -12,6 +12,7 @@ dependencies = [
     "pluggy>=1.5.0",
     "pydantic-settings[toml]==2.9.1",
     "python-dateutil>=2.9.0.post0",
+    "sqlmodel>=0.0.38",
     "termcolor>=3.3.0",
     "toml>=0.10.2",
 ]
@@ -41,6 +42,11 @@ mcp = [
     "nacos-sdk-python==2.0.9",
     "nacos-maintainer-sdk-python==0.1.2"
 ]
+ai = [
+    "chromadb>=1.5.9",
+    "opentelemetry-exporter-otlp-proto-grpc==1.42.1",
+    "opentelemetry-proto==1.42.1",
+]
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]
@@ -50,6 +56,9 @@ build-backend = "hatchling.build"
 source = "uv-dynamic-versioning"
 
 [dependency-groups]
+agent = [
+    "openai-agents>=0.18.3",
+]
 dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.1.0",

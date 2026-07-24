@@ -1,11 +1,9 @@
 from fastmcp.server import create_proxy
 from loguru import logger
-from maintainer.ai.model.nacos_mcp_info import McpTool
 
 from pystonic.conf import McpConfig
 from pystonic.core.system import get_first_non_loopback_ip
 from pystonic.mcp.nacos_manager import NacosMcpManager
-
 
 TRANSPORT_MAP = {
     "stdio": "stdio",
@@ -15,7 +13,6 @@ TRANSPORT_MAP = {
 
 
 class NacosMCPProxy:
-
     def __init__(self, conf: McpConfig):
         self.conf = conf
         if not self.conf.proxy:
@@ -33,7 +30,11 @@ class NacosMCPProxy:
         tools = await self.backend.list_tools()
         logger.info("found {} tool(s)", len(tools))
 
-        ip = get_first_non_loopback_ip() if self.conf.host == '0.0.0.0' else self.conf.host
+        ip = (
+            get_first_non_loopback_ip()
+            if self.conf.host == "0.0.0.0"
+            else self.conf.host
+        )
         if not ip:
             raise ValueError("No non-loopback IP found")
 
@@ -48,7 +49,5 @@ class NacosMCPProxy:
         )
 
         await self.backend.run_http_async(
-            transport="streamable-http",
-            host=self.conf.host,
-            port=self.conf.port
+            transport="streamable-http", host=self.conf.host, port=self.conf.port
         )
