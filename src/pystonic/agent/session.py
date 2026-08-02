@@ -30,36 +30,15 @@ class SessionNotFound(Exception):
 
 class SessionHisotry:
     def __init__(self):
-        self.store_file = Path(CONF.agent.session.store).joinpath("conversation.db")
+        self.store_file = Path(CONF.agent.session.store).joinpath("session.db")
         self.load()
 
     def load(self):
         self.store_file.parent.mkdir(parents=True, exist_ok=True)
 
-    def get_session_store(
-        self,
-        session_id: Optional[str] = None,
-        last_session: bool = False,
-        raise_if_not_found: bool = False,
-        save_session: bool = True,
-    ):
-        if not session_id:
-            if last_session:
-                agent_session = self.get_last_agent_session()
-                if agent_session:
-                    session_id = agent_session.session_id
-                elif raise_if_not_found:
-                    raise SessionNotFound("last session not found")
-        elif raise_if_not_found:
-            items = self.get_agent_sessions(session_id)
-            if not items or session_id not in [x.session_id for x in items]:
-                raise SessionNotFound(f"session {session_id} not found")
-        if not session_id:
-            logger.info("no session id, create new one")
-            session_id = f"ses_{uuid.uuid4()}"
-        return SQLiteSession(
-            session_id, db_path=self.store_file if save_session else ":memory:"
-        )
+    def get_session(self, session_id: Optional[str] = None):
+        session_id = session_id or uuid.uuid4().hex
+        return SQLiteSession(session_id, db_path=self.store_file)
 
     def _query_agent_session(self, session_id: Optional[str] = None):
         if not self.store_file:
@@ -101,16 +80,12 @@ class SessionHisotry:
         return items[0]
 
     async def delete_agent_session(self, session_id: str):
-        conn = sqlite3.connect(self.store_file)
-
-        session_store = self.get_session_store(
-            session_id=session_id, raise_if_not_found=True
-        )
-
+        session_store = self.get_session(session_id=session_id)
         logger.info("clear session messages ...")
         await session_store.clear_session()
         session_store.close()
         logger.info("delete session ...")
+        conn = sqlite3.connect(self.store_file)
         conn.execute(
             f"DELETE FROM {session_store.sessions_table} where session_id = ?",
             (session_id,),

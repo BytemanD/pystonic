@@ -8,16 +8,15 @@ from loguru import logger
 from pystonic import context
 from pystonic.conf import CONF
 
-VERBOSE_LEVELS = ["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"]
+VERBOSE_LEVELS = ["WARNING", "INFO", "DEBUG", "TRACE"]
 
 
 def setup_logger(remove: bool = False):
     """Setup logging configuration."""
     if remove:
         logger.remove()
-    versbose = (
-        int(os.getenv("LOG_VERBOSE")) if os.getenv("LOG_VERBOSE") is not None else 1
-    )
+    verbose = os.getenv("LOG_VERBOSE", 0)
+    versbose = int(verbose) if verbose is not None else 1
     logger.add(
         sys.stdout,
         level=VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, versbose)],
@@ -50,7 +49,7 @@ def setup_logger(remove: bool = False):
 
 def setup_logging():
     logging.basicConfig(
-        filename=CONF.log.file or sys.stdout,
+        filename=CONF.log.file,
         level="DEBUG" if CONF.log.level == "TRACE" else CONF.log.level,
         format="%(asctime)s | %(levelname)s | %(name)s - %(message)s",
         encoding=CONF.log.encoding,

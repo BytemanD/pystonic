@@ -57,7 +57,11 @@ source = "uv-dynamic-versioning"
 
 [dependency-groups]
 agent = [
+    "openai>=2.52.0",
     "openai-agents>=0.18.3",
+]
+cmd = [
+    "click>=8.4.2",
 ]
 dev = [
     "pytest>=9.0.2",

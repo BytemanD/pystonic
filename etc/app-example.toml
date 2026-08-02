@@ -1,0 +1,9 @@
+[log]
+file = 'logs/pystonic.log'
+level = 'DEBUG'
+
+[agent.providers.zipu]
+base_url = "https://open.bigmodel.cn/api/paas/v4"
+api_key = "xxxxxxxxx"
+models = ["glm-4.7-flash"]
+openai_use_responses = false

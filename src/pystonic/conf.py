@@ -13,12 +13,10 @@ from pydantic_settings import (
     TomlConfigSettingsSource,
 )
 
-from pystonic import log
-from pystonic.core import httpclient
 
 DEFAULT_CONF_FILE = [
     Path("etc", "app.toml"),
-    Path.home().joinpath(".config", "pyproject", "app.toml"),
+    Path.home().joinpath(".config", "pystonic", "app.toml"),
 ]
 DEFAULT_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
@@ -43,6 +41,14 @@ class LogConfig(BaseModel):
     retention: str = "30 days"
     compression: str = "zip"
     custom_extra: List[str] = []
+
+
+class HTTPClientConfig(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    log_response_detail: bool = True
+    timeout: int = 60
+    retries: int = 0
 
 
 class DBConfig(BaseModel):
@@ -112,10 +118,9 @@ class McpConfig(BaseModel):
 
 
 class ProviderConfig(BaseModel):
-    name: str
     base_url: HttpUrl
     api_key: str = ""
-    model: str = ""
+    models: List[str] = []
     openai_use_responses: bool = True
     extra_body: dict = {}
 
@@ -135,29 +140,30 @@ class AgentConfig(BaseModel):
     openai_timeout: int = 180
     session: AgentSessionConfig = AgentSessionConfig()
     # stream: bool = True
-    default_provider: str = "alibaba"
-    providers: List[ProviderConfig] = [
-        ProviderConfig(
-            name="alibaba",
+    default_provider: str = "zipu/glm-4.7-flash"
+    providers: Dict[str, ProviderConfig] = {
+        "alibaba": ProviderConfig(
             base_url=HttpUrl("https://dashscope.aliyuncs.com/compatible-mode/v1"),
-            model="qwen-plus",
             api_key="",
+            models=["qwen-plus"],
         ),
-        ProviderConfig(
-            name="zipu",
+        "zipu": ProviderConfig(
             base_url=HttpUrl("https://open.bigmodel.cn/api/paas/v4"),
-            model="glm-4.7-flash",
+            models=["glm-4.7-flash"],
             openai_use_responses=False,
             api_key="",
         ),
-    ]
+    }
 
-    def get_provider(self, name: Optional[str] = None):
-        provider_name = name or self.default_provider
-        provider = next((p for p in self.providers if p.name == name), None)
-        if not provider:
-            raise ValueError(f"Provider '{provider_name}' not found in configuration")
-        return provider
+    def get_provider(self, model: Optional[str] = None) -> ProviderConfig:
+        provider, model_name = (model or self.default_provider).split("/")
+
+        if provider not in self.providers:
+            raise ValueError(f"Provider '{provider}' not found in configuration")
+        if model_name not in self.providers[provider].models:
+            raise ValueError(f"model '{model_name}' not found in configuration")
+
+        return self.providers[provider]
 
 
 class BaseAppConfig(BaseSettings):
@@ -171,9 +177,10 @@ class BaseAppConfig(BaseSettings):
         frozen=True,
         toml_file=os.getenv("CONF_FILE") or DEFAULT_CONF_FILE,
     )
+
     log: LogConfig = LogConfig()
     db: DBConfig = DBConfig()
-    http_client: httpclient.HTTPClientConfig = httpclient.HTTPClientConfig()
+    http_client: HTTPClientConfig = HTTPClientConfig()
 
     mcp: McpConfig = McpConfig()
     agent: AgentConfig = AgentConfig()
@@ -208,19 +215,6 @@ class BaseAppConfig(BaseSettings):
             toml.dump(
                 self.model_dump(mode="json", exclude_defaults=exclude_defaults), f
             )
-
-    def init_hook(self):
-        log.setup_logger(self.log)
-        log.setup_logging(self.log)
-        httpclient._DEFAULT_CONF = self.http_client
-
-    @classmethod
-    def new(cls, init_settings: Optional[Any] = None):
-        config = super().model_validate(
-            init_settings if init_settings is not None else cls.get_init_settings(),
-        )
-        config.init_hook()
-        return config
 
     @classmethod
     def get_conf_file(cls) -> Optional[Path]:

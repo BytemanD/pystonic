@@ -1,14 +1,16 @@
 import asyncio
 import atexit
+import functools
 import textwrap
 from datetime import datetime
 from importlib import metadata
-from typing import Optional
+from typing import Optional, Tuple
 
 import openai
 from agents import (
     Agent,
     MultiProvider,
+    RawResponsesStreamEvent,
     RunConfig,
     Runner,
     set_default_openai_client,
@@ -22,6 +24,7 @@ from openai.types.responses import (
     ResponseCreatedEvent,
     ResponseFailedEvent,
     ResponseInProgressEvent,
+    ResponseCompletedEvent,
 )
 from rich.console import Console
 from rich.markdown import Markdown
@@ -32,7 +35,7 @@ from rich.text import Text
 
 from pystonic.agent.session import SessionHisotry
 from pystonic.agent.tools import common, shell, sqlite, web
-from pystonic.conf import CONF
+from pystonic.conf import CONF, ProviderConfig
 
 # from openai.types.
 from pystonic.shell import Shell
@@ -52,70 +55,33 @@ def fix_message_roles(messages):
     return messages
 
 
-class ShellAgent:
+class OpenaiAgent:
     def __init__(
         self,
-        yes=False,
-        session_id: Optional[str] = None,
-        last_session: bool = False,
-        save_session: bool = True,
+        name: str,
+        instructions: Optional[str] = None,
     ):
-        self.yes = yes
-        self.save_session = save_session
+        self.name = name
+        self.instructions = instructions
         self.providers = CONF.agent.providers
-
         self.default_provider = CONF.agent.get_provider()
 
         self.shell = Shell()
-        self.console = Console()
         self.actions = {}
 
-        if not self.default_provider.api_key:
-            raise ValueError(
-                f'api_key of provider "{self.default_provider.name}" is missing'
-            )
-        self.openai = AsyncOpenAI(
-            api_key=self.default_provider.api_key,
-            base_url=str(self.default_provider.base_url),
-            timeout=CONF.agent.openai_timeout,
-        )
-        self.response_id = None
         self.session_history = SessionHisotry()
-        self.session_store = self.session_history.get_session_store(
-            session_id=session_id,
-            last_session=last_session,
-            save_session=self.save_session,
-        )
-        logger.info("session id: {}", self.session_store.session_id)
 
-        set_default_openai_client(self.openai, use_for_tracing=False)
+        # set_default_openai_client(self.openai, use_for_tracing=False)
         set_tracing_disabled(True)
         instructions = CONF.agent.system_prompt.strip() + SYSTEM_PROMPT_NOTICE.format(
             info=self.system_info()
         )
         logger.debug("instructions: {}", instructions)
-        self.agent = Agent(
-            name="AI-Shell",
-            instructions=instructions,
-            model=self.model,
-            tools=[
-                common.change_dir,
-                common.list_dir,
-                common.read_file,
-                common.write_file,
-                shell.execute_command,
-                sqlite.connect_db,
-                sqlite.execute_sql,
-                web.web_get,
-            ],
-        )
+
         atexit.register(self.close)
 
     def close(self):
         logger.info("close shell agent")
-
-    def provider_info(self):
-        return f"提供商: {self.provider.name}\n模  型: {self.model}"
 
     def system_info(self):
         return (
@@ -123,7 +89,15 @@ class ShellAgent:
             f"终  端: {self.shell.terminal}"
         )
 
-    async def list_model(self):
+    @functools.lru_cache
+    def list_models(self):
+        return [
+            f"{name}/{model}"
+            for name, p in self.providers.items()
+            for model in p.models
+        ]
+
+    async def list_all_models(self):
         return [x.id for x in (await self.openai.models.list()).data]
 
     async def _call_llm(self, user_input: str):
@@ -253,26 +227,65 @@ class ShellAgent:
         if answer:
             self.console.print(Panel(Markdown(answer), border_style="cyan"))
 
-    async def chat(self):
-        self.console.print(
-            Panel(
-                f"{self.system_info()}\n{self.provider_info()}",
-                title=f"AI-Shell {metadata.version('ai-shell')}",
-            ),
-            Text(f"Session: {self.session_store.session_id}"),
+    def _get_agent(self, model: Optional[str] = None):
+        if not model:
+            models = self.list_models()
+            if models:
+                model = models[0]
+
+        return Agent(
+            name=self.name,
+            instructions=self.instructions,
+            model=model,
+            tools=[
+                common.change_dir,
+                common.list_dir,
+                common.read_file,
+                common.write_file,
+                shell.execute_command,
+                sqlite.connect_db,
+                sqlite.execute_sql,
+                web.web_get,
+            ],
         )
 
-        while True:
-            self.console.print(Rule(datetime.now().isoformat(sep=" "), style="cyan"))
-            while True:
-                user_input = Prompt.ask(
-                    Text(CONF.ai_shell.input_prompt, style="white on cyan")
+    def _get_model_provider(
+        self, model: Optional[str] = None
+    ) -> Tuple[str, MultiProvider]:
+        provider_name, model_name = (model or CONF.agent.default_provider).split("/")
+
+        if provider_name not in self.providers:
+            raise ValueError(f"Provider '{provider_name}' not found in configuration")
+        if model_name not in self.providers[provider_name].models:
+            raise ValueError(f"model '{model_name}' not found in configuration")
+
+        provider = self.providers[provider_name]
+        return model_name, MultiProvider(
+            openai_base_url=str(provider.base_url),
+            openai_api_key=provider.api_key,
+            openai_use_responses=provider.openai_use_responses,
+        )
+
+    async def stream(
+        self, input: str, model: Optional[str] = None, session_id: Optional[str] = None
+    ):
+        model_name, provider = self._get_model_provider(model=model)
+        resp = Runner.run_streamed(
+            self._get_agent(model=model_name),
+            input,
+            session=self.session_history.get_session(session_id=session_id),
+            max_turns=CONF.agent.max_turns,
+            run_config=RunConfig(model=model, model_provider=provider),
+        )
+        async for event in resp.stream_events():
+            logger.trace("Event: {}", event)
+            yield event
+            if isinstance(event, RawResponsesStreamEvent) and (
+                isinstance(event.data, ResponseCompletedEvent)
+            ):
+                logger.success(
+                    "response completed, output: {}", event.data.response.output
                 )
-                if user_input:
-                    break
-            if user_input in CONF.ai_shell.exit_keys:
-                break
-            await self.run(user_input)
 
     def get_agent_sessions(self):
         """获取会话列表"""
@@ -281,9 +294,6 @@ class ShellAgent:
     async def delete_agent_session(self, session_id: str):
         await self.session_history.delete_agent_session(session_id)
 
-    def clear_session(self, session_id: Optional[str]):
-        session_store = self.session_history.get_session_store(
-            session_id=session_id, last_session=True, raise_if_not_found=True
-        )
-        asyncio.run(session_store.clear_session())
-        return session_store.session_id
+    async def clear_session(self, session_id: Optional[str] = None):
+        session_store = self.session_history.get_session(session_id=session_id)
+        await session_store.clear_session()
