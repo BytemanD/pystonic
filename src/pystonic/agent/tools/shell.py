@@ -8,12 +8,12 @@ from pystonic.shell import Shell
 
 
 class ShellWrapper(Shell):
-    def execute(self, code_block: str):
-        logger.debug("code block: {}", code_block)
+    def execute(self, code: str):
+        logger.debug("code block: {}", code)
         with tempfile.NamedTemporaryFile(
             mode="w", delete=False, suffix=self.driver.SCRIPT_SUFFIX
         ) as file:
-            file.write(code_block)
+            file.write(code)
             file.flush()
             file.close()
             logger.debug("Run file: {}", file.name)

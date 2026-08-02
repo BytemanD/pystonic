@@ -1,11 +1,11 @@
 import os
 import platform
-from enum import Enum
+from enum import StrEnum
 
 from pystonic.shell.drivers import BashDriver, CmdDriver, PowershellDriver
 
 
-class Terminal(str, Enum):
+class Terminal(StrEnum):
     POWERSHELL = "powershell"
     CMD = "cmd"
     BASH = "bash"
@@ -35,4 +35,4 @@ class Shell:
             self.driver = BashDriver()
 
     def execute(self, code: str):
-        self.driver.execute(code)
+        return self.driver.execute(code)

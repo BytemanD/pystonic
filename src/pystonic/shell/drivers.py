@@ -1,6 +1,7 @@
 import abc
 import os
 import platform
+import subprocess
 import tempfile
 from enum import Enum
 
@@ -23,20 +24,22 @@ class ExecuteDriver(abc.ABC):
 
     def execute(self, code_block: str):
         logger.debug("code block: {}", code_block)
+        output = ""
         with tempfile.NamedTemporaryFile(
             mode="w", delete=False, suffix=self.SCRIPT_SUFFIX
         ) as file:
             file.write(code_block)
             file.flush()
             file.close()
+            logger.debug("Run file: {}", file.name)
             try:
-                logger.debug("Run file: {}", file.name)
-                os.system(self.file_command(file.name))
-            except Exception:
+                _, output = subprocess.getstatusoutput(self.file_command(file.name))
+            except subprocess.CalledProcessError as e:
                 logger.exception("Failed to run code block")
             finally:
                 logger.debug("Remove file: {}", file.name)
                 os.remove(file.name)
+        return output
 
     @abc.abstractmethod
     def oneline_command(self, code: str):

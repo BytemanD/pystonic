@@ -40,8 +40,14 @@ def change_dir(path: str):
 
 
 @function_tool
-def read_file(path: Path, encoding: str = "utf-8"):
-    """读取文本文件内容"""
+def read_file(path: Path, encoding: str = "utf-8") -> str:
+    """读取文本文件内容
+    Args:
+        path: 文件路径
+        encoding: 文件编码，默认 utf-8
+    Returns:
+        文件内容
+    """
     if not path.exists():
         raise ValueError(f"path {path} not exists")
     if not path.is_file():
@@ -50,7 +56,15 @@ def read_file(path: Path, encoding: str = "utf-8"):
 
 
 @function_tool
-def write_file(path: Path, content: str, encoding="utf-8"):
-    """创建文本文件, 并写入数据"""
+def write_file(path: Path, content: str, encoding="utf-8") -> Path:
+    """创建文本文件, 并写入数据
+    Args:
+        path: 文件路径
+        content: 文件内容
+        encoding: 文件编码，默认 utf-8
+    Returns:
+        文件路径
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding=encoding)
+    return path

@@ -1,31 +1,25 @@
 import asyncio
-import textwrap
+from typing import List
 
 from agents import (
     AgentUpdatedStreamEvent,
     RunItemStreamEvent,
+    Tool,
     ToolCallItem,
-    ToolOutputText,
-    stream_events,
 )
 import click
 from loguru import logger
 from openai.types.responses import (
     ResponseCreatedEvent,
-    ResponseFailedEvent,
     ResponseInProgressEvent,
     ResponseErrorEvent,
     ResponseOutputItemAddedEvent,
-    ResponseOutputItemDoneEvent,
-    ResponseReasoningSummaryPartAddedEvent,
     ResponseReasoningSummaryTextDeltaEvent,
     ResponseTextDeltaEvent,
-    ResponseReasoningTextDeltaEvent,
 )
-from rich.markdown import Markdown
 
 from pystonic.agent.openai import OpenaiAgent
-from pystonic.log import setup_logger
+from pystonic.agent.tools import common, shell, sqlite, web
 
 
 @click.group("agent")
@@ -35,7 +29,17 @@ def root():
 
 async def _do_chat(intput: str):
     agent = OpenaiAgent("智能助手")
-    async for event in agent.stream(intput):
+    tools: List[Tool] = [
+        common.change_dir,
+        common.list_dir,
+        common.read_file,
+        common.write_file,
+        shell.execute_command,
+        sqlite.connect_db,
+        sqlite.execute_sql,
+        web.web_get,
+    ]
+    async for event in agent.stream(intput, tools=tools):
         if isinstance(event, AgentUpdatedStreamEvent):
             click.secho(f"[切换Agent]: {event.new_agent.name}", fg="black")
             continue
@@ -80,7 +84,6 @@ async def _do_chat(intput: str):
         #             click.secho(textwrap.indent(sumary.text.rstrip(), "> "), fg="blue")
         #     continue
         # else:
-        logger.debug("other event: {}", event)
 
 
 @root.command()

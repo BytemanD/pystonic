@@ -41,11 +41,6 @@ def cpu_count():
 def disk_usage(path: Path):
     return shutil.disk_usage(path)
 
-
-def hostname():
-    return socket.gethostname()
-
-
 def ip_address():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -60,21 +55,19 @@ def ip_address():
 def hostname():
     return socket.gethostname()
 
+
 def get_all_non_loopback_ips():
     """使用 socket 获取所有非回环 IP"""
-    return [
-        ip
-        for ip in socket.gethostbyname_ex(hostname())[2]
-        if ip != '127.0.0.1'
-    ]
+    return [ip for ip in socket.gethostbyname_ex(hostname())[2] if ip != "127.0.0.1"]
 
 
-def get_first_non_loopback_ip(default: Optional[str]=None):
+def get_first_non_loopback_ip(default: Optional[str] = None):
     """使用 socket 获取所有非回环 IP"""
     ips = get_all_non_loopback_ips()
     if not ips and not default:
         raise ValueError("No non-loopback IP found")
     return ips[0] if ips else default
+
 
 def execute(
     cmd,
