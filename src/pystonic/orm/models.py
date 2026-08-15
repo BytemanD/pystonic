@@ -4,11 +4,11 @@ from datetime import datetime
 from sqlalchemy import DateTime, Integer, String, event, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from pystonic.plugins.orm.database import Base
+from pystonic.orm.database import Base
 
 
 def db_session():
-    from pystonic.plugins.orm.database import _SessionLocal
+    from pystonic.orm.database import _SessionLocal
 
     return _SessionLocal()
 
@@ -75,7 +75,7 @@ class DBModel(Base):
         return query
 
     @classmethod
-    def get_by_id(cls, id: str):
+    def get_by_id(cls, id: int):
         items = cls.query(cls).filter(cls.id == id)
         if not items:
             raise ValueError(f"{cls} with uuid {id} not exists")
@@ -110,7 +110,7 @@ class DBModel(Base):
     def update_by_uuid(cls, uuid: str, **kwargs) -> None:
         """根据 id 删除记录"""
         with db_session() as session:
-            session.query(cls).filter(cls.uuid == uuid).update(kwargs)
+            session.query(cls).filter(cls.uuid == uuid).update(**kwargs)
             session.commit()
 
     def _get_updated(self) -> dict:
@@ -119,6 +119,7 @@ class DBModel(Base):
             if field in ["id", "uuid", "create_at", "update_at"]:
                 continue
             updated[field] = getattr(self, field)
+        return updated
 
     def save(self):
         """更新当前实例到数据库，id 不存在则抛出异常"""

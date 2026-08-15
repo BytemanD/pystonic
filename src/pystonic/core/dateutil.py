@@ -1,6 +1,6 @@
 import calendar
 from datetime import datetime, timedelta
-from typing import Tuple
+from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 
@@ -9,7 +9,7 @@ FORMAT_TIME = "%H:%M:%S"
 FORMAT_DATETIME = f"{FORMAT_DATE} {FORMAT_TIME}"
 
 
-def day_range(days_offset=0, date: datetime = None):
+def day_range(days_offset=0, date: Optional[datetime] = None):
     """
     获取指定日期的起止时间范围
 
@@ -42,7 +42,7 @@ def tormorrow():
     return day_range(days_offset=1)
 
 
-def week_range(week_offset: int = 0, date: datetime = None):
+def week_range(week_offset: int = 0, date: Optional[datetime] = None):
     """获取指定周的起止时间范围"""
     if date is None:
         date = datetime.now()
@@ -61,7 +61,7 @@ def lastweek():
     return week_range(-1)
 
 
-def month_range(month_offset: int = 0, date: datetime = None):
+def month_range(month_offset: int = 0, date: Optional[datetime] = None):
     """获取指定周的起止时间范围"""
     if date is None:
         date = datetime.now()
@@ -89,29 +89,3 @@ def lastmonth():
 
 def nextmonth():
     return month_range(1)
-
-
-def parse_date_range(date_range: Tuple[str]) -> Tuple[datetime, datetime]:
-    """Parse date range"""
-    if not date_range:
-        return thisday()
-    if len(date_range) == 1:
-        if date_range[0] in ["today", "thisday"]:
-            return thisday()
-        if date_range[0] == "yesterday":
-            return yestoday()
-        if date_range[0] == "thisweek":
-            return thisweek()
-        if date_range[0] == "lastweek":
-            return lastweek()
-        if date_range[0] == "thismonth":
-            return thismonth()
-        if date_range[0] == "lastmonth":
-            return lastmonth()
-        return datetime.strptime(date_range[0], FORMAT_DATETIME), datetime.now()
-    elif len(date_range) == 2:
-        return datetime.strptime(date_range[0], FORMAT_DATETIME), datetime.strptime(
-            date_range[1], FORMAT_DATETIME
-        )
-
-    raise ValueError("Invalid date range")

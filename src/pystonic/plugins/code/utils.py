@@ -15,7 +15,7 @@ def check_code(
     cover_fail_under=80,
     bandit=False,
 ):
-    soruce_paths = " ".join(source_paths)
+    soruce_paths = " ".join([str(x) for x in source_paths])
     commands = [f"ruff format {soruce_paths}", f"ruff check --fix {soruce_paths}"]
     if test:
         # 检查 pytest 是否安装

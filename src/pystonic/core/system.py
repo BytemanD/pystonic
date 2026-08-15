@@ -41,6 +41,7 @@ def cpu_count():
 def disk_usage(path: Path):
     return shutil.disk_usage(path)
 
+
 def ip_address():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -12,7 +12,7 @@ dependencies = [
     "pluggy>=1.5.0",
     "pydantic-settings[toml]>=2.9.1",
     "python-dateutil>=2.9.0.post0",
-    "sqlmodel>=0.0.38",
+    "setproctitle>=1.3.7",
     "termcolor>=3.3.0",
     "toml>=0.10.2",
 ]
@@ -21,10 +21,8 @@ dependencies = [
 pystonic = "pystonic.cmd.pystonic:main"
 
 [project.optional-dependencies]
-rich = [
+pretty = [
     "rich>=14.3.3",
-]
-prettytable = [
     "prettytable>=3.17.0",
 ]
 gitstats = [
@@ -32,7 +30,7 @@ gitstats = [
     "rich>=14.3.3",
 ]
 orm = [
-    "sqlalchemy>=2.0.49",
+    "sqlmodel>=0.0.38",
 ]
 fastapi = [
     "fastapi>=0.136.3",
@@ -42,10 +40,23 @@ mcp = [
     "nacos-sdk-python==2.0.9",
     "nacos-maintainer-sdk-python==0.1.2"
 ]
-ai = [
-    "chromadb>=1.5.9",
-    "opentelemetry-exporter-otlp-proto-grpc==1.42.1",
-    "opentelemetry-proto==1.42.1",
+# ai = [
+#     "chromadb>=1.5.9",
+#     "opentelemetry-exporter-otlp-proto-grpc==1.42.1",
+#     "opentelemetry-proto==1.42.1",
+# ]
+agent = [
+    "openai>=2.52.0",
+    "openai-agents>=0.18.3",
+]
+# cmd = [
+#     "click>=8.4.2",
+# ]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.15.1",
+    "ruff>=0.15.4",
 ]
 
 [build-system]
@@ -55,20 +66,6 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
 
-[dependency-groups]
-agent = [
-    "openai>=2.52.0",
-    "openai-agents>=0.18.3",
-]
-cmd = [
-    "click>=8.4.2",
-]
-dev = [
-    "pytest>=9.0.2",
-    "pytest-cov>=7.1.0",
-    "pytest-mock>=3.15.1",
-    "ruff>=0.15.4",
-]
 
 [[tool.uv.index]]
 name = "tencent"

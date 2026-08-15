@@ -34,7 +34,7 @@ class ExecuteDriver(abc.ABC):
             logger.debug("Run file: {}", file.name)
             try:
                 _, output = subprocess.getstatusoutput(self.file_command(file.name))
-            except subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError:
                 logger.exception("Failed to run code block")
             finally:
                 logger.debug("Remove file: {}", file.name)

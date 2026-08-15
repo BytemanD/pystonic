@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String
 
 from pystonic.conf import DBConfig
-from pystonic.plugins.orm.database import (
+from pystonic.orm.database import (
     Base,
     create_all_tables,
     get_table_structure,

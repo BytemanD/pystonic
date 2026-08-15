@@ -1,5 +1,6 @@
 import functools
 from typing import List, Optional, Tuple
+import uuid
 
 from agents import (
     Agent,
@@ -16,7 +17,6 @@ from openai.types.responses import (
 )
 
 from pystonic.agent.session import SessionHisotry
-from pystonic.agent.tools import common, shell, sqlite, web
 from pystonic.conf import CONF
 
 # from openai.types.
@@ -44,20 +44,18 @@ class OpenaiAgent:
         instructions: Optional[str] = None,
     ):
         self.name = name
-        self.instructions = instructions
-        self.providers = CONF.agent.providers
-        self.default_provider = CONF.agent.get_provider()
-
         self.shell = Shell()
         self.actions = {}
 
         self.session_history = SessionHisotry()
-
-        # set_default_openai_client(self.openai, use_for_tracing=False)
-        set_tracing_disabled(True)
-        instructions = CONF.agent.system_prompt.strip() + SYSTEM_PROMPT_NOTICE.format(
-            info=self.system_info()
+        self.instructions = instructions or (
+            CONF.agent.system_prompt.strip()
+            + SYSTEM_PROMPT_NOTICE.format(info=self.system_info())
         )
+        self.providers = CONF.agent.providers
+        self.default_provider = CONF.agent.get_provider()
+
+        set_tracing_disabled(CONF.agent.disable_tracing)
         logger.debug("instructions: {}", instructions)
 
     def system_info(self):
@@ -73,6 +71,9 @@ class OpenaiAgent:
             for name, p in self.providers.items()
             for model in p.models
         ]
+
+    def delete_model(self):
+        """delete agent model"""
 
     def _get_agent(self, model: Optional[str] = None, tools: List[Tool] = []) -> Agent:
         if not model:
@@ -111,6 +112,16 @@ class OpenaiAgent:
         session_id: Optional[str] = None,
         tools: List[Tool] = [],
     ):
+        """Stream the agent's response to the input.
+
+        Args:
+            input (str): The input to the agent.
+            model (Optional[str]): The model to use for the agent. e.g. "zipu/glm-4.7-flash".
+            session_id (Optional[str]): The session ID to use for the agent.
+            tools (List[Tool]): A list of tools to use for the agent. If not
+        Return:
+            An async generator that yields events from the agent's response.
+        """
         model_name, provider = self._get_model_provider(model=model)
         resp = Runner.run_streamed(
             self._get_agent(model=model_name, tools=tools),

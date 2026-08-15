@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any, Optional
 
 from loguru import logger
 from pydantic import BaseModel
@@ -21,7 +22,7 @@ class TableColumn(BaseModel):
 
 Base = declarative_base()
 
-_engine: Engine = None
+_engine: Optional[Engine] = None
 _SessionLocal = None
 
 
@@ -32,7 +33,7 @@ def setup(config: DBConfig):
         url = config.url
         is_sqlite = url.startswith("sqlite:")
 
-        kwargs = {"echo": config.echo}
+        kwargs: dict[str, Any] = {"echo": config.echo}
         if not is_sqlite:
             kwargs["pool_size"] = config.pool_size
             kwargs["max_overflow"] = config.max_overflow

@@ -1,3 +1,3 @@
-from pystonic.plugins.gitstats.command import Command
+from pystonic.git.command import Command
 
 __all__ = ["Command"]

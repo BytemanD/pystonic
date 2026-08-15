@@ -13,10 +13,12 @@ from pydantic_settings import (
     TomlConfigSettingsSource,
 )
 
+from pystonic import app_name
+
 
 DEFAULT_CONF_FILE = [
     Path("etc", "app.toml"),
-    Path.home().joinpath(".config", "pystonic", "app.toml"),
+    Path.home().joinpath(".config", app_name(), "app.toml"),
 ]
 DEFAULT_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
@@ -131,7 +133,7 @@ class ProviderConfig(BaseModel):
 
 
 class AgentSessionConfig(BaseModel):
-    store: str = "data"
+    store: Optional[str] = None
 
 
 class AgentConfig(BaseModel):
@@ -154,6 +156,7 @@ class AgentConfig(BaseModel):
             api_key="",
         ),
     }
+    disable_tracing: bool = True
 
     def get_provider(self, model: Optional[str] = None) -> ProviderConfig:
         provider, model_name = (model or self.default_provider).split("/")
@@ -177,6 +180,9 @@ class BaseAppConfig(BaseSettings):
         frozen=True,
         toml_file=os.getenv("CONF_FILE") or DEFAULT_CONF_FILE,
     )
+
+    # global config
+    store: str = 'data'
 
     log: LogConfig = LogConfig()
     db: DBConfig = DBConfig()

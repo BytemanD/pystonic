@@ -30,7 +30,9 @@ class SessionNotFound(Exception):
 
 class SessionHisotry:
     def __init__(self):
-        self.store_file = Path(CONF.agent.session.store).joinpath("session.db")
+        self.store_file = Path(CONF.agent.session.store or CONF.store).joinpath(
+            "session.db"
+        )
         self.load()
 
     def load(self):
@@ -57,15 +59,14 @@ class SessionHisotry:
         cursor = self._query_agent_session(session_id=session_id)
         if not cursor:
             return sessions
-        for item in cursor:
-            sessions.append(
-                AgentSession(
-                    session_id=item["session_id"],
-                    create_at=item["created_at"],
-                    update_at=item["updated_at"],
-                )
+        return [
+            AgentSession(
+                session_id=item["session_id"],
+                create_at=item["created_at"],
+                update_at=item["updated_at"],
             )
-        return sessions
+            for item in cursor
+        ]
 
     def get_last_agent_session(self):
         items = self.get_agent_sessions()

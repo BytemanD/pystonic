@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest.mock import Mock, patch
 from git import Repo, Commit
-from pystonic.plugins.gitstats.utils import (
+from pystonic.git.utils import (
     CommitStats,
     CommitDetail,
     lines,

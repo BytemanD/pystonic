@@ -20,7 +20,7 @@ class CommitDetail(BaseModel):
     author: str = ""
     date: str = ""
     message: str = ""
-    changes: List[str] = []
+    changes: List[str] | str = []
 
     @classmethod
     def from_git_commit(cls, commit: Commit):

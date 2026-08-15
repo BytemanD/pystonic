@@ -30,14 +30,10 @@ class ShellWrapper(Shell):
         return output
 
 
+executor = ShellWrapper()
+
+
 @function_tool
 def execute_command(command: str) -> str:
     """执行 Shell/Bash/Cmd/Powershell 命令"""
-    shell = ShellWrapper()
-    return shell.execute(command)
-
-
-@function_tool
-def get_weather(city: str) -> str:
-    """查询指定城市的天气"""
-    return f"{city}的天气是晴朗的，温度约22°C。"
+    return executor.execute(command)

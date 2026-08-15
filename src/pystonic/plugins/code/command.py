@@ -1,14 +1,15 @@
 import argparse
 import os
+from pathlib import Path
 from typing import List
 
 from pystonic.core.plugin import CommandPlugin, hookimpl
 from pystonic.plugins.code import utils
 
 
-def _get_source_paths():
+def _get_source_paths() -> List[str | Path]:
     """查找python代码所在的目录"""
-    source_paths: List[str] = []
+    source_paths: List[str | Path] = []
     for path in ["src", "tests"]:
         if os.path.exists(path):
             source_paths.append(path)

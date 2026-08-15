@@ -55,7 +55,7 @@ class DataTable(PrettyTable):
         self.start, self.end = 0, len(self.rows)
 
 
-def make_data_table(
+def data_table(
     columns: List[str],
     items: Sequence[BaseModel],
     style: Optional[TableStyle] = None,
