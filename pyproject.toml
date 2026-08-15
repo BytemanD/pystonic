@@ -10,7 +10,7 @@ dependencies = [
     "humanize>=4.15.0",
     "loguru>=0.7.3",
     "pluggy>=1.5.0",
-    "pydantic-settings[toml]==2.9.1",
+    "pydantic-settings[toml]>=2.9.1",
     "python-dateutil>=2.9.0.post0",
     "sqlmodel>=0.0.38",
     "termcolor>=3.3.0",
