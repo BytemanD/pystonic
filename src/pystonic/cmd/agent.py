@@ -25,7 +25,6 @@ from rich.prompt import Prompt
 from rich.text import Text
 from rich.rule import Rule
 
-from pystonic.agent import openai
 from pystonic.agent.openai import OpenaiAgent
 from pystonic.agent.tools import common, shell, sqlite, web
 from pystonic.pretty import output

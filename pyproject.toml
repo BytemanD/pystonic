@@ -27,7 +27,6 @@ pretty = [
 ]
 gitstats = [
     "gitpython>=3.1.46",
-    "rich>=14.3.3",
 ]
 orm = [
     "sqlmodel>=0.0.38",

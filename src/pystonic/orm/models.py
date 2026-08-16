@@ -1,125 +1,110 @@
+from typing import Optional, Set
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, event, func
-from sqlalchemy.orm import Mapped, mapped_column
+from pydantic import PrivateAttr
 
-from pystonic.orm.database import Base
+from pystonic.orm.database import get_session
 
-
-def db_session():
-    from pystonic.orm.database import _SessionLocal
-
-    return _SessionLocal()
+from sqlmodel import Field, SQLModel, delete, select, update
+from sqlalchemy import event
 
 
-class DBModel(Base):
-    __abstract__ = True  # 表示这是一个抽象基类，不会创建单独的表
+class DBModel(SQLModel):
+    __abstract__ = True
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    uuid: Mapped[str] = mapped_column(
-        String(64), nullable=False, unique=True, index=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        server_default=func.now(),  # 数据库默认值（创建时）
-        nullable=False,
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        server_default=func.now(),
-        onupdate=func.now(),  # 更新时自动修改
-        nullable=False,
-    )
+    id: int = Field(default=None, primary_key=True)
+    uuid: str = Field(default=None, nullable=False, unique=True, index=True)
+    created_at: datetime = Field(default_factory=datetime.now, nullable=True)
+    updated_at: datetime = Field(default_factory=datetime.now, nullable=True)
 
-    # 非 DB 属性：存储加载时的原始值
-    _changes: dict = {}
+    # 非 DB 属性：存储变化的值
+    _modified_fields: Set[str] = PrivateAttr(default_factory=set)
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, field: str, value):
         """支持 dict-like 访问"""
-        if name not in self.__table__.columns.keys():
-            object.__setattr__(self, name, value)
-        if getattr(self, name) != value:
-            self._changes[name] = value
-        object.__setattr__(self, name, value)
+        super().__setattr__(field, value)
+        if field in self.__class__.model_fields:
+            if not self.__pydantic_private__:
+                self.__pydantic_private__ = {}
+                self.__pydantic_private__["_modified_fields"] = set([])
+            self._modified_fields.add(field)
 
     def _get_changes(self) -> dict:
         """返回字段名到 (原值, 新值) 的映射"""
         return {
-            k: v
-            for k, v in self._changes.items()
-            if k not in ["id", "uuid", "created_at", "updated_at"] and hasattr(self, k)
+            x: getattr(self, x)
+            for x in self._modified_fields
+            if x not in ["id", "uuid", "created_at", "updated_at"] and hasattr(self, x)
         }
-
-    @classmethod
-    def delete_all(cls, *criterion, **filters):
-        """删除所有符合条件的数据"""
-        with db_session() as session:
-            query = session.query(cls)
-            if criterion:
-                query = query.filter(*criterion)
-            elif filters:
-                query = query.filter_by(**filters)
-            query.delete()
-            session.commit()
 
     @classmethod
     def query(cls, *criterion, **filters):
         """返回一个 QueryBuilder 用于链式查询"""
-        with db_session() as session:
-            query = session.query(cls)
-            if criterion:
-                query = query.filter(*criterion)
-            elif filters:
-                query = query.filter_by(**filters)
-        return query
+        stm = select(cls).where(*criterion).filter_by(**filters)
+        with get_session() as session:
+            query = session.exec(stm)
+            return query.all()
 
     @classmethod
-    def get_by_id(cls, id: int):
-        items = cls.query(cls).filter(cls.id == id)
+    def get_by_id(cls, id: int, raise_if_not_exists: bool = False):
+        items = cls.query(cls.id == id)
         if not items:
-            raise ValueError(f"{cls} with uuid {id} not exists")
+            if raise_if_not_exists:
+                raise ValueError(f"{cls} with uuid {id} not exists")
+            else:
+                return None
         return items[0]
 
     @classmethod
+    def delete_all(cls, *criterion, **filters):
+        """删除所有符合条件的数据"""
+        stm = delete(cls).where(*criterion)
+        if filters:
+            stm = stm.where(
+                *[
+                    getattr(cls, field_name) == value
+                    for field_name, value in filters.items()
+                ]
+            )
+        with get_session() as session:
+            session.exec(stm)
+            session.commit()
+
+    @classmethod
     def get_by_uuid(cls, uuid: str):
-        items = cls.query(cls).filter(cls.uuid == uuid)
+        items = cls.query(cls.uuid == uuid)
         if not items:
             raise ValueError(f"{cls} with uuid {uuid} not exists")
         return items[0]
 
     @classmethod
-    def delete_by_id(cls, id: int, ignore_not_exists=False) -> None:
+    def delete_by_id(cls, id: int, raise_if_not_exists=False) -> None:
         """根据 id 删除记录"""
-        if not ignore_not_exists:
-            cls.get_by_id(id)
-        with db_session() as session:
-            session.query(cls).filter(cls.id == id).delete()
+        stm = delete(cls).where(cls.id == id)  # type: ignore
+        with get_session() as session:
+            deleted_count = session.exec(stm)
+            if not deleted_count and raise_if_not_exists:
+                raise ValueError(f"id {id} not exists")
             session.commit()
 
     @classmethod
-    def delete_by_uuid(cls, uuid: str, ignore_not_exists=False) -> None:
+    def delete_by_uuid(cls, uuid: str, raise_if_not_exists=False) -> None:
         """根据 id 删除记录"""
-        if not ignore_not_exists:
-            cls.get_by_uuid(uuid)
-        with db_session() as session:
-            session.query(cls).filter(cls.uuid == uuid).delete()
+        stm = delete(cls).where(cls.uuid == uuid)  # type: ignore
+        with get_session() as session:
+            delete_count = session.exec(stm)
+            if not delete_count and raise_if_not_exists:
+                raise ValueError(f"id {id} not exists")
             session.commit()
 
     @classmethod
     def update_by_uuid(cls, uuid: str, **kwargs) -> None:
         """根据 id 删除记录"""
-        with db_session() as session:
-            session.query(cls).filter(cls.uuid == uuid).update(**kwargs)
+        stm = update(cls).where(cls.uuid == uuid).values(**kwargs)  # type: ignore
+        with get_session() as session:
+            session.exec(stm)
             session.commit()
-
-    def _get_updated(self) -> dict:
-        updated = {}
-        for field in self.__table__.columns.keys():
-            if field in ["id", "uuid", "create_at", "update_at"]:
-                continue
-            updated[field] = getattr(self, field)
-        return updated
 
     def save(self):
         """更新当前实例到数据库，id 不存在则抛出异常"""
@@ -128,22 +113,28 @@ class DBModel(Base):
         changes = self._get_changes()
         if not changes:
             return
-        with db_session() as session:
-            session.query(self.__class__).filter_by(id=self.id).update(changes)
+        stm = (
+            update(self.__class__).where(self.__class__.id == self.id).values(**changes) # type: ignore
+        )
+        with get_session() as session:
+            session.exec(stm)
             session.commit()
+        self._modified_fields.clear()
 
     def create(self):
         """创建新记录到数据库, id 已存在则抛出异常"""
         if self.id is not None or self.uuid is not None:
             raise ValueError(f"{self.__class__} is already created")
         # self.uuid = generate_uuid()
-        with db_session() as session:
+        with get_session() as session:
             session.add(self)
             session.commit()
             session.refresh(self)
 
     def delete(self):
         """删除当前实例"""
+        if not self.id:
+            raise ValueError("object not created")
         self.delete_by_id(self.id)
 
 

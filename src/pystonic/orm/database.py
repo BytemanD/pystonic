@@ -1,12 +1,12 @@
+import contextlib
 from pathlib import Path
-from typing import Any, Optional
 
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import Engine, create_engine, inspect, text
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlmodel import SQLModel, Session
 
-from pystonic.conf import DBConfig
+from pystonic.conf import CONF
 
 
 class TableColumn(BaseModel):
@@ -20,39 +20,22 @@ class TableColumn(BaseModel):
     unique: bool = False
 
 
-Base = declarative_base()
+_engine: Engine = create_engine(
+    CONF.db.url,
+    pool_size=CONF.db.pool_size,
+    pool_recycle=CONF.db.pool_recycle,
+    pool_timeout=CONF.db.pool_timeout,
+    max_overflow=CONF.db.max_overflow,
+    echo=CONF.db.echo,
+)
 
-_engine: Optional[Engine] = None
-_SessionLocal = None
 
-
-def setup(config: DBConfig):
-    global _engine, _SessionLocal
-
-    if _engine is None:
-        url = config.url
-        is_sqlite = url.startswith("sqlite:")
-
-        kwargs: dict[str, Any] = {"echo": config.echo}
-        if not is_sqlite:
-            kwargs["pool_size"] = config.pool_size
-            kwargs["max_overflow"] = config.max_overflow
-            kwargs["pool_timeout"] = config.pool_timeout
-            kwargs["pool_recycle"] = config.pool_recycle
-
-        _engine = create_engine(url, **kwargs)
-
-    if _SessionLocal is None:
-        _SessionLocal = sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            bind=_engine,
-        )
-
+@contextlib.contextmanager
+def get_session():
+    with Session(_engine) as session:
+        yield session
 
 def create_all_tables():
-    assert _engine is not None
-
     if _engine.dialect.name == "sqlite":
         db_path = _engine.url.database
         if db_path and db_path != ":memory:":
@@ -62,7 +45,7 @@ def create_all_tables():
                 logger.info(f"Ensured SQLite database directory exists: {db_dir}")
 
     logger.info("Creating all tables...")
-    Base.metadata.create_all(bind=_engine)
+    SQLModel.metadata.create_all(bind=_engine)
     logger.success("All tables created successfully.")
 
 
@@ -82,10 +65,11 @@ def get_all_databases() -> list[str]:
                 text("SELECT datname FROM pg_database WHERE datistemplate = false")
             )
             return [row[0] for row in result]
-    else:
-        raise NotImplementedError(
-            f"Listing databases is not implemented for dialect: {dialect_name}"
-        )
+
+
+    raise NotImplementedError(
+        f"Listing databases is not implemented for dialect: {dialect_name}"
+    )
 
 
 def get_all_tables() -> list[str]:
