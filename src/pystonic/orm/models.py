@@ -1,4 +1,4 @@
-from typing import Optional, Set
+from typing import Set
 import uuid
 from datetime import datetime
 
@@ -114,7 +114,7 @@ class DBModel(SQLModel):
         if not changes:
             return
         stm = (
-            update(self.__class__).where(self.__class__.id == self.id).values(**changes) # type: ignore
+            update(self.__class__).where(self.__class__.id == self.id).values(**changes)  # type: ignore
         )
         with get_session() as session:
             session.exec(stm)

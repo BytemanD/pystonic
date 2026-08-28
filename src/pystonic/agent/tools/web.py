@@ -4,7 +4,7 @@ from urllib.parse import parse_qs
 from agents import function_tool
 
 from pystonic.conf import CONF
-from pystonic.core import httpclient
+from pystonic.utils import httpclient
 
 WEB_SEARCH = httpclient.default_client(
     raise_for_status=True,

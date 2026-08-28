@@ -53,16 +53,18 @@ def list_sesions():
     sessions = get_agent().get_agent_sessions()
     output.print_models(sessions)
 
+
 @session.command("delete")
 @click.argument("sessions", required=False, nargs=-1)
 def delete_session(sessions: List[str]):
     """List agent sessions."""
     if not sessions:
-        raise click.ClickException('session is required')
+        raise click.ClickException("session is required")
 
     for x in sessions:
         asyncio.run(get_agent().delete_agent_session(x))
-        click.secho(f'delete {x} success', fg="green")
+        click.secho(f"delete {x} success", fg="green")
+
 
 @root.group()
 def model():
@@ -75,6 +77,7 @@ def list_models():
     """List models."""
     for m in get_agent().list_models():
         click.echo(m)
+
 
 async def _do_chat(
     intput: str, session_id: Optional[str] = None, model: Optional[str] = None

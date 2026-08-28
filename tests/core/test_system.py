@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from pystonic.core.system import (
+from pystonic.utils.system import (
     cpu_count,
     disk_usage,
     dot_config,
@@ -202,7 +202,7 @@ def test_ip_address_fallback():
     """测试获取 IP 地址失败时使用备用方法"""
     with patch("socket.socket") as mock_socket_class:
         with patch("socket.gethostbyname") as mock_gethostbyname:
-            with patch("pystonic.core.system.hostname") as mock_hostname:
+            with patch("pystonic.utils.system.hostname") as mock_hostname:
                 # 模拟 socket 连接失败
                 mock_socket_class.side_effect = Exception("Connection failed")
 

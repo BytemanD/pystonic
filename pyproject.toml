@@ -39,11 +39,10 @@ mcp = [
     "nacos-sdk-python==2.0.9",
     "nacos-maintainer-sdk-python==0.1.2"
 ]
-# ai = [
-#     "chromadb>=1.5.9",
-#     "opentelemetry-exporter-otlp-proto-grpc==1.42.1",
-#     "opentelemetry-proto==1.42.1",
-# ]
+asgi = [
+    "fastapi>=0.141.1",
+    "uvicorn>=0.52.1",
+]
 agent = [
     "openai>=2.52.0",
     "openai-agents>=0.18.3",
@@ -80,3 +79,8 @@ explicit = true
 [tool.pytest]
 minversion = "9.0"
 addopts = ["-ra"]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.4",
+]

@@ -4,7 +4,7 @@ from typing import List, Optional
 from git import Commit, Repo
 from pydantic import BaseModel
 
-from pystonic.core import dateutil
+from pystonic.utils import dateutil
 
 
 class CommitStats(BaseModel):

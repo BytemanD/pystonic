@@ -1,5 +1,5 @@
 import pytest
-from pystonic.core.strutil import str2bool, is_valid_ip, IPVersion
+from pystonic.utils.strutil import str2bool, is_valid_ip, IPVersion
 
 
 def test_str2bool_true_values():

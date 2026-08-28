@@ -2,7 +2,7 @@ from fastmcp.server import create_proxy
 from loguru import logger
 
 from pystonic.conf import McpConfig
-from pystonic.core.system import get_first_non_loopback_ip
+from pystonic.utils.system import get_first_non_loopback_ip
 from pystonic.mcp.nacos_manager import NacosMcpManager
 
 TRANSPORT_MAP = {

@@ -1,4 +1,4 @@
-from pystonic.core.pkg import is_package_installed
+from pystonic.utils.pkg import is_package_installed
 
 
 def test_is_package_installed_with_existing_package():

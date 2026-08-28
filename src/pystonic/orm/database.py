@@ -35,6 +35,7 @@ def get_session():
     with Session(_engine) as session:
         yield session
 
+
 def create_all_tables():
     if _engine.dialect.name == "sqlite":
         db_path = _engine.url.database
@@ -65,7 +66,6 @@ def get_all_databases() -> list[str]:
                 text("SELECT datname FROM pg_database WHERE datistemplate = false")
             )
             return [row[0] for row in result]
-
 
     raise NotImplementedError(
         f"Listing databases is not implemented for dialect: {dialect_name}"

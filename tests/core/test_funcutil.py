@@ -1,7 +1,7 @@
 import re
 import time
 from unittest.mock import patch
-from pystonic.core.funcutil import timeit
+from pystonic.utils.funcutil import timeit
 
 
 @timeit
@@ -13,7 +13,7 @@ def _sample_add(x, y):
 
 def test_timeit_decorator():
     """验证 timeit 装饰器功能：返回值正确且记录执行时间日志"""
-    with patch("pystonic.core.funcutil.logger.info") as mock_logger:
+    with patch("pystonic.utils.funcutil.logger.info") as mock_logger:
         # 记录实际开始时间
         actual_start = time.perf_counter()
 

@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from pystonic.core.input import get_input_number, select_items
+from pystonic.utils.input import get_input_number, select_items
 
 
 def test_get_input_number_valid_input():
@@ -128,7 +128,7 @@ def test_select_items_success():
     items = ["选项 A", "选项 B", "选项 C"]
 
     with patch("builtins.input", return_value="2"):
-        with patch("pystonic.core.input.cprint") as mock_cprint:
+        with patch("pystonic.utils.input.cprint") as mock_cprint:
             result = select_items(items)
             assert result == "选项 B"
 
@@ -151,7 +151,7 @@ def test_select_items_custom_prompts():
     items = ["Item 1", "Item 2"]
 
     with patch("builtins.input", return_value="1"):
-        with patch("pystonic.core.input.cprint") as mock_cprint:
+        with patch("pystonic.utils.input.cprint") as mock_cprint:
             result = select_items(
                 items, select_prompt="请做出选择", input_prompt="请输入你的选择"
             )

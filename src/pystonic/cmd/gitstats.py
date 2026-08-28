@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Column
 from rich.text import Text
 
-from pystonic.core import dateutil
+from pystonic.utils import dateutil
 from pystonic.pretty import output
 
 from pystonic.git import utils

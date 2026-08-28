@@ -1,6 +1,5 @@
 import functools
 from typing import List, Optional, Tuple
-import uuid
 
 from agents import (
     Agent,

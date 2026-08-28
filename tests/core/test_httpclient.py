@@ -3,7 +3,7 @@ import threading
 import httpx
 import pytest
 
-from pystonic.core import httpclient
+from pystonic.utils import httpclient
 
 
 def start_http_server():

@@ -34,7 +34,7 @@ class FrozenModel(BaseModel):
 class LogConfig(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"] = "WARNING"
+    level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     file: Optional[str] = None
     format: str = DEFAULT_FORMAT
     colorize: Optional[bool] = None
@@ -84,6 +84,18 @@ class DBConfig(BaseModel):
             file = Path(db_url.replace("sqlite:///", ""))
             file.parent.mkdir(parents=True, exist_ok=True)
         return db_url
+
+
+class AsgiConfig(BaseModel):
+    name: str = "Pystonic ASGI"
+    summary: str = ""
+    description: str = ""
+    version: str = "0.1.0"
+
+    docs_url: str = "/docs"
+    redoc_url: str = "/redoc"
+    openapi_prefix: str = ""
+    openapi_url: str = "/openai.json"
 
 
 class NacosConfig(BaseModel):
@@ -182,12 +194,12 @@ class BaseAppConfig(BaseSettings):
     )
 
     # global config
-    store: str = 'data'
+    store: str = "data"
 
     log: LogConfig = LogConfig()
     db: DBConfig = DBConfig()
     http_client: HTTPClientConfig = HTTPClientConfig()
-
+    asgi: AsgiConfig = AsgiConfig()
     mcp: McpConfig = McpConfig()
     agent: AgentConfig = AgentConfig()
 
