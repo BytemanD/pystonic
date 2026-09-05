@@ -54,7 +54,7 @@ class HTTPClientConfig(BaseModel):
 
 
 class DBConfig(BaseModel):
-    # connection: str = "mysql+pymysql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}?charset={self.charset}"
+    # connection: str = "mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset={charset}"
     connection: str = "sqlite:///data/develop.db"
     host: str = "localhost"
     port: int = 3306
