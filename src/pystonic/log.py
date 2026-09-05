@@ -11,6 +11,12 @@ from pystonic.conf import CONF
 VERBOSE_LEVELS = ["WARNING", "INFO", "DEBUG", "TRACE"]
 
 
+class InterceptHandler(logging.Handler):
+    def emit(self, record: logging.LogRecord) -> None:
+        logger_opt = logger.opt(depth=6, exception=record.exc_info)
+        logger_opt.log(record.levelname, record.getMessage())
+
+
 def setup_logger(remove: bool = False):
     """Setup logging configuration."""
     if remove:
@@ -22,6 +28,7 @@ def setup_logger(remove: bool = False):
         level=VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, versbose)],
         format=CONF.log.format,
         colorize=True,
+        enqueue=CONF.log.enqueue,
     )
     if CONF.log.file:
         Path(CONF.log.file).parent.mkdir(parents=True, exist_ok=True)
@@ -34,6 +41,7 @@ def setup_logger(remove: bool = False):
             retention=CONF.log.retention,
             compression=CONF.log.compression,
             encoding=CONF.log.encoding,
+            enqueue=CONF.log.enqueue,
         )
 
     def _context_patcher(record):
@@ -45,6 +53,10 @@ def setup_logger(remove: bool = False):
         extra={"context": "-"},
         patcher=_context_patcher,
     )
+    if CONF.log.intercept_logging:
+        logging.basicConfig(
+            handlers=[InterceptHandler()], level=logging.INFO, force=True
+        )
 
 
 def setup_logging():

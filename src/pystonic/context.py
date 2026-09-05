@@ -1,4 +1,5 @@
 import contextvars
+import uuid
 from typing import Any, Dict
 
 _context_vars: Dict[str, contextvars.ContextVar] = {}
@@ -23,5 +24,5 @@ def getvar(key: str, default=None) -> Any:
     return _context_vars[key].get(default)
 
 
-def set_trace(value: str):
-    setvars(trace=value)
+def set_trace(value: str | None = None):
+    setvars(trace=value or f"trace-{uuid.uuid4()}")

@@ -5,7 +5,7 @@ from urllib.parse import quote_plus
 
 import toml
 from loguru import logger
-from pydantic import BaseModel, ConfigDict, HttpUrl, SecretStr
+from pydantic import BaseModel, HttpUrl, SecretStr
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -14,7 +14,6 @@ from pydantic_settings import (
 )
 
 from pystonic import app_name
-
 
 DEFAULT_CONF_FILE = [
     Path("etc", "app.toml"),
@@ -27,13 +26,7 @@ DEFAULT_FORMAT = (
 )
 
 
-class FrozenModel(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-
 class LogConfig(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
     level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
     file: Optional[str] = None
     format: str = DEFAULT_FORMAT
@@ -43,11 +36,11 @@ class LogConfig(BaseModel):
     retention: str = "30 days"
     compression: str = "zip"
     custom_extra: List[str] = []
+    enqueue: bool = True
+    intercept_logging: bool = True
 
 
 class HTTPClientConfig(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
     log_response_detail: bool = True
     timeout: int = 60
     retries: int = 0
@@ -55,7 +48,7 @@ class HTTPClientConfig(BaseModel):
 
 class DBConfig(BaseModel):
     # connection: str = "mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset={charset}"
-    connection: str = "sqlite:///data/develop.db"
+    connection: str = "sqlite://./data/develop.db"
     host: str = "localhost"
     port: int = 3306
     user: str = "root"
@@ -80,10 +73,13 @@ class DBConfig(BaseModel):
             database=self.database,
             charset=self.charset,
         )
-        if db_url.startswith("sqlite:"):
-            file = Path(db_url.replace("sqlite:///", ""))
+        if self.is_sqlite():
+            file = Path(db_url.replace("sqlite://", ""))
             file.parent.mkdir(parents=True, exist_ok=True)
         return db_url
+
+    def is_sqlite(self):
+        return self.connection.startswith("sqlite:")
 
 
 class AsgiConfig(BaseModel):
@@ -181,6 +177,25 @@ class AgentConfig(BaseModel):
         return self.providers[provider]
 
 
+class HueyConfig(BaseModel):
+    name: str = "huey app"
+    storage: Literal["db"] = "db"
+    database: str | None = None
+    workers: int = 1
+    periodic: bool = (True,)
+    backoff: float = 1.15
+    max_delay: float = 10
+    scheduler_interval: int = 1
+    # initial_delay: float = 0.1
+    # worker_type: str = WORKER_THREAD
+    # check_worker_health: bool = True
+    # health_check_interval: int = 10
+    # flush_locks: bool = False
+    # max_tasks: int = None
+    # shutdown_timeout: int | None = None
+    # graceful_signal: str = "INT"
+
+
 class BaseAppConfig(BaseSettings):
     """Base App Configuration"""
 
@@ -202,6 +217,8 @@ class BaseAppConfig(BaseSettings):
     asgi: AsgiConfig = AsgiConfig()
     mcp: McpConfig = McpConfig()
     agent: AgentConfig = AgentConfig()
+
+    huey: HueyConfig = HueyConfig()
 
     @classmethod
     def settings_customise_sources(
