@@ -23,4 +23,5 @@ async def run_task(task_name: str, body: dict):
     if not hasattr(tasks, task_name):
         raise HTTPException(status_code=400, detail=f"invalid task: {task_name}")
     getattr(tasks, task_name)(**body)
+    tasks.sync_source.schedule(args=(body.get("source_id"),), delay=1)
     return JSONResponse(status_code=201, content={"msg": "task commited"})
