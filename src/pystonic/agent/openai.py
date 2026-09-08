@@ -16,7 +16,7 @@ from openai.types.responses import (
 )
 
 from pystonic.agent.session import SessionHisotry
-from pystonic.conf import CONF
+from pystonic.common.conf import CONF
 
 # from openai.types.
 from pystonic.shell import Shell

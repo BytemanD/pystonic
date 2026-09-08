@@ -18,7 +18,7 @@ from maintainer.common.ai_maintainer_client_config_builder import (
 )
 from v2.nacos import ClientConfigBuilder, NacosNamingService, RegisterInstanceParam
 
-from pystonic.conf import NacosConfig
+from pystonic.common.conf import NacosConfig
 
 TRANSPORT_MAP = {
     "stdio": "stdio",

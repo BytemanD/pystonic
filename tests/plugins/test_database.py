@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 
-from pystonic.conf import DBConfig
+from pystonic.common.conf import DBConfig
 from pystonic.orm.database import (
     Base,
     create_all_tables,

@@ -5,8 +5,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from pystonic import context
-from pystonic.conf import CONF
+from pystonic.common import context
+from pystonic.common.conf import CONF
 
 VERBOSE_LEVELS = ["WARNING", "INFO", "DEBUG", "TRACE"]
 

@@ -1,6 +1,7 @@
 import contextvars
+import functools
 import uuid
-from typing import Any, Dict
+from typing import Any, Callable, Dict
 
 _context_vars: Dict[str, contextvars.ContextVar] = {}
 
@@ -26,3 +27,20 @@ def getvar(key: str, default=None) -> Any:
 
 def set_trace(value: str | None = None):
     setvars(trace=value or f"trace-{uuid.uuid4()}")
+
+
+def set_account(account: str):
+    setvars(account=account)
+
+
+def with_trace_id(func: Callable):
+
+    @functools.wraps(func)
+    def _wrapper(*args, **kwargs):
+        set_trace()
+        return func(*args, **kwargs)
+
+    return _wrapper
+
+
+# CTX = contextvars.ContextVar[dict] = contextvars.ContextVar("CTX", default={})

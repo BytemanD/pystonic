@@ -9,7 +9,7 @@ from agents import SQLiteSession
 from loguru import logger
 from pydantic import BaseModel
 
-from pystonic.conf import CONF
+from pystonic.common.conf import CONF
 
 
 class MessageRole(str, Enum):

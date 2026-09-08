@@ -48,7 +48,7 @@ class HTTPClientConfig(BaseModel):
 
 class DBConfig(BaseModel):
     # connection: str = "mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset={charset}"
-    connection: str = "sqlite://./data/develop.db"
+    connection: str = "sqlite:///./data/develop.db"
     host: str = "localhost"
     port: int = 3306
     user: str = "root"
@@ -92,6 +92,12 @@ class AsgiConfig(BaseModel):
     redoc_url: str = "/redoc"
     openapi_prefix: str = ""
     openapi_url: str = "/openai.json"
+
+
+class JWTConfig(BaseModel):
+    key: str = "your-secret-for"
+    expired: int = 3600
+    algorithms: list[str] = ["HS256"]
 
 
 class NacosConfig(BaseModel):
@@ -182,7 +188,7 @@ class HueyConfig(BaseModel):
     storage: Literal["db"] = "db"
     database: str | None = None
     workers: int = 1
-    periodic: bool = (True,)
+    periodic: bool = True
     backoff: float = 1.15
     max_delay: float = 10
     scheduler_interval: int = 1
@@ -194,6 +200,10 @@ class HueyConfig(BaseModel):
     # max_tasks: int = None
     # shutdown_timeout: int | None = None
     # graceful_signal: str = "INT"
+
+
+class TaskWrokerConfig(BaseModel):
+    max_workers: int = 10
 
 
 class BaseAppConfig(BaseSettings):
@@ -215,10 +225,12 @@ class BaseAppConfig(BaseSettings):
     db: DBConfig = DBConfig()
     http_client: HTTPClientConfig = HTTPClientConfig()
     asgi: AsgiConfig = AsgiConfig()
+    jwt: JWTConfig = JWTConfig()
     mcp: McpConfig = McpConfig()
     agent: AgentConfig = AgentConfig()
 
     huey: HueyConfig = HueyConfig()
+    task_worker: TaskWrokerConfig = TaskWrokerConfig()
 
     @classmethod
     def settings_customise_sources(

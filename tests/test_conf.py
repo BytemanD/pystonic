@@ -6,8 +6,8 @@ import toml
 from pydantic_core import ValidationError
 from pytest_mock import MockerFixture
 
-from pystonic import conf
-from pystonic.conf import BaseAppConfig, FrozenModel
+from pystonic.common import conf
+from pystonic.common.conf import BaseAppConfig, FrozenModel
 from pystonic.log import LogConfig
 
 

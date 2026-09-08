@@ -4,11 +4,17 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-from pystonic.conf import CONF
+from pystonic.common.conf import CONF
+
+
+async def default_livez_handler():
+    return {}
 
 
 def create_app(
     lifespan: Callable | None = None,
+    livez_handler: Callable | None = None,
+    livez_router: str = "/livez",
 ):
     app = FastAPI(
         title=CONF.asgi.name,
@@ -20,6 +26,8 @@ def create_app(
         openapi_url=CONF.asgi.openapi_url,
         lifespan=lifespan,
     )
+
+    app.get(livez_router)(livez_handler or default_livez_handler)
 
     @app.exception_handler(Exception)
     async def exception_handler(request: Request, exc: Exception):

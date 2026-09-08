@@ -3,7 +3,7 @@ from urllib.parse import parse_qs
 
 from agents import function_tool
 
-from pystonic.conf import CONF
+from pystonic.common.conf import CONF
 from pystonic.utils import httpclient
 
 WEB_SEARCH = httpclient.default_client(

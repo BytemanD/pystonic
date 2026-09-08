@@ -3,7 +3,7 @@ from pathlib import Path
 from huey import SqliteHuey
 from huey.contrib.sql_huey import SqlHuey
 
-from pystonic.conf import CONF
+from pystonic.common.conf import CONF
 from pystonic.task_scheduler.huey.storage import SqlStorageWithTablePrefix
 
 

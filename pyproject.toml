@@ -38,7 +38,7 @@ fastapi = [
 mcp = [
     "fastmcp==3.4.2",
     "nacos-sdk-python==2.0.9",
-    "nacos-maintainer-sdk-python==0.1.2"
+    "nacos-maintainer-sdk-python==0.1.2",
 ]
 asgi = [
     "fastapi>=0.141.1",
@@ -61,6 +61,9 @@ dev = [
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.15.1",
     "ruff>=0.15.4",
+]
+apscheduler = [
+    "apscheduler>=3.11.3",
 ]
 
 [build-system]

@@ -1,6 +1,6 @@
 import pytest
 
-from pystonic import conf
+from pystonic.common import conf
 
 
 @pytest.fixture(scope="session", autouse=True)

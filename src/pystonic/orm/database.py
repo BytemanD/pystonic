@@ -4,9 +4,10 @@ from pathlib import Path
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import Engine, create_engine, inspect, text
-from sqlmodel import SQLModel, Session
+from sqlmodel import Session, SQLModel
 
-from pystonic.conf import CONF
+from pystonic.common.conf import CONF
+from pystonic.common.exceptions import GetDBLockTimeout
 
 
 class TableColumn(BaseModel):
@@ -117,3 +118,15 @@ def get_table_structure(table_name: str) -> list[TableColumn]:
         )
         for col in columns
     ]
+
+
+@contextlib.contextmanager
+def db_lock(name, timeout: int = 2):
+    with get_session() as session:
+        logger.debug("get lock: {}", name)
+        result = session.exec(text(f"SELECT GET_LOCK('{name}', {timeout});")).first()
+        if not result or result[0] != 1:
+            logger.debug("get lock: {} timeout", name)
+            raise GetDBLockTimeout(name)
+        logger.debug("get lock: {} success", name)
+        yield
