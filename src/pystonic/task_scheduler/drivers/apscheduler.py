@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime
 from typing import Callable
 
 from apscheduler.events import (
@@ -16,6 +15,7 @@ from loguru import logger
 from pystonic.common.conf import CONF
 from pystonic.common.exceptions import GetDBLockTimeout
 from pystonic.orm import database
+from pystonic.utils.dateutil import utcnow
 
 
 class DistributedThreadPoolExecutor(ThreadPoolExecutor):
@@ -111,7 +111,7 @@ class APSchedulerDriver:
             kwargs=kwargs,
             id=id or uuid.uuid4().hex,
             name=name,
-            run_date=datetime.now() + timedelta(seconds=5),
+            run_date=utcnow() + timedelta(seconds=5),
             max_instances=1,
             coalesce=True,
             replace_existing=True,

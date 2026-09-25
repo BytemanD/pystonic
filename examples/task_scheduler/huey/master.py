@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
-from pystonic.log import setup_logger
+from pystonic.common.log import setup_logger
 
 from . import tasks
 

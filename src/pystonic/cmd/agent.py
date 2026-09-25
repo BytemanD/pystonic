@@ -1,33 +1,33 @@
 import asyncio
-from datetime import datetime
-from typing import List, Optional
 import uuid
+from typing import List, Optional
 
+import click
 from agents import (
     AgentUpdatedStreamEvent,
     RunItemStreamEvent,
     Tool,
     ToolCallItem,
 )
-import click
 from loguru import logger
 from openai import APIConnectionError
 from openai.types.responses import (
     ResponseCreatedEvent,
-    ResponseInProgressEvent,
     ResponseErrorEvent,
+    ResponseInProgressEvent,
     ResponseOutputItemAddedEvent,
     ResponseReasoningSummaryTextDeltaEvent,
     ResponseTextDeltaEvent,
 )
 from rich.console import Console
 from rich.prompt import Prompt
-from rich.text import Text
 from rich.rule import Rule
+from rich.text import Text
 
 from pystonic.agent.openai import OpenaiAgent
 from pystonic.agent.tools import common, shell, sqlite, web
 from pystonic.pretty import output
+from pystonic.utils.dateutil import utcnow
 
 console = Console()
 
@@ -155,7 +155,7 @@ def chat(session: Optional[str] = None, model: Optional[str] = None):
     """交互模式"""
     session = session or uuid.uuid4().hex
     while True:
-        console.print(Rule(datetime.now().isoformat(sep=" "), style="cyan"))
+        console.print(Rule(utcnow().isoformat(sep=" "), style="cyan"))
         while True:
             user_input = Prompt.ask(Text("请输入您的意图", style="white on cyan"))
             if user_input:

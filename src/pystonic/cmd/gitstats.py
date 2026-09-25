@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Tuple
 
-
 import click
 from pydantic import BaseModel, ConfigDict
 from rich import box
@@ -9,10 +8,9 @@ from rich.console import Console
 from rich.table import Column
 from rich.text import Text
 
-from pystonic.utils import dateutil
-from pystonic.pretty import output
-
 from pystonic.git import utils
+from pystonic.pretty import output
+from pystonic.utils import dateutil
 
 
 def parse_date_range(since: str, until: Optional[str]) -> Tuple[datetime, datetime]:
@@ -30,7 +28,7 @@ def parse_date_range(since: str, until: Optional[str]) -> Tuple[datetime, dateti
             return dateutil.thismonth()
         if since == "lastmonth":
             return dateutil.lastmonth()
-        return datetime.strptime(since, dateutil.FORMAT_DATETIME), datetime.now()
+        return datetime.strptime(since, dateutil.FORMAT_DATETIME), dateutil.utcnow()
 
     return datetime.strptime(since, dateutil.FORMAT_DATETIME), datetime.strptime(
         until, dateutil.FORMAT_DATETIME

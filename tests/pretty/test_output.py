@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from rich.table import Column, Table
 
 from pystonic.pretty.output import print_model, print_models
+from pystonic.utils.dateutil import utcnow
 
 
 class Foo(BaseModel):
@@ -16,7 +17,7 @@ class Foo(BaseModel):
 
 @patch("rich.console.Console.print")
 def test_print_model(mock_console_print: Mock):
-    now = datetime.now()
+    now = utcnow()
     model = Foo(name="John", age=30, is_active=True, created_at=now)
     print_model(model)
 
@@ -44,9 +45,11 @@ def test_print_model(mock_console_print: Mock):
 
 @patch("rich.console.Console.print")
 def test_print_models(mock_console_print: Mock):
+    def utcnow(): ...
+
     models = [
-        Foo(name="John", age=30, is_active=True, created_at=datetime.now()),
-        Foo(name="Jane", age=28, is_active=False, created_at=datetime.now()),
+        Foo(name="John", age=30, is_active=True, created_at=utcnow()),
+        Foo(name="Jane", age=28, is_active=False, created_at=utcnow()),
     ]
     print_models(models)
 

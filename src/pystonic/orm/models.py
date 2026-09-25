@@ -1,13 +1,13 @@
-from typing import Set
 import uuid
 from datetime import datetime
+from typing import Set
 
 from pydantic import PrivateAttr
+from sqlalchemy import event
+from sqlmodel import Field, SQLModel, delete, select, update
 
 from pystonic.orm.database import get_session
-
-from sqlmodel import Field, SQLModel, delete, select, update
-from sqlalchemy import event
+from pystonic.utils.dateutil import utcnow
 
 
 class DBModel(SQLModel):
@@ -15,8 +15,8 @@ class DBModel(SQLModel):
 
     id: int = Field(default=None, primary_key=True)
     uuid: str = Field(default=None, nullable=False, unique=True, index=True)
-    created_at: datetime = Field(default_factory=datetime.now, nullable=True)
-    updated_at: datetime = Field(default_factory=datetime.now, nullable=True)
+    created_at: datetime = Field(default_factory=utcnow, nullable=True)
+    updated_at: datetime = Field(default_factory=utcnow, nullable=True)
 
     # 非 DB 属性：存储变化的值
     _modified_fields: Set[str] = PrivateAttr(default_factory=set)
@@ -144,11 +144,11 @@ def before_insert(mapper, connection, target: DBModel):
     if target.uuid is None:
         target.uuid = str(uuid.uuid4())
 
-    target.created_at = datetime.now()
-    target.updated_at = datetime.now()
+    target.created_at = utcnow()
+    target.updated_at = utcnow()
 
 
 @event.listens_for(DBModel, "before_update", propagate=True)
 def before_update(mapper, connection, target):
     """更新时自动设置 update_at"""
-    target.updated_at = datetime.now()
+    target.updated_at = utcnow()

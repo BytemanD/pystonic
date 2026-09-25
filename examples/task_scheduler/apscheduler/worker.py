@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from loguru import logger
 
 from pystonic.asgi.app import create_app
-from pystonic.log import setup_logger
+from pystonic.common.log import setup_logger
 from pystonic.task_scheduler.drivers.apscheduler import APSchedulerDriver
 
 from .tasks import sync_source

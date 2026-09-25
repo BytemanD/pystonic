@@ -1,7 +1,7 @@
 import click
 
 from pystonic.cmd import agent, code, gitstats
-from pystonic.log import setup_logger
+from pystonic.common.log import setup_logger
 
 
 @click.group()

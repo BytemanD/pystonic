@@ -1,5 +1,5 @@
 import calendar
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Optional
 
 from dateutil.relativedelta import relativedelta
@@ -7,6 +7,10 @@ from dateutil.relativedelta import relativedelta
 FORMAT_DATE = "%Y-%m-%d"
 FORMAT_TIME = "%H:%M:%S"
 FORMAT_DATETIME = f"{FORMAT_DATE} {FORMAT_TIME}"
+
+
+def utcnow():
+    return datetime.now(UTC)
 
 
 def day_range(days_offset=0, date: Optional[datetime] = None):
@@ -21,7 +25,7 @@ def day_range(days_offset=0, date: Optional[datetime] = None):
         tuple: (开始时间, 结束时间)
     """
     if date is None:
-        date = datetime.now()
+        date = utcnow()
 
     target_date = date + timedelta(days=days_offset)
     start = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -45,7 +49,7 @@ def tormorrow():
 def week_range(week_offset: int = 0, date: Optional[datetime] = None):
     """获取指定周的起止时间范围"""
     if date is None:
-        date = datetime.now()
+        date = utcnow()
     monday = date - timedelta(days=date.weekday()) + timedelta(weeks=week_offset)
     sunday = monday + timedelta(days=6)
     return monday.replace(hour=0, minute=0, second=0, microsecond=0), sunday.replace(
@@ -64,7 +68,7 @@ def lastweek():
 def month_range(month_offset: int = 0, date: Optional[datetime] = None):
     """获取指定周的起止时间范围"""
     if date is None:
-        date = datetime.now()
+        date = utcnow()
     if month_offset != 0:
         date = date + relativedelta(months=month_offset)
 
