@@ -8,7 +8,7 @@ from pytest_mock import MockerFixture
 
 from pystonic.common import conf
 from pystonic.common.conf import BaseAppConfig, FrozenModel
-from pystonic.log import LogConfig
+from pystonic.common.log import LogConfig
 
 
 def test_conf_setup_with_init_settings(mocker: MockerFixture):

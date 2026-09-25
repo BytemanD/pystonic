@@ -45,7 +45,7 @@ def setup_logger(remove: bool = False):
         )
 
     def _context_patcher(record):
-        extra_keys = ["trace"] + CONF.log.custom_extra
+        extra_keys = ["trace", "account"] + CONF.log.custom_extra
         ctx_value = " ".join([str(context.getvar(x) or "-") for x in extra_keys])
         record.update(extra={"context": ctx_value or "-"})
 

@@ -1,7 +1,7 @@
 import pytest
 from loguru import logger
 
-from pystonic.log import DEFAULT_FORMAT, LogConfig, setup_logger
+from pystonic.common.log import DEFAULT_FORMAT, LogConfig, setup_logger
 
 
 def test_log_config_default():

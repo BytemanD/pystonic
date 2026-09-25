@@ -39,12 +39,22 @@ class DBModel(SQLModel):
         }
 
     @classmethod
+    def _select(cls, *criterion, **filters):
+        return select(cls).where(*criterion).filter_by(**filters)
+
+    @classmethod
     def query(cls, *criterion, **filters):
         """返回一个 QueryBuilder 用于链式查询"""
-        stm = select(cls).where(*criterion).filter_by(**filters)
         with get_session() as session:
-            query = session.exec(stm)
+            query = session.exec(cls._select(*criterion, **filters))
             return query.all()
+
+    @classmethod
+    def query_one_or_none(cls, *criterion, **filters):
+        """返回一个 QueryBuilder 用于链式查询"""
+        with get_session() as session:
+            query = session.exec(cls._select(*criterion, **filters))
+            return query.one_or_none()
 
     @classmethod
     def get_by_id(cls, id: int, raise_if_not_exists: bool = False):

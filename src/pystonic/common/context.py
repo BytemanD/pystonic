@@ -29,6 +29,10 @@ def set_trace(value: str | None = None):
     setvars(trace=value or f"trace-{uuid.uuid4()}")
 
 
+def account() -> str:
+    return getvar("account", "")
+
+
 def set_account(account: str):
     setvars(account=account)
 

@@ -6,7 +6,7 @@ from huey import crontab
 from jaraco import functools
 
 from pystonic.common import context
-from pystonic.log import setup_logger
+from pystonic.common.log import setup_logger
 
 from .tasks import HUEY, sync_source
 
