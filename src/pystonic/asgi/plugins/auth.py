@@ -1,6 +1,6 @@
 from typing import Callable
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel, SecretStr
@@ -10,6 +10,7 @@ from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import HTTPConnection
 
 from pystonic.asgi.middlewares.jwt_auth import JWT_SERVICE, JWTBackend
+from pystonic.common import context
 
 
 class LoginRequest(BaseModel):
@@ -21,6 +22,10 @@ class LoginResponse(BaseModel):
     token: str
 
 
+class RefreshResponse(BaseModel):
+    token: str
+
+
 def unauthorized_error(conn: HTTPConnection, exc: Exception) -> Response:
     return JSONResponse({"error": str(exc)}, status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -28,7 +33,7 @@ def unauthorized_error(conn: HTTPConnection, exc: Exception) -> Response:
 def setup(
     app: FastAPI,
     on_login: Callable[[str, str], None],
-    login_url: str | None = "/api/v1/auth/login",
+    auth_router_prefix: str = "/api/v1/auth",
     exclude_routes: set[tuple[str, str]] | None = None,
 ):
     """安装 JWT 认证插件
@@ -42,22 +47,31 @@ def setup(
         login_url: 用户名+密码登录接口路由
         exclude_routes: 需要排除认证的路由
     """
-
+    auth_router = APIRouter(tags=["Auth"])
     exclude_routes = exclude_routes or set([])
-    if login_url:
-        exclude_routes.update({("POST", login_url)})
+    exclude_routes.add({("POST", f"{auth_router_prefix}/login")})
 
-        @app.post(login_url)
-        def _login(req: Request, body: LoginRequest):
-            try:
-                on_login(body.username, body.password.get_secret_value())
-            except AuthenticationError as e:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e)
-                )
-            token = JWT_SERVICE.encode(body.username)
-            logger.success("login success")
-            return LoginResponse(token=token)
+    # ============= auth router =============
+
+    @auth_router.post("/login", response_model=LoginResponse)
+    def _login(req: Request, body: LoginRequest):
+        try:
+            on_login(body.username, body.password.get_secret_value())
+        except AuthenticationError as e:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        token = JWT_SERVICE.encode(body.username)
+        logger.success("login success")
+        return LoginResponse(token=token)
+
+    @auth_router.post("/token", response_model=RefreshResponse)
+    def _refresh_token(req: Request):
+        token = JWT_SERVICE.encode(context.getvar("account"))
+        logger.success("create token success")
+        return RefreshResponse(token=token)
+
+    # =====================================
+
+    app.include_router(auth_router, prefix=auth_router_prefix)
 
     app.add_middleware(
         AuthenticationMiddleware,
