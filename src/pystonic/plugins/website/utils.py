@@ -2,7 +2,6 @@ import html
 import html.parser
 import re
 from pathlib import Path
-from typing import List, Optional
 from urllib.parse import urlparse
 
 import httpx
@@ -12,7 +11,7 @@ from loguru import logger
 class HtmlLinkParser(html.parser.HTMLParser):
     def __init__(self):
         super().__init__()
-        self.links: List[str] = []
+        self.links: list[str] = []
 
     def handle_starttag(self, tag, attrs):
         if tag == "a":
@@ -29,10 +28,10 @@ def get_links(url: str):
     return parser.links
 
 
-def rglob(url: str, parttern: Optional[re.Pattern] = None):
+def rglob(url: str, parttern: re.Pattern | None = None):
     """Recursive glob from url"""
 
-    files: List[str] = []
+    files: list[str] = []
     dirs = [url + "/"]
     while dirs:
         base_url = dirs.pop()
@@ -55,7 +54,7 @@ def rglob(url: str, parttern: Optional[re.Pattern] = None):
 
 
 def sync_files_from_http_server(
-    url: str, output: str, parttern: Optional[re.Pattern] = None
+    url: str, output: str, parttern: re.Pattern | None = None
 ):
     """sync files from http server
 

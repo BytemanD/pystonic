@@ -1,5 +1,4 @@
 import functools
-from typing import List, Optional, Tuple
 
 from agents import (
     Agent,
@@ -40,7 +39,7 @@ class OpenaiAgent:
     def __init__(
         self,
         name: str,
-        instructions: Optional[str] = None,
+        instructions: str | None = None,
     ):
         self.name = name
         self.shell = Shell()
@@ -74,7 +73,7 @@ class OpenaiAgent:
     def delete_model(self):
         """delete agent model"""
 
-    def _get_agent(self, model: Optional[str] = None, tools: List[Tool] = []) -> Agent:
+    def _get_agent(self, model: str | None = None, tools: list[Tool] = []) -> Agent:
         if not model:
             models = self.list_models()
             if models:
@@ -88,8 +87,8 @@ class OpenaiAgent:
         )
 
     def _get_model_provider(
-        self, model: Optional[str] = None
-    ) -> Tuple[str, MultiProvider]:
+        self, model: str | None = None
+    ) -> tuple[str, MultiProvider]:
         provider_name, model_name = (model or CONF.agent.default_provider).split("/")
 
         if provider_name not in self.providers:
@@ -107,9 +106,9 @@ class OpenaiAgent:
     async def stream(
         self,
         input: str,
-        model: Optional[str] = None,
-        session_id: Optional[str] = None,
-        tools: List[Tool] = [],
+        model: str | None = None,
+        session_id: str | None = None,
+        tools: list[Tool] = [],
     ):
         """Stream the agent's response to the input.
 
@@ -148,6 +147,6 @@ class OpenaiAgent:
     async def delete_agent_session(self, session_id: str):
         await self.session_history.delete_agent_session(session_id)
 
-    async def clear_session(self, session_id: Optional[str] = None):
+    async def clear_session(self, session_id: str | None = None):
         session_store = self.session_history.get_session(session_id=session_id)
         await session_store.clear_session()

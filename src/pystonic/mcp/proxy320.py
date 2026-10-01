@@ -1,29 +1,26 @@
 import asyncio
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
-from loguru import logger
 from fastmcp.server import create_proxy
-from pydantic import BaseModel
-
 from fastmcp.server.proxy import ProxyTool
-
-from v2.nacos.ai.nacos_ai_service import GetMcpServerParam, NacosAIService
+from loguru import logger
+from pydantic import BaseModel
 from v2.nacos import (
-    RegisterInstanceParam,
     ClientConfigBuilder,
     NacosException,
     NacosNamingService,
-)
-from v2.nacos.ai.model.mcp.registry import ServerVersionDetail
-from v2.nacos.ai.model.mcp.mcp import (
-    McpTool,
-    McpToolSpecification,
-    McpServerBasicInfo,
-    McpServerRemoteServiceConfig,
-    McpEndpointSpec,
+    RegisterInstanceParam,
 )
 from v2.nacos.ai.model.ai_param import ReleaseMcpServerParam
-
+from v2.nacos.ai.model.mcp.mcp import (
+    McpEndpointSpec,
+    McpServerBasicInfo,
+    McpServerRemoteServiceConfig,
+    McpTool,
+    McpToolSpecification,
+)
+from v2.nacos.ai.model.mcp.registry import ServerVersionDetail
+from v2.nacos.ai.nacos_ai_service import GetMcpServerParam, NacosAIService
 
 TRANSPORT_MAP = {
     "stdio": "stdio",
@@ -43,8 +40,8 @@ class NacosSettings(BaseModel):
     password: str = ""
 
     namespace: str = "public"
-    access_key: Optional[str] = None
-    secret_key: Optional[str] = None
+    access_key: str | None = None
+    secret_key: str | None = None
     meta: dict = {}
     connect_labels: dict = {}
 

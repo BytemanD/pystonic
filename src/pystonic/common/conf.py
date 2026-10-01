@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union
+from typing import Literal
 from urllib.parse import quote_plus
 
 import toml
@@ -28,14 +28,14 @@ DEFAULT_FORMAT = (
 
 class LogConfig(BaseModel):
     level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
-    file: Optional[str] = None
+    file: str | None = None
     format: str = DEFAULT_FORMAT
-    colorize: Optional[bool] = None
+    colorize: bool | None = None
     encoding: str = "utf-8"
     rotation: str = "10 MB"
     retention: str = "30 days"
     compression: str = "zip"
-    custom_extra: List[str] = []
+    custom_extra: list[str] = []
     enqueue: bool = True
     intercept_logging: bool = True
 
@@ -82,16 +82,16 @@ class DBConfig(BaseModel):
         return self.connection.startswith("sqlite:")
 
 
-class AsgiConfig(BaseModel):
-    name: str = "Pystonic ASGI"
-    summary: str = ""
-    description: str = ""
-    version: str = "0.1.0"
+# class AsgiConfig(BaseModel):
+#     name: str = "Pystonic ASGI"
+#     summary: str = ""
+#     description: str = ""
+#     version: str = "0.1.0"
 
-    docs_url: str = "/docs"
-    redoc_url: str = "/redoc"
-    openapi_prefix: str = ""
-    openapi_url: str = "/openai.json"
+#     docs_url: str = "/docs"
+#     redoc_url: str = "/redoc"
+#     openapi_prefix: str = ""
+#     openapi_url: str = "/openapi.json"
 
 
 class JWTConfig(BaseModel):
@@ -108,12 +108,12 @@ class NacosConfig(BaseModel):
     namespace: str = "public"
     group_name: str = "DEFAULT_GROUP"
 
-    retry_interval: Optional[int] = 10
+    retry_interval: int | None = 10
     log_level: str = "info"
 
 
 class McpProxyConfig(BaseModel):
-    target: Optional[str] = ""
+    target: str | None = ""
     client_log_level: str = "info"
 
 
@@ -130,13 +130,13 @@ class McpConfig(BaseModel):
 
     enable_nacos: bool = False
     nacos: NacosConfig = NacosConfig()
-    proxy: Optional[McpProxyConfig] = None
+    proxy: McpProxyConfig | None = None
 
 
 class ProviderConfig(BaseModel):
     base_url: HttpUrl
     api_key: str = ""
-    models: List[str] = []
+    models: list[str] = []
     openai_use_responses: bool = True
     extra_body: dict = {}
 
@@ -147,7 +147,7 @@ class ProviderConfig(BaseModel):
 
 
 class AgentSessionConfig(BaseModel):
-    store: Optional[str] = None
+    store: str | None = None
 
 
 class AgentConfig(BaseModel):
@@ -157,7 +157,7 @@ class AgentConfig(BaseModel):
     session: AgentSessionConfig = AgentSessionConfig()
     # stream: bool = True
     default_provider: str = "zipu/glm-4.7-flash"
-    providers: Dict[str, ProviderConfig] = {
+    providers: dict[str, ProviderConfig] = {
         "alibaba": ProviderConfig(
             base_url=HttpUrl("https://dashscope.aliyuncs.com/compatible-mode/v1"),
             api_key="",
@@ -172,7 +172,7 @@ class AgentConfig(BaseModel):
     }
     disable_tracing: bool = True
 
-    def get_provider(self, model: Optional[str] = None) -> ProviderConfig:
+    def get_provider(self, model: str | None = None) -> ProviderConfig:
         provider, model_name = (model or self.default_provider).split("/")
 
         if provider not in self.providers:
@@ -224,7 +224,7 @@ class BaseAppConfig(BaseSettings):
     log: LogConfig = LogConfig()
     db: DBConfig = DBConfig()
     http_client: HTTPClientConfig = HTTPClientConfig()
-    asgi: AsgiConfig = AsgiConfig()
+    # asgi: AsgiConfig = AsgiConfig()
     jwt: JWTConfig = JWTConfig()
     mcp: McpConfig = McpConfig()
     agent: AgentConfig = AgentConfig()
@@ -264,7 +264,7 @@ class BaseAppConfig(BaseSettings):
             )
 
     @classmethod
-    def get_conf_file(cls) -> Optional[Path]:
+    def get_conf_file(cls) -> Path | None:
         files = cls.model_config.get("toml_file") or []
         if not files:
             return None
@@ -278,14 +278,14 @@ class BaseAppConfig(BaseSettings):
         return Path(files[0])
 
     @classmethod
-    def get_init_settings(cls) -> Dict:
+    def get_init_settings(cls) -> dict:
         return getattr(cls, "_init_settings", {})
 
     @classmethod
     def setup(
         cls,
-        init_settings: Optional[Dict] = None,
-        toml_file: Optional[Union[Path, List[Path]]] = None,
+        init_settings: dict | None = None,
+        toml_file: Path | list[Path] | None = None,
     ):
         """初始化配置"""
         if init_settings is not None:

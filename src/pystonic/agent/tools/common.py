@@ -1,16 +1,15 @@
 import os
 from pathlib import Path
-from typing import List, Optional
 
 from agents import function_tool
 
 
 @function_tool
 def list_dir(
-    path: Optional[str] = None,
-    name: Optional[str] = None,
+    path: str | None = None,
+    name: str | None = None,
     include_hidden: bool = False,
-) -> List[str]:
+) -> list[str]:
     """列出目录下的子目录和文件
 
     Args:

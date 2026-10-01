@@ -1,5 +1,5 @@
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
 from apscheduler.events import (
     EVENT_JOB_ERROR,

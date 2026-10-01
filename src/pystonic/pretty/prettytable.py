@@ -1,5 +1,4 @@
-from collections.abc import Sequence
-from typing import Generator, List, Optional
+from collections.abc import Generator, Sequence
 
 from prettytable import PrettyTable, TableStyle
 from pydantic import BaseModel
@@ -10,8 +9,8 @@ class DataTable(PrettyTable):
 
     def __init__(
         self,
-        fields: Optional[List[str]] = None,
-        title: Optional[dict] = None,
+        fields: list[str] | None = None,
+        title: dict | None = None,
         index: bool = False,
         **kwargs,
     ):
@@ -23,7 +22,7 @@ class DataTable(PrettyTable):
         field_names = [title.get(field, field) for field in self.data_fields]
         super().__init__((self.index and ["#"] or []) + field_names, **kwargs)
 
-    def add_items(self, items: List[dict]):
+    def add_items(self, items: list[dict]):
         """Add items to table"""
         for i, item in enumerate(items, start=1):
             self.add_row(
@@ -31,7 +30,7 @@ class DataTable(PrettyTable):
                 + [item.get(field) for field in self.data_fields]
             )
 
-    def add_object_items(self, items: List[object]):
+    def add_object_items(self, items: list[object]):
         """Add items to table"""
         for i, item in enumerate(items, start=1):
             self.add_row(
@@ -56,9 +55,9 @@ class DataTable(PrettyTable):
 
 
 def data_table(
-    columns: List[str],
+    columns: list[str],
     items: Sequence[BaseModel],
-    style: Optional[TableStyle] = None,
+    style: TableStyle | None = None,
     autoindex: bool = False,
 ) -> PrettyTable:
     """Create a DataTable instance"""

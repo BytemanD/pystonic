@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import Optional
 
 from fastmcp.tools import Tool
 from loguru import logger
@@ -59,7 +58,7 @@ class NacosMcpManager:
         ip: str,
         port: int,
         tools: list[Tool] = [],
-        instructions: Optional[str] = None,
+        instructions: str | None = None,
     ):
         service_name = f"{name}::{version}"
 
@@ -152,7 +151,7 @@ class NacosMcpManager:
         while True:
             try:
                 await asyncio.sleep(30)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logging.debug("Timeout occurred")
             except asyncio.CancelledError:
                 return

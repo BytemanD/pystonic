@@ -1,9 +1,10 @@
 import contextvars
 import functools
 import uuid
-from typing import Any, Callable, Dict
+from collections.abc import Callable
+from typing import Any
 
-_context_vars: Dict[str, contextvars.ContextVar] = {}
+_context_vars: dict[str, contextvars.ContextVar] = {}
 
 
 def setvars(**kwargs):

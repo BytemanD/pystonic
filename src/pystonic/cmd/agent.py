@@ -1,6 +1,5 @@
 import asyncio
 import uuid
-from typing import List, Optional
 
 import click
 from agents import (
@@ -44,7 +43,6 @@ def root():
 @root.group()
 def session():
     """agent sessions"""
-    pass
 
 
 @session.command("list")
@@ -56,7 +54,7 @@ def list_sesions():
 
 @session.command("delete")
 @click.argument("sessions", required=False, nargs=-1)
-def delete_session(sessions: List[str]):
+def delete_session(sessions: list[str]):
     """List agent sessions."""
     if not sessions:
         raise click.ClickException("session is required")
@@ -69,7 +67,6 @@ def delete_session(sessions: List[str]):
 @root.group()
 def model():
     """agent models"""
-    pass
 
 
 @model.command("list")
@@ -80,9 +77,9 @@ def list_models():
 
 
 async def _do_chat(
-    intput: str, session_id: Optional[str] = None, model: Optional[str] = None
+    intput: str, session_id: str | None = None, model: str | None = None
 ):
-    tools: List[Tool] = [
+    tools: list[Tool] = [
         common.change_dir,
         common.list_dir,
         common.read_file,
@@ -140,7 +137,7 @@ async def _do_chat(
 @click.argument("intput")
 @click.option("--model", "-m", default=None, help="Model to use for the agent")
 @click.option("--session", "-c", default=None, help="Session to use for the agent")
-def run(intput: str, session: Optional[str] = None, model: Optional[str] = None):
+def run(intput: str, session: str | None = None, model: str | None = None):
     """Chat with the agent."""
     try:
         asyncio.run(_do_chat(intput, session_id=session, model=model))
@@ -151,7 +148,7 @@ def run(intput: str, session: Optional[str] = None, model: Optional[str] = None)
 @root.command()
 @click.option("--model", "-m", default=None, help="Model to use for the agent")
 @click.option("--session", "-s", default=None, help="Session to use for the agent")
-def chat(session: Optional[str] = None, model: Optional[str] = None):
+def chat(session: str | None = None, model: str | None = None):
     """交互模式"""
     session = session or uuid.uuid4().hex
     while True:

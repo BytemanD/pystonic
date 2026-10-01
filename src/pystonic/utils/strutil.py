@@ -1,7 +1,6 @@
+import re
 from enum import Enum
 from ipaddress import AddressValueError, IPv4Address, IPv6Address
-import re
-from typing import List, Optional, Tuple
 
 _TRUE_VALUES = ("true", "1", "on", "yes", "y", "ok", "enable")
 _FALSE_VALUES = ("false", "0", "off", "no", "n", "nok", "disable")
@@ -18,7 +17,7 @@ class IPVersion(str, Enum):
     V6 = "v6"
 
 
-def is_valid_ip(ip: str) -> Tuple[bool, Optional[IPVersion]]:
+def is_valid_ip(ip: str) -> tuple[bool, IPVersion | None]:
     try:
         IPv4Address(ip)
         return True, IPVersion.V4
@@ -33,7 +32,7 @@ def is_valid_ip(ip: str) -> Tuple[bool, Optional[IPVersion]]:
     return False, None
 
 
-def find_code_blocks_from_markdown(markdown_text: str) -> List[str]:
+def find_code_blocks_from_markdown(markdown_text: str) -> list[str]:
     """Match command"""
     code_patterns = [
         r"```\w+\n(.*?)\n```",

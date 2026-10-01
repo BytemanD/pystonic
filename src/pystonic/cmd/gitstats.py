@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional, Tuple
 
 import click
 from pydantic import BaseModel, ConfigDict
@@ -13,7 +12,7 @@ from pystonic.pretty import output
 from pystonic.utils import dateutil
 
 
-def parse_date_range(since: str, until: Optional[str]) -> Tuple[datetime, datetime]:
+def parse_date_range(since: str, until: str | None) -> tuple[datetime, datetime]:
     """Parse date range"""
     if not until:
         if not since or since in ["today", "thisday"]:
@@ -59,8 +58,8 @@ def root():
     help="Sort by",
 )
 def lines(
-    date_range: List[str],
-    sort_by: Optional[str] = None,
+    date_range: list[str],
+    sort_by: str | None = None,
 ):
     if not date_range:
         date_range = ["today"]
@@ -110,9 +109,9 @@ def lines(
 @click.option("--author", "-a", help="Filter commits by author")
 @click.option("--changes", is_flag=True, help="show changes")
 def commits(
-    date_range: List[str],
+    date_range: list[str],
     changes: bool = False,
-    author: Optional[str] = None,
+    author: str | None = None,
 ):
     if not date_range:
         date_range = ["today"]
@@ -132,7 +131,7 @@ def commits(
         style="cyan underline",
     )
     console.print()
-    fields: List[str | Column] = [
+    fields: list[str | Column] = [
         Column("date"),
         Column("author", justify="left"),
         Column("hexsha", justify="left"),

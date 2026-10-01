@@ -20,7 +20,6 @@ class SubparserSpec:
     @hookspec
     def register_subcommand(self, subparsers: argparse._SubParsersAction) -> None:
         """Register a subparser for this plugin."""
-        pass
 
 
 class CommandPlugin(abc.ABC):

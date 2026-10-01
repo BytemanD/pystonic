@@ -1,16 +1,14 @@
 import os
 from pathlib import Path
-from typing import List
-
 
 import click
 
 from pystonic.utils.pkg import is_package_installed
 
 
-def _get_source_paths() -> List[str | Path]:
+def _get_source_paths() -> list[str | Path]:
     """查找python代码所在的目录"""
-    source_paths: List[str | Path] = []
+    source_paths: list[str | Path] = []
     for path in ["src", "tests"]:
         if os.path.exists(path):
             source_paths.append(path)
@@ -20,7 +18,7 @@ def _get_source_paths() -> List[str | Path]:
 
 
 def check_code(
-    source_paths: List[str | Path],
+    source_paths: list[str | Path],
     test=False,
     cover=False,
     cover_path="src",

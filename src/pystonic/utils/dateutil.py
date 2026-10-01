@@ -1,6 +1,5 @@
 import calendar
 from datetime import UTC, datetime, timedelta
-from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 
@@ -13,7 +12,7 @@ def utcnow():
     return datetime.now(UTC)
 
 
-def day_range(days_offset=0, date: Optional[datetime] = None):
+def day_range(days_offset=0, date: datetime | None = None):
     """
     获取指定日期的起止时间范围
 
@@ -46,7 +45,7 @@ def tormorrow():
     return day_range(days_offset=1)
 
 
-def week_range(week_offset: int = 0, date: Optional[datetime] = None):
+def week_range(week_offset: int = 0, date: datetime | None = None):
     """获取指定周的起止时间范围"""
     if date is None:
         date = utcnow()
@@ -65,7 +64,7 @@ def lastweek():
     return week_range(-1)
 
 
-def month_range(month_offset: int = 0, date: Optional[datetime] = None):
+def month_range(month_offset: int = 0, date: datetime | None = None):
     """获取指定周的起止时间范围"""
     if date is None:
         date = utcnow()

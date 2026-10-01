@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from git import Commit, Repo
 from pydantic import BaseModel
@@ -20,7 +19,7 @@ class CommitDetail(BaseModel):
     author: str = ""
     date: str = ""
     message: str = ""
-    changes: List[str] | str = []
+    changes: list[str] | str = []
 
     @classmethod
     def from_git_commit(cls, commit: Commit):
@@ -57,7 +56,7 @@ def lines(since: datetime, until: datetime):
     return [x for x in commit_stats.values()]
 
 
-def commits(since: datetime, until: datetime, author: Optional[str] = None):
+def commits(since: datetime, until: datetime, author: str | None = None):
     repo = Repo()
     commits_list = [
         commit

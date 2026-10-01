@@ -7,7 +7,6 @@ from pystonic.common.log import setup_logger
 @click.group()
 def root():
     setup_logger(remove=True)
-    pass
 
 
 def main():

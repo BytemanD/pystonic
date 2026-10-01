@@ -1,6 +1,5 @@
 import uuid
 from datetime import datetime
-from typing import Set
 
 from pydantic import PrivateAttr
 from sqlalchemy import event
@@ -19,7 +18,7 @@ class DBModel(SQLModel):
     updated_at: datetime = Field(default_factory=utcnow, nullable=True)
 
     # 非 DB 属性：存储变化的值
-    _modified_fields: Set[str] = PrivateAttr(default_factory=set)
+    _modified_fields: set[str] = PrivateAttr(default_factory=set)
 
     def __setattr__(self, field: str, value):
         """支持 dict-like 访问"""

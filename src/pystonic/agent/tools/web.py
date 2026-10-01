@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, Tuple
+from collections.abc import Sequence
 from urllib.parse import parse_qs
 
 from agents import function_tool
@@ -15,8 +15,8 @@ WEB_SEARCH = httpclient.default_client(
 @function_tool
 def web_get(
     url: str,
-    params: Optional[str] = None,
-    headers: Optional[Sequence[Tuple[str, str]]] = None,
+    params: str | None = None,
+    headers: Sequence[tuple[str, str]] | None = None,
 ) -> str:
     """HTTP GET请求
 

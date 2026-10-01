@@ -76,7 +76,7 @@ source = "uv-dynamic-versioning"
 
 [[tool.uv.index]]
 name = "tencent"
-url = "http://mirrors.cloud.tencent.com/pypi/simple"
+url = "https://mirrors.cloud.tencent.com/pypi/simple"
 
 [[tool.uv.index]]
 name = "testpypi"

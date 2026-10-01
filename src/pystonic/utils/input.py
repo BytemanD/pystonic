@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from termcolor import colored, cprint
 
 
@@ -31,10 +29,10 @@ def get_input_number(
 
 
 def select_items(
-    items: List[str],
-    default: Optional[str] = None,
-    select_prompt: Optional[str] = None,
-    input_prompt: Optional[str] = None,
+    items: list[str],
+    default: str | None = None,
+    select_prompt: str | None = None,
+    input_prompt: str | None = None,
 ):
     """打印items列表, 并获取用户选择结果"""
     select_prompt = select_prompt or "请选择:"

@@ -6,7 +6,6 @@ import socket
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 from loguru import logger
 
@@ -62,7 +61,7 @@ def get_all_non_loopback_ips():
     return [ip for ip in socket.gethostbyname_ex(hostname())[2] if ip != "127.0.0.1"]
 
 
-def get_first_non_loopback_ip(default: Optional[str] = None):
+def get_first_non_loopback_ip(default: str | None = None):
     """使用 socket 获取所有非回环 IP"""
     ips = get_all_non_loopback_ips()
     if not ips and not default:

@@ -1,4 +1,4 @@
-from typing import List, Optional, Sequence
+from collections.abc import Sequence
 
 from pydantic import BaseModel
 from rich import box
@@ -8,7 +8,7 @@ from rich.table import Column, Table
 console = Console()
 
 
-def print_model(item: BaseModel, fields: List[str] = []):
+def print_model(item: BaseModel, fields: list[str] = []):
     fields = fields or [x for x in item.__class__.model_fields.keys()]
 
     table = Table(Column("Field", justify="left"), Column("Value", justify="left"))
@@ -21,9 +21,9 @@ def print_model(item: BaseModel, fields: List[str] = []):
 
 def print_models(
     items: Sequence[BaseModel],
-    fields: List[str | Column] = [],
-    title: Optional[str] = None,
-    box: Optional[box.Box] = box.HEAVY_HEAD,
+    fields: list[str | Column] = [],
+    title: str | None = None,
+    box: box.Box | None = box.HEAVY_HEAD,
     show_lines: bool = False,
 ):
     if not items:

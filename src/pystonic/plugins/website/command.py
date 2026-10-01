@@ -1,8 +1,8 @@
 import argparse
 import re
 
-from pystonic.utils.plugin import CommandPlugin, hookimpl
 from pystonic.plugins.website import utils
+from pystonic.utils.plugin import CommandPlugin, hookimpl
 
 
 class Command(CommandPlugin):

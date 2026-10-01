@@ -2,7 +2,7 @@ import os
 import shutil
 from enum import Enum
 from pathlib import Path
-from typing import List, Literal, Tuple, Union, overload
+from typing import Literal, overload
 
 import humanize
 from loguru import logger
@@ -64,7 +64,7 @@ def move_files(
     dst: Path,
     dry_run: bool = False,
     recursive: bool = False,
-    if_exists: Union[IfExists, str] = IfExists.raise_error,
+    if_exists: IfExists | str = IfExists.raise_error,
 ):
     """移动文件
     Args:
@@ -84,7 +84,7 @@ def move_files(
         files = [x for x in src.glob("*") if x.is_file()]
 
     dst.mkdir(parents=True, exist_ok=True)
-    files_to_move: List[Tuple[Path, Path]] = []
+    files_to_move: list[tuple[Path, Path]] = []
     for file in files:
         if dst.joinpath(file.name).exists():
             if if_exists == IfExists.raise_error:
@@ -108,13 +108,11 @@ def move_files(
 @overload
 def file_size(path: Path | str, natural: Literal[False] = False) -> int:
     """获取文件大小, 单位: 字节"""
-    ...
 
 
 @overload
 def file_size(path: Path | str, natural: Literal[True]) -> str:
     """获取文件大小, 返回人类可读字符串"""
-    ...
 
 
 def file_size(path: Path | str, natural=False) -> int | str:

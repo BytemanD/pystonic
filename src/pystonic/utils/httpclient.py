@@ -1,5 +1,4 @@
 import re
-from typing import Dict, List, Optional
 
 import httpx
 from loguru import logger
@@ -90,11 +89,11 @@ def default_client(
     base_url: str = "",
     auth=None,
     raise_for_status=False,
-    headers: Optional[Dict] = None,
-    retries: Optional[int] = None,
-    timeout: Optional[int] = None,
+    headers: dict | None = None,
+    retries: int | None = None,
+    timeout: int | None = None,
 ) -> httpx.Client:
-    event_hooks: Dict[str, List] = {
+    event_hooks: dict[str, list] = {
         "request": [_log_request],
         "response": [_log_response],
     }
