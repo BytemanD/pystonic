@@ -73,9 +73,6 @@ class DBConfig(BaseModel):
             database=self.database,
             charset=self.charset,
         )
-        if self.is_sqlite():
-            file = Path(db_url.replace("sqlite://", ""))
-            file.parent.mkdir(parents=True, exist_ok=True)
         return db_url
 
     def is_sqlite(self):

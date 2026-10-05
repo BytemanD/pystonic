@@ -23,7 +23,7 @@ def create_app(
     openapi_url: str = "/openapi.json",
     openapi_prefix: str = "",
     middlewares: Sequence[Middleware] | None = None,
-    root_path: str = ""
+    root_path: str = "",
 ):
     app = FastAPI(
         title=title,
