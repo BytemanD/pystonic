@@ -95,7 +95,7 @@ class DBConfig(BaseModel):
 
 
 class JWTConfig(BaseModel):
-    key: str = "your-secret-for"
+    key: str = "this-is-a-test-key-please-change-in-prod"
     expired: int = 3600
     algorithms: list[str] = ["HS256"]
 
