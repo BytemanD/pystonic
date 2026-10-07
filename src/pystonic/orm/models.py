@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import PrivateAttr
 from sqlalchemy import event
-from sqlmodel import Field, SQLModel, delete, func, select, update
+from sqlmodel import Field, SQLModel, col, delete, func, select, update
 
 from pystonic.orm.database import get_session
 from pystonic.utils.dateutil import utcnow
@@ -58,10 +58,10 @@ class DBModel(SQLModel):
     @classmethod
     def count(cls, *criterion, **filters):
         """返回一个 QueryBuilder 用于链式查询"""
-        stm = select(func.count(cls.uuid)).where(*criterion).filter_by(**filters)
+        stm = select(func.count(col(cls.uuid))).where(*criterion).filter_by(**filters)
         with get_session() as session:
             query = session.exec(stm)
-            return query.all()
+            return query.one()
 
     @classmethod
     def get_by_id(cls, id: int, raise_if_not_exists: bool = False):
