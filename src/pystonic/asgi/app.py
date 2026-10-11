@@ -1,9 +1,11 @@
 from collections.abc import Callable, Sequence
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.middleware import Middleware
 from fastapi.responses import JSONResponse
 from loguru import logger
+
+from pystonic.common.exceptions import PermissionDeny, ResourceNotFound
 
 
 async def default_livez_handler():
@@ -40,6 +42,18 @@ def create_app(
     )
 
     app.get(livez_router)(livez_handler or default_livez_handler)
+
+    @app.exception_handler(PermissionDeny)
+    async def exception_permission_deny(request: Request, exc: PermissionDeny):
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN, content={"error": str(exc)}
+        )
+
+    @app.exception_handler(ResourceNotFound)
+    async def exception_resource_not_found(request: Request, exc: ResourceNotFound):
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN, content={"error": str(exc)}
+        )
 
     @app.exception_handler(Exception)
     async def exception_handler(request: Request, exc: Exception):

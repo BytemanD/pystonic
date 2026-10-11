@@ -26,7 +26,7 @@ def check_code(
     bandit=False,
 ):
     source_arg = " ".join([str(x) for x in source_paths])
-    commands = [f"ruff format {source_arg}", f"ruff check --fix {source_arg}"]
+    commands = [f"ruff check --fix {source_arg}", f"ruff format {source_arg}"]
     if test:
         # 检查 pytest 是否安装
         if not is_package_installed("pytest"):

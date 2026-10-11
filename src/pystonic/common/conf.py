@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import quote_plus
 
+import dotenv
 import toml
 from loguru import logger
 from pydantic import BaseModel, HttpUrl, SecretStr
@@ -14,6 +15,8 @@ from pydantic_settings import (
 )
 
 from pystonic import app_name
+
+dotenv.load_dotenv()
 
 DEFAULT_CONF_FILE = [
     Path("etc", "app.toml"),

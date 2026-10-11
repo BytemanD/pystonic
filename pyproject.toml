@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-pystonic = "pystonic.cmd.pystonic:main"
+pystonic = "pystonic.cmd.main:main"
 
 [project.optional-dependencies]
 pretty = [
