@@ -1,6 +1,6 @@
 import click
 
-from pystonic.cmd import agent, code, gitstats
+from pystonic.cmd import agent, code, gitstats, pip
 from pystonic.common.log import setup_logger
 
 
@@ -12,6 +12,7 @@ def root():
 def main():
     root.add_command(agent.root)
     root.add_command(gitstats.root)
+    root.add_command(pip.root)
     root.add_command(code.root)
     root()
 

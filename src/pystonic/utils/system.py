@@ -7,7 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+import distro
 from loguru import logger
+from pydantic import BaseModel
 
 
 def is_windows():
@@ -81,3 +83,34 @@ def execute(
         cmd, check=check, shell=shell, stdout=stdout, stderr=stderr
     )
     return process.returncode, process.stdout, process.stderr
+
+
+def app_data(app_name: str) -> Path:
+    """获取数据目录下的文件路径"""
+    appdir = os.getenv("APPDATA")
+    if not appdir:
+        appdir = "/usr/share"
+    return Path(appdir, app_name)
+
+
+class PlatformInfo(BaseModel):
+    system: str
+    release: str
+    version: str
+    machine: str
+    processor: str
+
+
+def platform_info() -> dict:
+    info = {
+        "system": platform.system(),
+        "release": platform.release(),
+        "version": platform.version(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
+    }
+    if platform.system().lower() == "linux":
+        info["name"] = distro.name()
+        info["dist_version"] = distro.version()
+
+    return info
