@@ -206,6 +206,16 @@ class TaskWrokerConfig(BaseModel):
     max_workers: int = 10
 
 
+class S3Config(BaseModel):
+    endpoint_url: str = ""
+    region_name: str = "auto"
+    access_key_id: str = ""
+    secret_access_key: str = ""
+    session_token: str = ""
+
+    upstash_token: str = ""
+
+
 class BaseAppConfig(BaseSettings):
     """Base App Configuration"""
 
@@ -227,6 +237,7 @@ class BaseAppConfig(BaseSettings):
     # asgi: AsgiConfig = AsgiConfig()
     jwt: JWTConfig = JWTConfig()
     mcp: McpConfig = McpConfig()
+    s3: S3Config = S3Config()
     agent: AgentConfig = AgentConfig()
 
     huey: HueyConfig = HueyConfig()

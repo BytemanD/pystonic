@@ -67,6 +67,7 @@ apscheduler = [
     "apscheduler>=3.11.3",
 ]
 infra = [
+    "boto3>=1.43.117",
     "docker>=7.2.0",
     "psutil>=7.2.2",
 ]
