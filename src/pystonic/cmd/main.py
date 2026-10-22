@@ -1,4 +1,5 @@
 import click
+import dotenv
 
 from pystonic.cmd import agent, code, gitstats, pip
 from pystonic.common.log import setup_logger
@@ -6,6 +7,7 @@ from pystonic.common.log import setup_logger
 
 @click.group()
 def root():
+    dotenv.load_dotenv()
     setup_logger(remove=True)
 
 

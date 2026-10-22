@@ -58,6 +58,10 @@ def hostname():
     return socket.gethostname()
 
 
+def getpid():
+    return os.getpid()
+
+
 def get_all_non_loopback_ips():
     """使用 socket 获取所有非回环 IP"""
     return [ip for ip in socket.gethostbyname_ex(hostname())[2] if ip != "127.0.0.1"]

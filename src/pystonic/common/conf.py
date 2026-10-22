@@ -213,7 +213,14 @@ class S3Config(BaseModel):
     secret_access_key: str = ""
     session_token: str = ""
 
-    upstash_token: str = ""
+
+class RedisConfig(BaseModel):
+    url: str = ""
+
+
+class UpstashConfig(BaseModel):
+    url: str = "https://blob.upstash.io/v1/credentials"
+    token: str = ""
 
 
 class BaseAppConfig(BaseSettings):
@@ -238,6 +245,8 @@ class BaseAppConfig(BaseSettings):
     jwt: JWTConfig = JWTConfig()
     mcp: McpConfig = McpConfig()
     s3: S3Config = S3Config()
+    redis: RedisConfig = RedisConfig()
+    upstash: UpstashConfig = UpstashConfig()
     agent: AgentConfig = AgentConfig()
 
     huey: HueyConfig = HueyConfig()
