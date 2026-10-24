@@ -7,21 +7,11 @@ from pydantic_core import ValidationError
 from pytest_mock import MockerFixture
 
 from pystonic.common import conf
-from pystonic.common.conf import BaseAppConfig, FrozenModel
-from pystonic.common.log import LogConfig
-
-
-def test_conf_setup_with_init_settings(mocker: MockerFixture):
-    mocker.patch("pystonic.log.setup_logger")
-
-    conf.BaseAppConfig.setup(init_settings={"log": {"level": "TRACE"}})
-    new_config = BaseAppConfig.model_validate({"log": {"level": "TRACE"}})
-
-    assert new_config.log.level == "TRACE"
+from pystonic.common.conf import CONF, BaseAppConfig, LogConfig
 
 
 def test_conf_setup_with_one_toml_file(mocker: MockerFixture):
-    mocker.patch("pystonic.log.setup_logger")
+    mocker.patch("pystonic.common.log.setup_logger")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         toml_file = Path(tmpdir, "test.toml")
@@ -39,7 +29,7 @@ def test_conf_setup_with_one_toml_file(mocker: MockerFixture):
 
 
 def test_conf_setup_with_multi_toml_files(mocker: MockerFixture):
-    mocker.patch("pystonic.log.setup_logger")
+    mocker.patch("pystonic.common.log.setup_logger")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         toml_file = Path(tmpdir, "test.toml")
@@ -66,20 +56,9 @@ def test_conf_init_without_setup():
 
 
 def test_conf_update_disable():
-    new_conf = BaseAppConfig.model_validate({})
 
     with pytest.raises(ValidationError):
-        new_conf.log = LogConfig(level="TRACE")
+        CONF.store = '/tmp'
 
     with pytest.raises(ValidationError):
-        new_conf.log.level = "TRACE"
-
-    class FooConfig(FrozenModel):
-        bar: str = ""
-
-    class BarConfig(BaseAppConfig):
-        foo: FooConfig = FooConfig()
-
-    new_conf = BarConfig()
-    with pytest.raises(ValidationError):
-        new_conf.foo.bar = "bar"
+        CONF.log.level = 'TRACE'

@@ -25,8 +25,8 @@ _engine: Engine = create_engine(
     CONF.db.url,
     pool_size=CONF.db.pool_size,
     pool_recycle=CONF.db.pool_recycle,
-    pool_timeout=CONF.db.pool_timeout,
-    max_overflow=CONF.db.max_overflow,
+    # pool_timeout=CONF.db.pool_timeout,
+    # max_overflow=CONF.db.max_overflow,
     echo=CONF.db.echo,
 )
 

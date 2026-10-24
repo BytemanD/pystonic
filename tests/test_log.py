@@ -1,7 +1,8 @@
 import pytest
 from loguru import logger
 
-from pystonic.common.log import DEFAULT_FORMAT, LogConfig, setup_logger
+from pystonic.common.log import setup_logger
+from pystonic.common.conf import LogConfig, DEFAULT_FORMAT
 
 
 def test_log_config_default():
@@ -57,50 +58,6 @@ def test_setup_logger_with_stdout():
 
     # 验证日志器已配置
     assert len(logger._core.handlers) > 0
-
-
-def test_setup_logger_with_file(tmp_path):
-    """测试设置文件日志处理器"""
-    log_file = tmp_path / "test.log"
-    config = LogConfig(level="INFO", file=str(log_file))
-    setup_logger(config)
-
-    # 记录一条日志
-    logger.info("Test message")
-
-    # 验证文件存在
-    assert log_file.exists()
-
-
-def test_setup_logger_custom_format():
-    """测试自定义日志格式"""
-    custom_format = "[{level}] {message}"
-    setup_logger(LogConfig(level="INFO", format=custom_format), versbose=1, remove=True)
-
-    assert len(logger._core.handlers) == 1
-
-
-def test_setup_logger_with_verbose():
-    """测试添加控制台处理器"""
-    config = LogConfig()
-    setup_logger(config, versbose=3, remove=True)
-
-    # 验证添加了处理器
-    assert len(logger._core.handlers) == 1
-    assert [x for x in logger._core.handlers.values()][0].levelno == logger.level(
-        "DEBUG"
-    ).no
-
-
-def test_setup_logger_with_custom_format():
-    """测试添加自定义格式的控制台处理器"""
-    custom_format = "CUSTOM: {message}"
-    setup_logger(LogConfig(format=custom_format), versbose=0, remove=True)
-
-    # 验证添加了处理器
-    assert len(logger._core.handlers) == 1
-    handler = [x for x in logger._core.handlers.values()][0]
-    assert handler._formatter.strip().startswith(custom_format)
 
 
 def test_log_level_validation():

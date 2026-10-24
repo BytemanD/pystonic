@@ -2,7 +2,7 @@ from typing import List
 
 import pytest
 
-from pystonic.utils import textutil
+from pystonic.utils import strutil
 
 
 @pytest.mark.parametrize(
@@ -18,4 +18,4 @@ from pystonic.utils import textutil
     ],
 )
 def test_find_code_from_markdown_text(text: str, expected: List[str]):
-    assert textutil.find_code_blocks_from_markdown(text) == expected
+    assert strutil.find_code_blocks_from_markdown(text) == expected

@@ -11,14 +11,12 @@ from pystonic.utils.dateutil import utcnow
 class Foo(BaseModel):
     name: str
     age: int
-    is_active: bool
-    created_at: datetime
+    is_active: bool = True
 
 
 @patch("rich.console.Console.print")
 def test_print_model(mock_console_print: Mock):
-    now = utcnow()
-    model = Foo(name="John", age=30, is_active=True, created_at=now)
+    model = Foo(name="John", age=30, is_active=True)
     print_model(model)
 
     mock_console_print.assert_called_once()
@@ -33,23 +31,21 @@ def test_print_model(mock_console_print: Mock):
     assert column1.header == "Field"
     assert column2.header == "Value"
 
-    assert table.row_count == 4
-    assert [x for x in column1.cells] == ["name", "age", "is_active", "created_at"]
+    assert table.row_count == 3
+    assert [x for x in column1.cells] == ["name", "age", "is_active"]
     assert [x for x in column2.cells] == [
         str(model.name),
         str(model.age),
         str(model.is_active),
-        str(model.created_at),
     ]
 
 
 @patch("rich.console.Console.print")
 def test_print_models(mock_console_print: Mock):
-    def utcnow(): ...
 
     models = [
-        Foo(name="John", age=30, is_active=True, created_at=utcnow()),
-        Foo(name="Jane", age=28, is_active=False, created_at=utcnow()),
+        Foo(name="John", age=30, is_active=True),
+        Foo(name="Jane", age=28, is_active=False),
     ]
     print_models(models)
 
@@ -57,17 +53,15 @@ def test_print_models(mock_console_print: Mock):
     table = mock_console_print.call_args[0][0]
 
     assert isinstance(table, Table)
-    assert len(table.columns) == 4
-    column1, column2, column3, column4 = (
+    assert len(table.columns) == 3
+    column1, column2, column3 = (
         table.columns[0],
         table.columns[1],
         table.columns[2],
-        table.columns[3],
     )
     assert column1.header == "name"
     assert column2.header == "age"
     assert column3.header == "is_active"
-    assert column4.header == "created_at"
 
     assert table.row_count == 2
     assert [x for x in column1.cells] == [str(models[0].name), str(models[1].name)]
@@ -76,27 +70,22 @@ def test_print_models(mock_console_print: Mock):
         str(models[0].is_active),
         str(models[1].is_active),
     ]
-    assert [x for x in column4.cells] == [
-        str(models[0].created_at),
-        str(models[1].created_at),
-    ]
-
 
 @patch("rich.console.Console.print")
 def test_print_models_with_empty_items(mock_console_print: Mock):
-    print_models([])
+    print_models([Foo(name='name1', age=18)])
 
     mock_console_print.assert_called_once()
     table = mock_console_print.call_args[0][0]
 
     assert isinstance(table, Table)
-    assert len(table.columns) == 0
-    assert table.row_count == 0
+    assert len(table.columns) == 3
+    assert table.row_count == 1
 
 
 @patch("rich.console.Console.print")
 def test_print_models_with_custom_fields(mock_console_print: Mock):
-    print_models([], fields=["name", "age"])
+    print_models([Foo(name='name1', age=18, is_active=True)], fields=["name", "age"])
 
     mock_console_print.assert_called_once()
     table = mock_console_print.call_args[0][0]
@@ -105,4 +94,4 @@ def test_print_models_with_custom_fields(mock_console_print: Mock):
     assert len(table.columns) == 2
     assert [x.header for x in table.columns] == ["name", "age"]
 
-    assert table.row_count == 0
+    assert table.row_count == 1

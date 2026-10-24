@@ -29,8 +29,14 @@ DEFAULT_FORMAT = (
 )
 
 
-class LogConfig(BaseModel):
-    level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+class FrozenBaseModel(BaseModel):
+    model_config = SettingsConfigDict(
+        frozen=True,
+    )
+
+
+class LogConfig(FrozenBaseModel):
+    level: Literal["TRACE", "DEBUG", "INFO", "WARNING", "ERROR"] = "WARNING"
     file: str | None = None
     format: str = DEFAULT_FORMAT
     colorize: bool | None = None
@@ -43,13 +49,13 @@ class LogConfig(BaseModel):
     intercept_logging: bool = True
 
 
-class HTTPClientConfig(BaseModel):
+class HTTPClientConfig(FrozenBaseModel):
     log_response_detail: bool = True
     timeout: int = 60
     retries: int = 0
 
 
-class DBConfig(BaseModel):
+class DBConfig(FrozenBaseModel):
     # connection: str = "mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset={charset}"
     connection: str = "sqlite:///./data/develop.db"
     host: str = "localhost"
@@ -82,7 +88,7 @@ class DBConfig(BaseModel):
         return self.connection.startswith("sqlite:")
 
 
-# class AsgiConfig(BaseModel):
+# class AsgiConfig(FrozenBaseModel):
 #     name: str = "Pystonic ASGI"
 #     summary: str = ""
 #     description: str = ""
@@ -94,13 +100,13 @@ class DBConfig(BaseModel):
 #     openapi_url: str = "/openapi.json"
 
 
-class JWTConfig(BaseModel):
+class JWTConfig(FrozenBaseModel):
     key: str = "this-is-a-test-key-please-change-in-prod"
     expired: int = 3600
     algorithms: list[str] = ["HS256"]
 
 
-class NacosConfig(BaseModel):
+class NacosConfig(FrozenBaseModel):
     server_addr: str = "localhost:8848"
     username: str = "nacos"
     password: SecretStr = SecretStr("nacos")
@@ -112,12 +118,12 @@ class NacosConfig(BaseModel):
     log_level: str = "info"
 
 
-class McpProxyConfig(BaseModel):
+class McpProxyConfig(FrozenBaseModel):
     target: str | None = ""
     client_log_level: str = "info"
 
 
-class McpConfig(BaseModel):
+class McpConfig(FrozenBaseModel):
     """Mcp Server Configuration"""
 
     name: str = "pystonic-mcp-server"
@@ -133,7 +139,7 @@ class McpConfig(BaseModel):
     proxy: McpProxyConfig | None = None
 
 
-class ProviderConfig(BaseModel):
+class ProviderConfig(FrozenBaseModel):
     base_url: HttpUrl
     api_key: str = ""
     models: list[str] = []
@@ -146,11 +152,11 @@ class ProviderConfig(BaseModel):
         self.extra_body["enable_thinking"] = enable
 
 
-class AgentSessionConfig(BaseModel):
+class AgentSessionConfig(FrozenBaseModel):
     store: str | None = None
 
 
-class AgentConfig(BaseModel):
+class AgentConfig(FrozenBaseModel):
     system_prompt: str = "你是一个专业的AI助手"
     max_turns: int = 100
     openai_timeout: int = 180
@@ -183,7 +189,7 @@ class AgentConfig(BaseModel):
         return self.providers[provider]
 
 
-class HueyConfig(BaseModel):
+class HueyConfig(FrozenBaseModel):
     name: str = "huey app"
     storage: Literal["db"] = "db"
     database: str | None = None
@@ -202,23 +208,24 @@ class HueyConfig(BaseModel):
     # graceful_signal: str = "INT"
 
 
-class TaskWrokerConfig(BaseModel):
+class TaskWrokerConfig(FrozenBaseModel):
     max_workers: int = 10
 
 
-class S3Config(BaseModel):
+class S3Config(FrozenBaseModel):
     endpoint_url: str = ""
-    region_name: str = "auto"
+    region: str = "auto"
     access_key_id: str = ""
     secret_access_key: str = ""
     session_token: str = ""
+    bucket: str = ""
 
 
-class RedisConfig(BaseModel):
+class RedisConfig(FrozenBaseModel):
     url: str = ""
 
 
-class UpstashConfig(BaseModel):
+class UpstashConfig(FrozenBaseModel):
     url: str = "https://blob.upstash.io/v1/credentials"
     token: str = ""
 

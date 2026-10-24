@@ -3,17 +3,9 @@ import os
 from pathlib import Path
 import shutil
 
-from pydantic import BaseModel
 from loguru import logger
 
-
-class FilePath(BaseModel):
-    name: str
-    path: str
-    is_dir: bool
-    modify_time: datetime
-    size: int = 0
-    create_time: datetime | None = None
+from pystonic.infra.storage.objects import FilePath
 
 
 class LocalStorage:
@@ -67,7 +59,7 @@ class LocalStorage:
         abs_path = self.root.joinpath(path)
         if not abs_path.exists():
             return
-        logger.debug("remove path: {}", path)
+        logger.debug("delete path: {}", path)
         if abs_path.is_dir():
             shutil.rmtree(abs_path)
         else:
