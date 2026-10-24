@@ -1,7 +1,7 @@
-from datetime import datetime
 import os
-from pathlib import Path
 import shutil
+from datetime import datetime
+from pathlib import Path
 
 from loguru import logger
 
@@ -13,7 +13,7 @@ class LocalStorage:
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
 
-    def list_files(self, directory: str | Path = None):
+    def list_files(self, directory: str | Path | None = None):
         list_path = self.root if not directory else self.root.joinpath(directory)
 
         def _make_file(name: str):

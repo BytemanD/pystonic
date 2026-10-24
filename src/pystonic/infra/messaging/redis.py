@@ -1,10 +1,8 @@
-from typing import Type
-
 from loguru import logger
 from pydantic import BaseModel
 
 from pystonic.infra.redis.client import RedisClient
-from pystonic.utils.system import hostname, getpid
+from pystonic.utils.system import getpid, hostname
 
 
 class RedisMessaingQueue:
@@ -21,7 +19,7 @@ class RedisMessaingQueue:
         name: str,
         count: int = 1,
         block: int = 5000,
-        response_model: Type[BaseModel] | None = None,
+        response_model: type[BaseModel] | None = None,
     ):
         self.redis.x_create_group(name, self.group_name, mkstream=True)
         logger.info("watch redis key: {}", name)

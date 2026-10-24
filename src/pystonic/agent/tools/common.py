@@ -24,9 +24,8 @@ def list_dir(
     def _filter(x: Path):
         if name and name not in x.name:
             return False
-        if not include_hidden and x.name.startswith("."):
-            return False
-        return True
+
+        return not (not include_hidden and x.name.startswith("."))
 
     children = [x for x in find_path.iterdir()]
     return [str(x.relative_to(find_path)) for x in filter(_filter, children)]

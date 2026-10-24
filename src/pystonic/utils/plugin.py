@@ -4,9 +4,8 @@ import importlib
 import pkgutil
 
 import pluggy
-from loguru import logger
-
 import pystonic.plugins
+from loguru import logger
 
 hookspec = pluggy.HookspecMarker("pystonic")
 hookimpl = pluggy.HookimplMarker("pystonic")

@@ -62,7 +62,7 @@ class OpenaiAgent:
             f"终  端: {self.shell.terminal.value}"
         )
 
-    @functools.lru_cache
+    @functools.cached_property
     def list_models(self):
         return [
             f"{name}/{model}"
@@ -73,7 +73,9 @@ class OpenaiAgent:
     def delete_model(self):
         """delete agent model"""
 
-    def _get_agent(self, model: str | None = None, tools: list[Tool] = []) -> Agent:
+    def _get_agent(
+        self, model: str | None = None, tools: list[Tool] | None = None
+    ) -> Agent:
         if not model:
             models = self.list_models()
             if models:
@@ -83,7 +85,7 @@ class OpenaiAgent:
             name=self.name,
             instructions=self.instructions,
             model=model,
-            tools=tools,
+            tools=tools or [],
         )
 
     def _get_model_provider(
@@ -108,7 +110,7 @@ class OpenaiAgent:
         input: str,
         model: str | None = None,
         session_id: str | None = None,
-        tools: list[Tool] = [],
+        tools: list[Tool] | None = None,
     ):
         """Stream the agent's response to the input.
 
@@ -122,7 +124,7 @@ class OpenaiAgent:
         """
         model_name, provider = self._get_model_provider(model=model)
         resp = Runner.run_streamed(
-            self._get_agent(model=model_name, tools=tools),
+            self._get_agent(model=model_name, tools=tools or []),
             input,
             session=self.session_history.get_session(session_id=session_id),
             max_turns=CONF.agent.max_turns,

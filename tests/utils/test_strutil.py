@@ -1,8 +1,7 @@
-from typing import List
-
 import pytest
+
 from pystonic.utils import strutil
-from pystonic.utils.strutil import str2bool, is_valid_ip, IPVersion
+from pystonic.utils.strutil import IPVersion, is_valid_ip, str2bool
 
 
 def test_str2bool_true_values():
@@ -118,5 +117,5 @@ def test_is_valid_ip_returns_tuple():
         ("```python\nls\npwd\n```", ["ls\npwd"]),
     ],
 )
-def test_find_code_from_markdown_text(text: str, expected: List[str]):
+def test_find_code_from_markdown_text(text: str, expected: list[str]):
     assert strutil.find_code_blocks_from_markdown(text) == expected

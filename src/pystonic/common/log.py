@@ -21,7 +21,7 @@ def setup_logger(remove: bool = False):
     """Setup logging configuration."""
     if remove:
         logger.remove()
-    verbose = os.getenv("LOG_VERBOSE", 0)
+    verbose = os.getenv("LOG_VERBOSE", "0")
     versbose = int(verbose) if verbose is not None else 1
     logger.add(
         sys.stdout,

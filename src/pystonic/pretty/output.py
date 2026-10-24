@@ -8,8 +8,8 @@ from rich.table import Column, Table
 console = Console()
 
 
-def print_model(item: BaseModel, fields: list[str] = []):
-    fields = fields or [x for x in item.__class__.model_fields.keys()]
+def print_model(item: BaseModel, fields: list[str] | None = None):
+    fields = fields or [x for x in item.__class__.model_fields]
 
     table = Table(Column("Field", justify="left"), Column("Value", justify="left"))
 
@@ -21,7 +21,7 @@ def print_model(item: BaseModel, fields: list[str] = []):
 
 def print_models(
     items: Sequence[BaseModel],
-    fields: list[str | Column] = [],
+    fields: list[str | Column] | None = None,
     title: str | None = None,
     box: box.Box | None = box.HEAVY_HEAD,
     show_lines: bool = False,
@@ -30,7 +30,7 @@ def print_models(
         console.print("No items", style="yellow")
         return
     if not fields:
-        fields = [x for x in items[0].__class__.model_fields.keys()] if items else []
+        fields = [x for x in items[0].__class__.model_fields] if items else []
 
     model_fields = [x if isinstance(x, str) else str(x.header) for x in fields]
     headers = [Column(x) if isinstance(x, str) else x for x in fields]

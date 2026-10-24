@@ -1,13 +1,12 @@
 import os
 from pathlib import Path
 
+import boto3
+from botocore.exceptions import ClientError
 from loguru import logger
 
 from pystonic.common.conf import CONF, S3Config
 from pystonic.infra.storage.objects import FilePath
-
-import boto3
-from botocore.exceptions import ClientError
 
 
 class S3Storage:
@@ -23,7 +22,7 @@ class S3Storage:
             aws_session_token=config.session_token,
         )
 
-    def list_files(self, directory: str = None):
+    def list_files(self, directory: str | None = None):
         items = self.client.list_objects_v2(Bucket=self.bucket, Prefix=directory or "")
         return [
             FilePath(

@@ -108,7 +108,7 @@ class NacosMCPProxy:
             )
         except NacosException as e:
             if not e.error_code == 404:
-                raise e
+                raise
         return server_detail_info
 
     async def register_to_nacos(self, port: int):

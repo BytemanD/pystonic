@@ -1,4 +1,5 @@
 from unittest.mock import patch
+
 from pystonic.utils.input import get_input_number, select_items
 
 
@@ -127,14 +128,16 @@ def test_select_items_success():
     """测试选择列表项成功"""
     items = ["选项 A", "选项 B", "选项 C"]
 
-    with patch("builtins.input", return_value="2"):
-        with patch("pystonic.utils.input.cprint") as mock_cprint:
-            result = select_items(items)
-            assert result == "选项 B"
+    with (
+        patch("builtins.input", return_value="2"),
+        patch("pystonic.utils.input.cprint") as mock_cprint,
+    ):
+        result = select_items(items)
+        assert result == "选项 B"
 
-            # 验证打印了提示
-            mock_cprint.assert_called_once()
-            assert "请选择:" in mock_cprint.call_args[0][0]
+        # 验证打印了提示
+        mock_cprint.assert_called_once()
+        assert "请选择:" in mock_cprint.call_args[0][0]
 
 
 def test_select_items_default_return():
@@ -150,33 +153,37 @@ def test_select_items_custom_prompts():
     """测试自定义提示文本"""
     items = ["Item 1", "Item 2"]
 
-    with patch("builtins.input", return_value="1"):
-        with patch("pystonic.utils.input.cprint") as mock_cprint:
-            result = select_items(
-                items, select_prompt="请做出选择", input_prompt="请输入你的选择"
-            )
-            assert result == "Item 1"
+    with (
+        patch("builtins.input", return_value="1"),
+        patch("pystonic.utils.input.cprint") as mock_cprint,
+    ):
+        result = select_items(
+            items, select_prompt="请做出选择", input_prompt="请输入你的选择"
+        )
+        assert result == "Item 1"
 
-            # 验证使用了自定义提示
-            mock_cprint.assert_called_once()
-            assert "请做出选择" in mock_cprint.call_args[0][0]
+        # 验证使用了自定义提示
+        mock_cprint.assert_called_once()
+        assert "请做出选择" in mock_cprint.call_args[0][0]
 
 
 def test_select_items_print_format():
     """测试列表打印格式"""
     items = ["A", "B", "C", "D", "E"]
 
-    with patch("builtins.input", return_value="3"):
-        with patch("builtins.print") as mock_print:
-            result = select_items(items)
-            assert result == "C"
+    with (
+        patch("builtins.input", return_value="3"),
+        patch("builtins.print") as mock_print,
+    ):
+        result = select_items(items)
+        assert result == "C"
 
-            # 验证打印了所有选项 (5 个选项 + 1 个标题行 = 6 次调用)
-            assert mock_print.call_count == len(items) + 1
-            # 第一个选项应该是 "1. A"
-            first_call = mock_print.call_args_list[1]  # 从第 2 次开始是选项
-            assert "1." in str(first_call)
-            assert "A" in str(first_call)
+        # 验证打印了所有选项 (5 个选项 + 1 个标题行 = 6 次调用)
+        assert mock_print.call_count == len(items) + 1
+        # 第一个选项应该是 "1. A"
+        first_call = mock_print.call_args_list[1]  # 从第 2 次开始是选项
+        assert "1." in str(first_call)
+        assert "A" in str(first_call)
 
 
 def test_select_items_empty_default():

@@ -1,7 +1,7 @@
 from sqlmodel import Field
 
-from pystonic.orm.models import DBModel
 from pystonic.orm.database import create_all_tables
+from pystonic.orm.models import DBModel
 
 
 class User(DBModel, table=True):

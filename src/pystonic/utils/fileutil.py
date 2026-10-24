@@ -99,10 +99,9 @@ def move_files(
         logger.warning("move files: {} to {}", files_to_move, dst)
         return
     for file, dst_file in files_to_move:
-        if dst_file.exists():
-            if if_exists == IfExists.overwrite:
-                logger.warning("删除文件: {}", dst_file)
-                os.remove(dst.joinpath(file.name))
+        if dst_file.exists() and if_exists == IfExists.overwrite:
+            logger.warning("删除文件: {}", dst_file)
+            os.remove(dst.joinpath(file.name))
         shutil.move(file, dst)
 
 

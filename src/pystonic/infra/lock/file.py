@@ -2,8 +2,8 @@ import contextlib
 import os
 import tempfile
 
-from loguru import logger
 import portalocker
+from loguru import logger
 
 from pystonic.common.exceptions import GetLockTimeout
 

@@ -11,7 +11,7 @@ def create_huery():
     if CONF.huey.storage == "db":
         db_url = CONF.db.url
         if db_url.startswith("sqlite:"):
-            filename = db_url.replace("sqlite://", "")
+            filename = db_url.replace("sqlite:///", "")
             Path(filename).parent.mkdir(parents=True, exist_ok=True)
             return SqliteHuey(name=CONF.huey.name, filename=filename)
         elif db_url.startswith("mysql"):

@@ -2,7 +2,7 @@ import io
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -179,12 +179,10 @@ def test_hostname():
 
 def test_ip_address_success():
     """测试获取 IP 地址成功"""
-    with patch("socket.socket") as mock_socket_class:
-        # 模拟 socket 对象
-        mock_socket = MagicMock()
-        mock_socket.getsockname.return_value = ("192.168.1.100", 0)
-        mock_socket_class.return_value = mock_socket
-
+    mock_socket = MagicMock()
+    mock_socket.__enter__.return_value = mock_socket
+    mock_socket.getsockname.return_value = ("192.168.1.100", 0)
+    with patch("socket.socket", return_value=mock_socket):
         result = ip_address()
 
         # 验证返回 IP 地址
@@ -192,28 +190,29 @@ def test_ip_address_success():
 
         # 验证 socket 被正确调用（端口是 80 不是 8）
         mock_socket.connect.assert_called_once_with(("8.8.8.8", 80))
-        mock_socket.close.assert_called_once()
 
 
 def test_ip_address_fallback():
     """测试获取 IP 地址失败时使用备用方法"""
-    with patch("socket.socket") as mock_socket_class:
-        with patch("socket.gethostbyname") as mock_gethostbyname:
-            with patch("pystonic.utils.system.hostname") as mock_hostname:
-                # 模拟 socket 连接失败
-                mock_socket_class.side_effect = Exception("Connection failed")
+    with (
+        patch("socket.socket") as mock_socket_class,
+        patch("socket.gethostbyname") as mock_gethostbyname,
+        patch("pystonic.utils.system.hostname") as mock_hostname,
+    ):
+        # 模拟 socket 连接失败
+        mock_socket_class.side_effect = Exception("Connection failed")
 
-                # 模拟备用方法成功
-                mock_hostname.return_value = "localhost"
-                mock_gethostbyname.return_value = "127.0.0.1"
+        # 模拟备用方法成功
+        mock_hostname.return_value = "localhost"
+        mock_gethostbyname.return_value = "127.0.0.1"
 
-                result = ip_address()
+        result = ip_address()
 
-                # 验证返回备用 IP
-                assert result == "127.0.0.1"
+        # 验证返回备用 IP
+        assert result == "127.0.0.1"
 
-                # 验证调用了备用方法
-                mock_gethostbyname.assert_called_once_with("localhost")
+        # 验证调用了备用方法
+        mock_gethostbyname.assert_called_once_with("localhost")
 
 
 def test_execute_success():
@@ -247,7 +246,7 @@ def test_execute_with_check_false():
         mock_run.return_value = mock_result
 
         # check=False 时不应该抛异常
-        returncode, stdout, stderr = execute("invalid_cmd", check=False)
+        returncode, _, stderr = execute("invalid_cmd", check=False)
 
         assert returncode == 1
         assert stderr == b"error"
@@ -280,7 +279,7 @@ def test_execute_shell_false():
         )
         mock_run.return_value = mock_result
 
-        returncode, stdout, stderr = execute(["ls", "-l"], shell=False)
+        returncode, stdout, _ = execute(["ls", "-l"], shell=False)
 
         assert returncode == 0
         assert stdout == b"file list"

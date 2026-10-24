@@ -1,15 +1,14 @@
 from termcolor import colored, cprint
 
 
-def get_input_number(
-    prompt, min_number=None, max_number=None, quit_strs=["quit", "exit", "q"]
-):
+def get_input_number(prompt, min_number=None, max_number=None, quit_strs=None):
     """获取用户输入，支持退出功能
 
     :param message: 提示信息
     :param quit_strs: 退出字符串列表
     :return: 用户输入的整数
     """
+    quit_strs = quit_strs or ["quit", "exit", "q"]
     exit_msg = "/".join(quit_strs)
     input_index = input(colored(f"{prompt}[输入 {exit_msg} 退出]: ", color="cyan"))
     input_index = input_index.strip()

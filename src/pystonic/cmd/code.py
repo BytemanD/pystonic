@@ -78,7 +78,9 @@ def root():
     default="src",
     help="Path to the source code for coverage",
 )
+@click.argument("src", default="src")
 def check(
+    src: str,
     test: bool,
     test_dir: str,
     bandit: bool,
@@ -86,7 +88,7 @@ def check(
     cover_failed_under: int,
     cover_path: str,
 ):
-    source_arg = " ".join([str(x) for x in _get_source_paths()])
+    source_arg = " ".join(src.split(","))
     commands = [f"ruff check --fix {source_arg}", f"ruff format {source_arg}"]
     if test and os.path.exists(test_dir):
         # 检查 pytest 是否安装

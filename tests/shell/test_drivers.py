@@ -1,12 +1,14 @@
-import pytest
 import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from pystonic.shell.drivers import (
+    BashDriver,
     Cmd,
+    CmdDriver,
     ExecuteDriver,
     PowershellDriver,
-    CmdDriver,
-    BashDriver,
 )
 
 
@@ -60,25 +62,27 @@ class TestPowershellDriver:
 
         driver = PowershellDriver()
 
-        with patch(
-            "subprocess.getstatusoutput", return_value=(0, "foo")
-        ) as mock_getstatusoutput:
-            with patch("os.remove") as mock_remove:
-                with patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile:
-                    # 模拟临时文件
-                    mock_file = MagicMock()
-                    mock_file.name = "test.ps1"
-                    mock_file.__enter__ = MagicMock(return_value=mock_file)
-                    mock_file.__exit__ = MagicMock(return_value=None)
-                    mock_tempfile.return_value = mock_file
+        with (
+            patch(
+                "subprocess.getstatusoutput", return_value=(0, "foo")
+            ) as mock_getstatusoutput,
+            patch("os.remove") as mock_remove,
+            patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile,
+        ):
+            # 模拟临时文件
+            mock_file = MagicMock()
+            mock_file.name = "test.ps1"
+            mock_file.__enter__ = MagicMock(return_value=mock_file)
+            mock_file.__exit__ = MagicMock(return_value=None)
+            mock_tempfile.return_value = mock_file
 
-                    # 执行代码块
-                    driver.execute("Write-Host 'Test'")
+            # 执行代码块
+            driver.execute("Write-Host 'Test'")
 
-                    # 验证调用了 os.system
-                    assert mock_getstatusoutput.called
-                    # 验证清理了临时文件
-                    assert mock_remove.called
+            # 验证调用了 os.system
+            assert mock_getstatusoutput.called
+            # 验证清理了临时文件
+            assert mock_remove.called
 
 
 class TestCmdDriver:
@@ -106,21 +110,23 @@ class TestCmdDriver:
         """测试 CMD 执行代码块"""
         driver = CmdDriver()
 
-        with patch(
-            "subprocess.getstatusoutput", return_value=(0, "foo")
-        ) as mock_getstatusoutput:
-            with patch("os.remove") as mock_remove:
-                with patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile:
-                    mock_file = MagicMock()
-                    mock_file.name = "test.bat"
-                    mock_file.__enter__ = MagicMock(return_value=mock_file)
-                    mock_file.__exit__ = MagicMock(return_value=None)
-                    mock_tempfile.return_value = mock_file
+        with (
+            patch(
+                "subprocess.getstatusoutput", return_value=(0, "foo")
+            ) as mock_getstatusoutput,
+            patch("os.remove") as mock_remove,
+            patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile,
+        ):
+            mock_file = MagicMock()
+            mock_file.name = "test.bat"
+            mock_file.__enter__ = MagicMock(return_value=mock_file)
+            mock_file.__exit__ = MagicMock(return_value=None)
+            mock_tempfile.return_value = mock_file
 
-                    driver.execute("echo Hello")
+            driver.execute("echo Hello")
 
-                    assert mock_getstatusoutput.called
-                    assert mock_remove.called
+            assert mock_getstatusoutput.called
+            assert mock_remove.called
 
 
 class TestBashDriver:
@@ -154,21 +160,23 @@ class TestBashDriver:
         """测试 Bash 执行代码块"""
         driver = BashDriver()
 
-        with patch(
-            "subprocess.getstatusoutput", return_value=(0, "foo")
-        ) as mock_getstatusoutput:
-            with patch("os.remove") as mock_remove:
-                with patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile:
-                    mock_file = MagicMock()
-                    mock_file.name = "test.sh"
-                    mock_file.__enter__ = MagicMock(return_value=mock_file)
-                    mock_file.__exit__ = MagicMock(return_value=None)
-                    mock_tempfile.return_value = mock_file
+        with (
+            patch(
+                "subprocess.getstatusoutput", return_value=(0, "foo")
+            ) as mock_getstatusoutput,
+            patch("os.remove") as mock_remove,
+            patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile,
+        ):
+            mock_file = MagicMock()
+            mock_file.name = "test.sh"
+            mock_file.__enter__ = MagicMock(return_value=mock_file)
+            mock_file.__exit__ = MagicMock(return_value=None)
+            mock_tempfile.return_value = mock_file
 
-                    driver.execute("echo 'Test'")
+            driver.execute("echo 'Test'")
 
-                    assert mock_getstatusoutput.called
-                    assert mock_remove.called
+            assert mock_getstatusoutput.called
+            assert mock_remove.called
 
 
 class TestExecuteDriverBase:
@@ -213,6 +221,6 @@ class TestDriverPlatformCompatibility:
             assert hasattr(driver, "oneline_command")
             assert hasattr(driver, "file_command")
             assert hasattr(driver, "execute")
-            assert callable(getattr(driver, "oneline_command"))
-            assert callable(getattr(driver, "file_command"))
-            assert callable(getattr(driver, "execute"))
+            assert callable(driver.oneline_command)
+            assert callable(driver.file_command)
+            assert callable(driver.execute)

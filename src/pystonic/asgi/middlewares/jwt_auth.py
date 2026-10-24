@@ -41,9 +41,9 @@ JWT_SERVICE = JWTService()
 
 
 class JWTBackend(AuthenticationBackend):
-    def __init__(self, exclude_routes: set[tuple[str, str]] = set()) -> None:
+    def __init__(self, exclude_routes: set[tuple[str, str]] | None = None) -> None:
         super().__init__()
-        self.exclude_routes = exclude_routes
+        self.exclude_routes = exclude_routes or []
 
     async def authenticate(
         self, conn: HTTPConnection

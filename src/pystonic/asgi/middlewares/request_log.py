@@ -65,7 +65,7 @@ class DetailedRequestLoggingMiddleware(BaseHTTPMiddleware):
                         return {"type": "http.request", "body": body}
 
                     request._receive = receive
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 logger.warning(f"无法读取请求体: {e}")
                 request_body = "<无法读取>"
 

@@ -45,7 +45,7 @@ def execute_sql(sql: str, parameters: tuple[Any, ...] = ()) -> dict[str, Any]:
         execute_sql("INSERT INTO users (name) VALUES (?)", ("Alice",))
         result = execute_sql("SELECT * FROM users")  # 得到查询结果
     """
-    global _global_conn
+    # global _global_conn
     if _global_conn is None:
         # 未调用 connect 时自动连接内存数据库
         connect_db()

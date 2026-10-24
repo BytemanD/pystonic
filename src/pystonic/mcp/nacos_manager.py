@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from fastmcp.tools import Tool
 from loguru import logger
@@ -57,7 +56,7 @@ class NacosMcpManager:
         transport: str,
         ip: str,
         port: int,
-        tools: list[Tool] = [],
+        tools: list[Tool] | None = None,
         instructions: str | None = None,
     ):
         service_name = f"{name}::{version}"
@@ -92,7 +91,7 @@ class NacosMcpManager:
             mcp_service_detail = await mcp_service.get_mcp_server_detail(
                 self.conf.namespace, name, version
             )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning("get mcp server detail failed: {}", e)
         else:
             logger.info("mcp_service_detail: {}", mcp_service_detail.model_dump_json())
@@ -105,7 +104,7 @@ class NacosMcpManager:
                     inputSchema=tool.parameters,
                     outputSchema=tool.output_schema,
                 )
-                for tool in tools
+                for tool in tools or []
             ]
         )
         if mcp_service_detail:
@@ -152,7 +151,7 @@ class NacosMcpManager:
             try:
                 await asyncio.sleep(30)
             except TimeoutError:
-                logging.debug("Timeout occurred")
+                logger.debug("Timeout occurred")
             except asyncio.CancelledError:
                 return
             try:
@@ -162,5 +161,5 @@ class NacosMcpManager:
                 logger.info(
                     "mcp server deteail: {}", server_detail_info.model_dump_json()
                 )
-            except Exception as e:
-                logging.error("get mcp server detail failed: {}", e)
+            except Exception as e:  # noqa: BLE001
+                logger.error("get mcp server detail failed: {}", e)

@@ -1,6 +1,7 @@
 import contextlib
 
 from redis.exceptions import LockError
+
 from pystonic.common.exceptions import GetLockTimeout
 from pystonic.infra.redis.client import RedisClient
 

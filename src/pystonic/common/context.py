@@ -8,7 +8,7 @@ _context_vars: dict[str, contextvars.ContextVar] = {}
 
 
 def setvars(**kwargs):
-    global _context_vars
+    # global _context_vars
 
     for key, value in kwargs.items():
         if key not in _context_vars:
@@ -19,7 +19,7 @@ def setvars(**kwargs):
 
 
 def getvar(key: str, default=None) -> Any:
-    global _context_vars
+    # global _context_vars
 
     if key not in _context_vars:
         return None

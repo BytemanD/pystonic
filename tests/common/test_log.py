@@ -1,8 +1,9 @@
 import pytest
 from loguru import logger
+from pydantic import ValidationError
 
+from pystonic.common.conf import DEFAULT_FORMAT, LogConfig
 from pystonic.common.log import setup_logger
-from pystonic.common.conf import LogConfig, DEFAULT_FORMAT
 
 
 def test_log_config_default():
@@ -46,8 +47,7 @@ def test_log_config_frozen():
     """测试 LogConfig 不可变性"""
     config = LogConfig(level="INFO")
 
-    # 尝试修改应该抛出异常
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         config.level = "ERROR"
 
 

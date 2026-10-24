@@ -26,7 +26,7 @@ class DBModel(SQLModel):
         if field in self.__class__.model_fields:
             if not self.__pydantic_private__:
                 self.__pydantic_private__ = {}
-                self.__pydantic_private__["_modified_fields"] = set([])
+                self.__pydantic_private__["_modified_fields"] = set()
             self._modified_fields.add(field)
 
     def _get_changes(self) -> dict:

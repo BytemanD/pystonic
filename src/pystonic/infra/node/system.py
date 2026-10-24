@@ -1,5 +1,4 @@
 import dataclasses
-from typing import Dict, List, Optional
 
 import psutil
 from pydantic import BaseModel
@@ -17,13 +16,13 @@ class Disk(BaseModel):
     mountpoint: str
     fstype: str
     opts: str = ""
-    usage: Optional[DiskUsage] = None
+    usage: DiskUsage | None = None
 
 
 class NetInterface(BaseModel):
     name: str
     mac_address: str = ""
-    addresses: List[str] = dataclasses.field(default_factory=list)
+    addresses: list[str] = dataclasses.field(default_factory=list)
     bytes_sent: int = 0
     bytes_recv: int = 0
     packets_sent: int = 0
@@ -68,7 +67,7 @@ def disk_usage(mountpoint: str = "/"):
     )
 
 
-def partitions(all_device=False) -> List[Disk]:
+def partitions(all_device=False) -> list[Disk]:
     """获取所有磁盘分区信息
 
     如果 all_device=False, 仅物理设备
@@ -87,9 +86,9 @@ def partitions(all_device=False) -> List[Disk]:
     ]
 
 
-def net_interfaces(self) -> List[NetInterface]:
+def net_interfaces(self) -> list[NetInterface]:
     """获取网络接口地址信息"""
-    net_ifs: Dict[str, NetInterface] = {}
+    net_ifs: dict[str, NetInterface] = {}
     addrs = psutil.net_if_addrs()
     for interface, addresses in addrs.items():
         if interface == "lo":

@@ -22,7 +22,7 @@ class ShellWrapper(Shell):
                 _, output = subprocess.getstatusoutput(
                     self.driver.file_command(file.name)
                 )
-            except Exception as e:
+            except subprocess.CalledProcessError as e:
                 logger.exception("Failed to run code block")
                 output = str(e)
             finally:

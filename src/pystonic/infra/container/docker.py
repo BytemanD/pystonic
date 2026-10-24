@@ -1,10 +1,10 @@
 import dataclasses
-from typing import Dict, List, Literal, Optional
-import requests.exceptions
-import urllib3.exceptions
+from typing import Literal
 
 import docker
 import docker.errors
+import requests.exceptions
+import urllib3.exceptions
 from docker.models import containers as docker_containers
 from docker.models import images as docker_images
 from docker.models import volumes as docker_volumes
@@ -24,8 +24,8 @@ class Container:
     name: str
     status: str
     image: str = ""
-    command: List[str] = dataclasses.field(default_factory=list)
-    autoRemove: Optional[bool] = None
+    command: list[str] = dataclasses.field(default_factory=list)
+    autoRemove: bool | None = None
 
     def is_running(self) -> bool:
         return self.status in ["running", "active"]
@@ -48,9 +48,9 @@ class Container:
 @dataclasses.dataclass
 class Image:
     short_id: str
-    tags: List[str]
+    tags: list[str]
     size: int
-    id: Optional[str] = None
+    id: str | None = None
 
     @classmethod
     def from_raw_object(cls, image: docker_images.Image):
@@ -69,7 +69,7 @@ class Volume:
     mountpoint: str = ""
     driver: str = ""
     created_at: str = ""
-    labels: Optional[Dict[str, str]] = None
+    labels: dict[str, str] | None = None
 
     @classmethod
     def from_raw_object(cls, volume: docker_volumes.Volume):
@@ -175,7 +175,7 @@ class DockerManager:
         container = self._get_container(id_or_name)
         container.resize(height, width)
 
-    def images(self, show_intermediate=False) -> List[Image]:
+    def images(self, show_intermediate=False) -> list[Image]:
         images = self.client.images.list(all=show_intermediate)
         return [Image.from_raw_object(image) for image in images]
 
@@ -188,8 +188,8 @@ class DockerManager:
         self.client.images.remove(id_or_tag, force=force)
 
     def add_image_tag(
-        self, image_id: str, repository: str, tag: Optional[str] = None
-    ) -> List[str]:
+        self, image_id: str, repository: str, tag: str | None = None
+    ) -> list[str]:
         logger.info("image {} add tag: {}:{}", image_id, repository, tag)
         image = self.client.images.get(image_id)
         image.tag(repository, tag or "latest")
@@ -198,7 +198,7 @@ class DockerManager:
     def prune_images(self):
         self.client.images.prune()
 
-    def volumes(self) -> List[Volume]:
+    def volumes(self) -> list[Volume]:
         items = self.client.volumes.list()
         return [Volume.from_raw_object(volume) for volume in items]
 
@@ -207,7 +207,7 @@ class DockerManager:
         return Volume.from_raw_object(volume)
 
     def create_volume(
-        self, name=None, driver=None, label: Optional[dict[str, str]] = None
+        self, name=None, driver=None, label: dict[str, str] | None = None
     ) -> Volume:
         volume = self.client.volumes.create(name=name, driver=driver, label=label)
         return Volume.from_raw_object(volume)
@@ -217,7 +217,7 @@ class DockerManager:
         volume.remove(force=force)
 
     @retry(ContainerStatusNotMatch, tries=60, delay=1)
-    def _wait_container_status(self, id_or_name, expect: List[str]) -> Container:
+    def _wait_container_status(self, id_or_name, expect: list[str]) -> Container:
         new_container = self.get_container(id_or_name)
         logger.info("container {} status is {}", id_or_name, new_container.status)
         if new_container.status in expect:

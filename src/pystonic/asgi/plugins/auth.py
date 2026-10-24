@@ -48,7 +48,7 @@ def setup(
         exclude_routes: 需要排除认证的路由
     """
     auth_router = APIRouter(tags=["Auth"])
-    exclude_routes = exclude_routes or set([])
+    exclude_routes = exclude_routes or set()
     exclude_routes.add(("POST", f"{auth_router_prefix}/login"))
 
     # ============= auth router =============
