@@ -23,7 +23,6 @@ def create_app(
     docs_url: str = "/docs",
     redoc_url: str = "/redoc",
     openapi_url: str = "/openapi.json",
-    openapi_prefix: str = "",
     middlewares: Sequence[Middleware] | None = None,
     root_path: str = "",
 ):
@@ -34,7 +33,6 @@ def create_app(
         version=version,
         docs_url=docs_url,
         redoc_url=redoc_url,
-        openapi_prefix=openapi_prefix,
         openapi_url=openapi_url,
         lifespan=lifespan,
         middleware=middlewares,

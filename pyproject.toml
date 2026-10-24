@@ -34,16 +34,14 @@ gitstats = [
 orm = [
     "sqlmodel>=0.0.38",
 ]
-fastapi = [
-    "fastapi>=0.136.3",
-]
+
 mcp = [
     "fastmcp==3.4.2",
     "nacos-sdk-python==2.0.9",
     "nacos-maintainer-sdk-python==0.1.2",
 ]
 asgi = [
-    "fastapi>=0.141.1",
+    "fastapi>=0.162.0",
     "uvicorn>=0.52.1",
 ]
 agent = [
