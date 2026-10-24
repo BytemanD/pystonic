@@ -27,7 +27,7 @@ def check_code(
 ):
     source_arg = " ".join([str(x) for x in source_paths])
     commands = [f"ruff check --fix {source_arg}", f"ruff format {source_arg}"]
-    if test:
+    if test and os.path.exists("tests"):
         # 检查 pytest 是否安装
         if not is_package_installed("pytest"):
             print("❌ Error: pytest is not installed. Please install it first.")
@@ -62,6 +62,7 @@ def root():
 
 @root.command()
 @click.option("-t", "--test", is_flag=True, help="Run tests with pytest")
+@click.option("--test-dir", default="tests", help="Test cases dir")
 @click.option("-b", "--bandit", is_flag=True, help="Run check with bandit")
 @click.option("-c", "--cover", is_flag=True, help="Run pytest with coverage")
 @click.option(
@@ -78,13 +79,38 @@ def root():
     help="Path to the source code for coverage",
 )
 def check(
-    test: bool, bandit: bool, cover: bool, cover_failed_under: int, cover_path: str
+    test: bool,
+    test_dir: str,
+    bandit: bool,
+    cover: bool,
+    cover_failed_under: int,
+    cover_path: str,
 ):
-    check_code(
-        _get_source_paths(),
-        test=test,
-        bandit=bandit,
-        cover=cover,
-        cover_fail_under=cover_failed_under,
-        cover_path=cover_path,
-    )
+    source_arg = " ".join([str(x) for x in _get_source_paths()])
+    commands = [f"ruff check --fix {source_arg}", f"ruff format {source_arg}"]
+    if test and os.path.exists(test_dir):
+        # 检查 pytest 是否安装
+        if not is_package_installed("pytest"):
+            print("❌ Error: pytest is not installed. Please install it first.")
+            return
+        pytest_cmd = f"pytest {test_dir}"
+        # 如果启用覆盖率检查，验证 pytest-cov 是否安装
+        if cover:
+            if not is_package_installed("pytest_cov"):
+                print("❌ Error: pytest-cov is not installed. Please install it first.")
+                return
+            pytest_cmd += f" --cov={cover_path} --cov-report=term --cov-fail-under={cover_failed_under}"
+
+        commands.append(pytest_cmd)
+
+    if bandit:
+        if not is_package_installed("bandit"):
+            print("❌ Error: bandit is not installed. Please install it first.")
+            return
+        commands.append(f"bandit -r {source_arg}")
+
+    for command in commands:
+        click.secho(f"🚀 {command}", fg="magenta")
+        os.system(command)
+        # click.echo(output)
+        print()

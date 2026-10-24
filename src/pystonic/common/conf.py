@@ -214,7 +214,7 @@ class TaskWrokerConfig(FrozenBaseModel):
 
 class S3Config(FrozenBaseModel):
     endpoint_url: str = ""
-    region: str = "auto"
+    region: str = ""
     access_key_id: str = ""
     secret_access_key: str = ""
     session_token: str = ""
@@ -236,7 +236,7 @@ class BaseAppConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        env_nested_delimiter=".",
+        env_nested_delimiter="__",
         extra="ignore",
         frozen=True,
         toml_file=os.getenv("CONF_FILE") or DEFAULT_CONF_FILE,

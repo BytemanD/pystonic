@@ -8,7 +8,6 @@ from pystonic.infra.storage.objects import FilePath
 
 import boto3
 from botocore.exceptions import ClientError
-# from botocore.errorfactory import NoSuchKey
 
 
 class S3Storage:
@@ -25,7 +24,7 @@ class S3Storage:
         )
 
     def list_files(self, directory: str = None):
-        items = self.client.list_objects_v2(Bucket=self.bucket)
+        items = self.client.list_objects_v2(Bucket=self.bucket, Prefix=directory or "")
         return [
             FilePath(
                 name=os.path.basename(x.get("Key")),
@@ -39,15 +38,15 @@ class S3Storage:
 
     def get_file(self, path: str):
         try:
-            response = self.client.get_object(Bucket=self.bucket, Key=path)
+            response = self.client.head_object(Bucket=self.bucket, Key=path)
         except ClientError as e:
             if type(e).__name__ == "NoSuchKey":
                 raise FileNotFoundError(f"file {path} not exists")
             raise
         return FilePath(
-            name=os.path.basename(response.get("Key")),
-            path=response.get("Key"),
-            size=response.get("Size"),
+            name=os.path.basename(path),
+            path=path,
+            size=response.get("ContentLength"),
             modify_time=response.get("LastModified"),
             is_dir=False,
         )

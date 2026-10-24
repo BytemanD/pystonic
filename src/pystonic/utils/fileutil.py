@@ -1,3 +1,4 @@
+import hashlib
 import os
 import shutil
 from enum import Enum
@@ -131,3 +132,13 @@ def file_size(path: Path | str, natural=False) -> int | str:
         return humanize.naturalsize(file_path.stat().st_size)
     else:
         return file_path.stat().st_size
+
+
+def file_sha256(file_path: str) -> str:
+    """计算文件的二进制哈希值"""
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        # 分块读取，避免大文件内存溢出
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()

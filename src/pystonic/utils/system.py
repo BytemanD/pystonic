@@ -103,18 +103,20 @@ class PlatformInfo(BaseModel):
     version: str
     machine: str
     processor: str
+    name: str | None = None
+    dist_version: str | None = None
 
 
 def platform_info() -> dict:
-    info = {
-        "system": platform.system(),
-        "release": platform.release(),
-        "version": platform.version(),
-        "machine": platform.machine(),
-        "processor": platform.processor(),
-    }
+    info = PlatformInfo(
+        system=platform.system(),
+        release=platform.release(),
+        version=platform.version(),
+        machine=platform.machine(),
+        processor=platform.processor(),
+    )
     if platform.system().lower() == "linux":
-        info["name"] = distro.name()
-        info["dist_version"] = distro.version()
+        info.name = distro.name()
+        info.dist_version = distro.version()
 
     return info

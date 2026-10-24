@@ -1,22 +1,13 @@
-import hashlib
 from pathlib import Path
 
 import chromadb
 import click
 from loguru import logger
 
+from pystonic.utils.fileutil import file_sha256
+
 client = chromadb.PersistentClient("data/chromadb")
 collection = client.get_or_create_collection(name="my_collection")
-
-
-def file_sha256(file_path: str) -> str:
-    """计算文件的二进制哈希值"""
-    sha256_hash = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        # 分块读取，避免大文件内存溢出
-        for byte_block in iter(lambda: f.read(4096), b""):
-            sha256_hash.update(byte_block)
-    return sha256_hash.hexdigest()
 
 
 @click.group()
