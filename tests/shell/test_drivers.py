@@ -57,9 +57,12 @@ class TestPowershellDriver:
 
     def test_powershell_execute(self):
         """测试 PowerShell 执行代码块"""
+
         driver = PowershellDriver()
 
-        with patch("os.system") as mock_system:
+        with patch(
+            "subprocess.getstatusoutput", return_value=(0, "foo")
+        ) as mock_getstatusoutput:
             with patch("os.remove") as mock_remove:
                 with patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile:
                     # 模拟临时文件
@@ -73,7 +76,7 @@ class TestPowershellDriver:
                     driver.execute("Write-Host 'Test'")
 
                     # 验证调用了 os.system
-                    assert mock_system.called
+                    assert mock_getstatusoutput.called
                     # 验证清理了临时文件
                     assert mock_remove.called
 
@@ -103,7 +106,9 @@ class TestCmdDriver:
         """测试 CMD 执行代码块"""
         driver = CmdDriver()
 
-        with patch("os.system") as mock_system:
+        with patch(
+            "subprocess.getstatusoutput", return_value=(0, "foo")
+        ) as mock_getstatusoutput:
             with patch("os.remove") as mock_remove:
                 with patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile:
                     mock_file = MagicMock()
@@ -114,7 +119,7 @@ class TestCmdDriver:
 
                     driver.execute("echo Hello")
 
-                    assert mock_system.called
+                    assert mock_getstatusoutput.called
                     assert mock_remove.called
 
 
@@ -149,7 +154,9 @@ class TestBashDriver:
         """测试 Bash 执行代码块"""
         driver = BashDriver()
 
-        with patch("os.system") as mock_system:
+        with patch(
+            "subprocess.getstatusoutput", return_value=(0, "foo")
+        ) as mock_getstatusoutput:
             with patch("os.remove") as mock_remove:
                 with patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile:
                     mock_file = MagicMock()
@@ -160,7 +167,7 @@ class TestBashDriver:
 
                     driver.execute("echo 'Test'")
 
-                    assert mock_system.called
+                    assert mock_getstatusoutput.called
                     assert mock_remove.called
 
 

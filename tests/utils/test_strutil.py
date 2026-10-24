@@ -1,4 +1,7 @@
+from typing import List
+
 import pytest
+from pystonic.utils import strutil
 from pystonic.utils.strutil import str2bool, is_valid_ip, IPVersion
 
 
@@ -101,3 +104,19 @@ def test_is_valid_ip_returns_tuple():
     is_valid, version = result
     assert is_valid is True
     assert isinstance(version, IPVersion)
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("```ls```", ["ls"]),
+        ("```\nls\n```", ["ls"]),
+        ("```\nls\npwd\n```", ["ls\npwd"]),
+        ("```\nls\n\npwd\n```", ["ls\n\npwd"]),
+        ("```\nls\nhostname -i\n```", ["ls\nhostname -i"]),
+        ("```powershell\nls\n```", ["ls"]),
+        ("```python\nls\npwd\n```", ["ls\npwd"]),
+    ],
+)
+def test_find_code_from_markdown_text(text: str, expected: List[str]):
+    assert strutil.find_code_blocks_from_markdown(text) == expected

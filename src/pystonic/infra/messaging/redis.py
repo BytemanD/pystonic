@@ -1,28 +1,22 @@
-from os import getpid
 from typing import Type
 
 from loguru import logger
 from pydantic import BaseModel
 
 from pystonic.infra.redis.client import RedisClient
-from pystonic.utils.system import hostname
+from pystonic.utils.system import hostname, getpid
 
 
-class Productor:
-    def __init__(self):
-        self.redis = RedisClient(decode_responses=True)
-
-    def push(self, name: str, value: BaseModel):
-        self.redis.xadd(name, value.model_dump(mode="json"))
-
-
-class Consumer:
+class RedisMessaingQueue:
     def __init__(self, group_name: str | None = None, consumer_name: str | None = None):
         self.group_name = group_name or f"Host-{hostname()}"
         self.consumer_name = consumer_name or f"Thread-{getpid()}"
         self.redis = RedisClient(decode_responses=True)
 
-    def watch(
+    def publish(self, name: str, value: BaseModel):
+        self.redis.xadd(name, value.model_dump(mode="json"))
+
+    def consume(
         self,
         name: str,
         count: int = 1,

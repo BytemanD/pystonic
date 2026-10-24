@@ -1,7 +1,7 @@
 import argparse
 import re
 
-from pystonic.plugins.website import utils
+from tools.website import utils
 from pystonic.utils.plugin import CommandPlugin, hookimpl
 
 

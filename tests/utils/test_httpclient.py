@@ -18,14 +18,14 @@ thread.start()
 
 
 def test_httpclient():
-    client = httpclient.default_client(base_url="http://127.0.0.1")
+    client = httpclient.default_client(base_url="https://example.org")
     resp = client.get("/")
     assert not resp.is_error
 
 
 def test_httpclient_with_check_status():
     client = httpclient.default_client(
-        base_url="http://127.0.0.1", timeout=10, raise_for_status=True
+        base_url="https://example.org", timeout=10, raise_for_status=True
     )
     with pytest.raises(httpx.HTTPStatusError):
         client.post("/")

@@ -58,7 +58,7 @@ def test_conf_init_without_setup():
 def test_conf_update_disable():
 
     with pytest.raises(ValidationError):
-        CONF.store = '/tmp'
+        CONF.store = "/tmp"
 
     with pytest.raises(ValidationError):
-        CONF.log.level = 'TRACE'
+        CONF.log.level = "TRACE"

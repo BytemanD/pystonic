@@ -1,11 +1,9 @@
-from datetime import datetime
 from unittest.mock import Mock, patch
 
 from pydantic import BaseModel
 from rich.table import Column, Table
 
 from pystonic.pretty.output import print_model, print_models
-from pystonic.utils.dateutil import utcnow
 
 
 class Foo(BaseModel):
@@ -71,9 +69,10 @@ def test_print_models(mock_console_print: Mock):
         str(models[1].is_active),
     ]
 
+
 @patch("rich.console.Console.print")
 def test_print_models_with_empty_items(mock_console_print: Mock):
-    print_models([Foo(name='name1', age=18)])
+    print_models([Foo(name="name1", age=18)])
 
     mock_console_print.assert_called_once()
     table = mock_console_print.call_args[0][0]
@@ -85,7 +84,7 @@ def test_print_models_with_empty_items(mock_console_print: Mock):
 
 @patch("rich.console.Console.print")
 def test_print_models_with_custom_fields(mock_console_print: Mock):
-    print_models([Foo(name='name1', age=18, is_active=True)], fields=["name", "age"])
+    print_models([Foo(name="name1", age=18, is_active=True)], fields=["name", "age"])
 
     mock_console_print.assert_called_once()
     table = mock_console_print.call_args[0][0]
