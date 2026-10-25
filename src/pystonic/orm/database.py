@@ -3,8 +3,8 @@ from pathlib import Path
 
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy import Engine, create_engine, inspect, text
-from sqlmodel import Session, SQLModel
+from sqlalchemy import Engine
+from sqlmodel import Session, SQLModel, create_engine, inspect, text
 
 from pystonic.common.conf import CONF
 
@@ -22,11 +22,11 @@ class TableColumn(BaseModel):
 
 _engine: Engine = create_engine(
     CONF.db.url,
+    echo=CONF.db.echo,
     pool_size=CONF.db.pool_size,
     pool_recycle=CONF.db.pool_recycle,
-    # pool_timeout=CONF.db.pool_timeout,
-    # max_overflow=CONF.db.max_overflow,
-    echo=CONF.db.echo,
+    pool_timeout=CONF.db.pool_timeout,
+    max_overflow=CONF.db.max_overflow,
 )
 
 
@@ -117,3 +117,11 @@ def get_table_structure(table_name: str) -> list[TableColumn]:
         )
         for col in columns
     ]
+
+
+if _engine.dialect.name == "sqlite":
+    logger.warning(
+        "SQLite is currently in use. SQLite is not suitable for production workloads; "
+        "please switch to MySQL, PostgreSQL, or another production-grade database "
+        "before deploying."
+    )

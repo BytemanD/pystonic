@@ -10,6 +10,8 @@ from pystonic.infra.storage.objects import FilePath
 
 
 class S3Storage:
+    SCHEMA = "s3://"
+
     def __init__(self, config: S3Config | None = None):
         config = config or CONF.s3
         self.bucket = config.bucket

@@ -9,6 +9,8 @@ from pystonic.infra.storage.objects import FilePath
 
 
 class LocalStorage:
+    SCHEMA = "local://"
+
     def __init__(self, root: str | Path):
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
@@ -42,14 +44,14 @@ class LocalStorage:
             modify_time=datetime.fromtimestamp(abs_path.stat().st_mtime),
         )
 
-    def write(self, path: str | Path, content: bytes | str):
+    def write(self, path: str | Path, content: bytes | str, encoding="utf-8"):
         abs_path = self.root.joinpath(path)
         abs_path.parent.mkdir(parents=True, exist_ok=True)
         logger.debug("write file: {}", path)
         if isinstance(content, bytes):
             abs_path.write_bytes(content)
         else:
-            abs_path.write_text(content)
+            abs_path.write_text(content, encoding=encoding)
 
     def read(self, path: str | Path):
         abs_path = self.root.joinpath(path)

@@ -1,5 +1,7 @@
+import threading
+
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from pystonic.infra.redis.client import RedisClient
 from pystonic.utils.system import getpid, hostname
@@ -10,6 +12,11 @@ class RedisMessaingQueue:
         self.group_name = group_name or f"Host-{hostname()}"
         self.consumer_name = consumer_name or f"Thread-{getpid()}"
         self.redis = RedisClient(decode_responses=True)
+        self._shutdown_event = threading.Event()
+
+    def shutdown(self):
+        self.redis.client.close()
+        self._shutdown_event.set()
 
     def publish(self, name: str, value: BaseModel):
         self.redis.xadd(name, value.model_dump(mode="json"))
@@ -23,7 +30,10 @@ class RedisMessaingQueue:
     ):
         self.redis.x_create_group(name, self.group_name, mkstream=True)
         logger.info("watch redis key: {}", name)
-        while True:
+        while not self._shutdown_event.is_set():
+            if self._shutdown:
+                logger.info("shutdown")
+                break
             results = self.redis.x_read_group(
                 name,
                 self.group_name,
@@ -37,10 +47,15 @@ class RedisMessaingQueue:
             logger.debug("receive {} results", len(results))
             for stream_name, messages in results:
                 for msg_id, fields in messages:
-                    yield (
-                        response_model.model_validate(fields)
-                        if response_model
-                        else fields
-                    )
+                    try:
+                        item = (
+                            response_model.model_validate(fields)
+                            if response_model
+                            else fields
+                        )
+                    except ValidationError:
+                        logger.error("invalid {}: {}", response_model, fields)
+                        continue
+                    yield item
                     logger.debug("ack {}", msg_id)
                     self.redis.client.xack(name, self.group_name, msg_id)
