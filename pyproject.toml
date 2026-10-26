@@ -72,6 +72,15 @@ infra = [
     "psutil>=7.2.2",
     "redis>=8.1.0",
 ]
+milvus = [
+    "chroma>=0.2.0",
+    "pymilvus[model]>=3.0.2",
+]
+chroma = [
+    "langchain-chroma>=1.1.0",
+    "langchain-core>=1.7.0",
+    "langchain-text-splitters>=1.1.3",
+]
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]

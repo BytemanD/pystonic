@@ -31,9 +31,6 @@ class RedisMessaingQueue:
         self.redis.x_create_group(name, self.group_name, mkstream=True)
         logger.info("watch redis key: {}", name)
         while not self._shutdown_event.is_set():
-            if self._shutdown:
-                logger.info("shutdown")
-                break
             results = self.redis.x_read_group(
                 name,
                 self.group_name,

@@ -230,6 +230,29 @@ class UpstashConfig(FrozenBaseModel):
     token: str = ""
 
 
+class MilvusConfig(FrozenBaseModel):
+    uri: str = ""
+    token: str = ""
+    timeout: int = 300
+    user: str = ""
+    password: str = ""
+    db_name: str = ""
+    default_collection: str = "default"
+    embedding_model: str = "all-MiniLM-L6-v2"
+    # 有 GPU 可改为 'cuda:0'
+    embedding_device: str = "cpu"
+    # 一致性级别
+    consistency_level: str = "Session"
+
+
+class ChromaConfig(FrozenBaseModel):
+    persist_directory: str | None = None
+    host: str | None = None
+    port: int | None = None
+    default_collection: str = "default"
+    splite_thresold: int = 1000
+
+
 class BaseAppConfig(BaseSettings):
     """Base App Configuration"""
 
@@ -254,6 +277,8 @@ class BaseAppConfig(BaseSettings):
     s3: S3Config = S3Config()
     redis: RedisConfig = RedisConfig()
     upstash: UpstashConfig = UpstashConfig()
+    milvus: MilvusConfig = MilvusConfig()
+    chroma: ChromaConfig = ChromaConfig()
     agent: AgentConfig = AgentConfig()
 
     huey: HueyConfig = HueyConfig()
