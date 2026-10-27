@@ -44,6 +44,7 @@ class MilvusVector:
     wget https://chroma-onnx-models.s3.amazonaws.com/all-MiniLM-L6-v2/onnx.tar.gz
     cp onnx.tar.gz ~/.cache/chroma/onnx_models/all-MiniLM-L6-v2/onnx.tar.gz
     ```
+    注意: collection 名称首个字符应为下划线、小写字母或大写字母
     """
 
     def __init__(self, config: MilvusConfig | None = None):

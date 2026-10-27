@@ -25,7 +25,7 @@ class JWTToken(BaseModel):
 
 class JWTService:
     def encode(self, user: str):
-        payload = {"sub": user, "exp": utcnow() + timedelta(hours=1)}
+        payload = {"sub": user, "exp": utcnow() + timedelta(seconds=CONF.jwt.expired)}
         return jwt.encode(payload, key=CONF.jwt.key, algorithm=CONF.jwt.algorithms[0])
 
     def decode(self, token: str, verify: bool = False):
