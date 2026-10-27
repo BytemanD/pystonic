@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
+import sys
 
 import click
 
 from pystonic.utils.pkg import is_package_installed
+from pystonic.utils.system import execute
 
 
 def _get_source_paths() -> list[str | Path]:
@@ -50,7 +52,7 @@ def check_code(
 
     for command in commands:
         click.secho(f"🚀 {command}", fg="magenta")
-        os.system(command)
+        execute(command.split(), stdout=sys.stdout, stderr=sys.stderr)
         # click.echo(output)
         print()
 

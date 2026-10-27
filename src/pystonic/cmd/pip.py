@@ -5,7 +5,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from pystonic.pretty import output
-from pystonic.utils import executor
+from pystonic.utils.system import execute
 
 
 class PipRepo(BaseModel):
@@ -44,7 +44,7 @@ def set_repo(repo: str):
         raise click.ClickException(f"invalid repo: {repo}")
 
     result = parse.urlparse(repo_map[repo])
-    pip_cmd = executor.Executor("python -m pip")
     logger.success("set pip repo ({}) success", index_url)
-    pip_cmd.execute("config", "set", "global.index-url", index_url)
-    pip_cmd.execute("config", "set", "global.trusted-host", result.hostname)
+    cmd_prefix = ["python", "-m", "pip", "config", "set"]
+    execute(*cmd_prefix, "global.index-url", index_url, check=True)
+    execute(*cmd_prefix, "global.trusted-host", result.hostname, check=True)

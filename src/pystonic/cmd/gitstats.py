@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.table import Column
 from rich.text import Text
 
-from pystonic.git import utils
+from pystonic.infra.git import utils
 from pystonic.pretty import output
 from pystonic.utils import dateutil
 
@@ -57,13 +57,8 @@ def root():
     default="total",
     help="Sort by",
 )
-def lines(
-    date_range: list[str],
-    sort_by: str | None = None,
-):
-    if not date_range:
-        date_range = ["today"]
-
+def lines(date_range: list[str], sort_by: str | None = None):
+    date_range = date_range or ["today"]
     try:
         since, until = parse_date_range(
             date_range[0], until=date_range[1] if len(date_range) > 1 else None
@@ -108,16 +103,8 @@ def lines(
 @click.argument("date_range", required=False, nargs=-1, default=["today"])
 @click.option("--author", "-a", help="Filter commits by author")
 @click.option("--changes", is_flag=True, help="show changes")
-def commits(
-    date_range: list[str],
-    changes: bool = False,
-    author: str | None = None,
-):
-    if not date_range:
-        date_range = ["today"]
-
-    console = Console()
-
+def commits(date_range: list[str], changes: bool = False, author: str | None = None):
+    date_range = date_range or ["today"]
     try:
         since, until = parse_date_range(
             date_range[0], until=date_range[1] if len(date_range) > 1 else None
@@ -126,6 +113,7 @@ def commits(
         raise ValueError(f"parse date range error: {e}")
     commits = utils.commits(since, until, author=author)
 
+    console = Console()
     console.print(
         f"{since:%Y-%m-%d %H:%M:%S} ~ {until:%Y-%m-%d %H:%M:%S}",
         style="cyan underline",

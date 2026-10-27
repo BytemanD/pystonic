@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 
 def is_windows():
-    return platform.system() == "Window"
+    return platform.system() == "Windows"
 
 
 def is_linux():
@@ -74,15 +74,21 @@ def get_first_non_loopback_ip(default: str | None = None):
 
 
 def execute(
-    cmd,
-    check=True,
-    shell=True,
+    *args: str,
+    shell=False,
+    check=False,
+    text=True,
     stdout=subprocess.PIPE,
     stderr=subprocess.PIPE,
 ):
-    logger.debug("RUN: {}", cmd)
+    logger.debug("Run: {}", args)
     process = subprocess.run(
-        cmd, check=check, shell=shell, stdout=stdout, stderr=stderr
+        [x for x in args],
+        shell=shell,
+        text=text,
+        check=check,
+        stdout=stdout,
+        stderr=stderr,
     )
     return process.returncode, process.stdout, process.stderr
 

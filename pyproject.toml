@@ -28,9 +28,7 @@ pretty = [
     "rich>=14.3.3",
     "prettytable>=3.17.0",
 ]
-gitstats = [
-    "gitpython>=3.1.46",
-]
+
 orm = [
     "sqlmodel>=0.0.38",
 ]
@@ -61,6 +59,8 @@ dev = [
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.15.1",
     "ruff>=0.15.4",
+    "bandit>=1.9.4",
+    "gitpython>=3.1.46",
 ]
 apscheduler = [
     "apscheduler>=3.11.3",
@@ -104,8 +104,3 @@ explicit = true
 [tool.pytest]
 minversion = "9.0"
 addopts = ["-ra"]
-
-[dependency-groups]
-dev = [
-    "bandit>=1.9.4",
-]
