@@ -111,7 +111,7 @@ class PlatformInfo(BaseModel):
     dist_version: str | None = None
 
 
-def platform_info() -> dict:
+def platform_info():
     info = PlatformInfo(
         system=platform.system(),
         release=platform.release(),

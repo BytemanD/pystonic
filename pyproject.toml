@@ -48,8 +48,6 @@ agent = [
     "langchain-openai>=1.7.3",
     "langgraph-checkpoint-mysql[asyncmy]>=3.0.0",
     "langgraph-checkpoint-sqlite>=3.1.2",
-    "openai>=2.52.0",
-    "openai-agents>=0.18.3",
 ]
 huey = [
     "huey[peewee,redis,sql,sqlite]>=3.4.0",
@@ -109,3 +107,8 @@ explicit = true
 [tool.pytest]
 minversion = "9.0"
 addopts = ["-ra"]
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.4.1",
+]

@@ -13,15 +13,20 @@ from langgraph.checkpoint.mysql.asyncmy import AsyncMySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from loguru import logger
 
-from pydantic import BaseModel, SecretStr
-from pystonic.agent.langchain_agent.objects import Message, RuntimeContext
-from pystonic.common import context
+from pydantic import SecretStr
+from pystonic.agents.langchain_agent.middlewares import RuntimeAgentMiddleware
+from pystonic.agents.langchain_agent.objects import Message, RuntimeContext
 from pystonic.common.conf import CONF
 from pystonic.orm.database import engine_name
 
 
 @contextlib.asynccontextmanager
-async def get_checkpointer_saver():
+async def get_checkpointer_saver(sqlite_memory=False):
+    if sqlite_memory:
+        async with AsyncSqliteSaver.from_conn_string(":memory:") as saver:
+            yield saver
+        return
+
     if CONF.agent.checkpoint_driver in ["auto", "mysql"] and engine_name() == "mysql":
         logger.info("use mysql checkpoint saver")
         async with AsyncMySaver.from_conn_string(CONF.db.url) as saver:
@@ -43,8 +48,8 @@ async def get_checkpointer_saver():
 class AsyncAgent:
     def __init__(
         self,
-        saver: BaseCheckpointSaver | None = None,
-        context_schema: Type[RuntimeContext] | None = None,
+        saver: BaseCheckpointSaver,
+        context_schema: Type[RuntimeContext] = RuntimeContext,
         middleware: Sequence[AgentMiddleware] | None = None,
         tools: list | None = None,
     ):
@@ -53,26 +58,25 @@ class AsyncAgent:
             ChatOpenAI(model="gpt", base_url="...", api_key=SecretStr("...")),
             checkpointer=saver,
             context_schema=context_schema,
-            middleware=middleware or [],
+            middleware=[RuntimeAgentMiddleware(), *(middleware or [])],
             tools=tools or [],
         )
 
-    async def chat(
+    async def astream(
         self,
-        ctx: BaseModel,
+        ctx: RuntimeContext,
         query: str,
         callbacks: Sequence[BaseCallbackHandler] | None = None,
+        config: dict | None = None,
     ):
+        config = config or {}
         stream = self._agent.astream(
             {"messages": [{"role": "user", "content": query}]},
             stream_mode="messages",
             config={
-                "configurable": {"thread_id": ctx.session_uuid},
-                "metadata": {
-                    "user": context.getvar("account"),
-                    "agent": ctx.agent_uuid,
-                },
+                "configurable": {"thread_id": ctx.thread_id},
                 "callbacks": callbacks or [],
+                **config,
             },
             # version="v3"
             context=ctx,

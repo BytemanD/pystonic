@@ -20,14 +20,7 @@ class TableColumn(BaseModel):
     unique: bool = False
 
 
-_engine: Engine = create_engine(
-    CONF.db.url,
-    echo=CONF.db.echo,
-    pool_size=CONF.db.pool_size,
-    pool_recycle=CONF.db.pool_recycle,
-    pool_timeout=CONF.db.pool_timeout,
-    max_overflow=CONF.db.max_overflow,
-)
+_engine: Engine = create_engine(CONF.db.url, **CONF.db.engine_params())
 
 
 def engine_name():
@@ -41,7 +34,14 @@ def get_session():
 
 
 def create_all_tables():
-    if _engine.dialect.name == "sqlite":
+    if engine_name() == "sqlite" and not CONF.db.disable_warning:
+        logger.warning(
+            "SQLite is currently in use. SQLite is not suitable for production workloads; "
+            "please switch to MySQL, PostgreSQL, or another production-grade database "
+            "before deploying."
+        )
+
+    if engine_name() == "sqlite":
         db_path = _engine.url.database
         if db_path and db_path != ":memory:":
             db_dir = Path(db_path).parent
@@ -123,7 +123,7 @@ def get_table_structure(table_name: str) -> list[TableColumn]:
     ]
 
 
-if _engine.dialect.name == "sqlite":
+if engine_name() == "sqlite" and not CONF.db.disable_warning:
     logger.warning(
         "SQLite is currently in use. SQLite is not suitable for production workloads; "
         "please switch to MySQL, PostgreSQL, or another production-grade database "

@@ -46,7 +46,7 @@ class LogConfig(FrozenBaseModel):
     compression: str = "zip"
     custom_extra: list[str] = []
     enqueue: bool = True
-    intercept_logging: bool = True
+    intercept_logging: bool = False
 
 
 class HTTPClientConfig(FrozenBaseModel):
@@ -72,6 +72,8 @@ class DBConfig(FrozenBaseModel):
     pool_recycle: int = 3600
     echo: bool = False
 
+    disable_warning: bool = False
+
     @property
     def url(self):
         db_url = self.connection.format(
@@ -86,6 +88,18 @@ class DBConfig(FrozenBaseModel):
 
     def is_sqlite(self):
         return self.connection.startswith("sqlite:")
+
+    def engine_params(self):
+        params = {
+            "echo": self.echo,
+            "pool_size": self.pool_size,
+            "pool_recycle": self.pool_recycle,
+        }
+        if not self.is_sqlite():
+            params.update(
+                pool_timeout=self.pool_timeout, max_overflow=self.max_overflow
+            )
+        return params
 
 
 # class AsgiConfig(FrozenBaseModel):
@@ -156,6 +170,12 @@ class AgentSessionConfig(FrozenBaseModel):
     store: str | None = None
 
 
+class LLMProviderConfig(BaseModel):
+    base_url: str
+    api_key: SecretStr
+    models: list[str] = []
+
+
 class AgentConfig(FrozenBaseModel):
     system_prompt: str = "你是一个专业的AI助手"
     max_turns: int = 100
@@ -163,21 +183,22 @@ class AgentConfig(FrozenBaseModel):
     session: AgentSessionConfig = AgentSessionConfig()
     # stream: bool = True
     default_provider: str = "zipu/glm-4.7-flash"
-    providers: dict[str, ProviderConfig] = {
-        "alibaba": ProviderConfig(
-            base_url=HttpUrl("https://dashscope.aliyuncs.com/compatible-mode/v1"),
-            api_key="",
-            models=["qwen-plus"],
-        ),
-        "zipu": ProviderConfig(
-            base_url=HttpUrl("https://open.bigmodel.cn/api/paas/v4"),
-            models=["glm-4.7-flash"],
-            openai_use_responses=False,
-            api_key="",
-        ),
-    }
+    # providers: dict[str, ProviderConfig] = {
+    #     "alibaba": ProviderConfig(
+    #         base_url=HttpUrl("https://dashscope.aliyuncs.com/compatible-mode/v1"),
+    #         api_key="",
+    #         models=["qwen-plus"],
+    #     ),
+    #     "zipu": ProviderConfig(
+    #         base_url=HttpUrl("https://open.bigmodel.cn/api/paas/v4"),
+    #         models=["glm-4.7-flash"],
+    #         openai_use_responses=False,
+    #         api_key="",
+    #     ),
+    # }
     disable_tracing: bool = True
-    checkpoint_driver: Literal['auto', "sqlite", "mysql"] = "auto"
+    checkpoint_driver: Literal["auto", "sqlite", "mysql"] = "auto"
+    providers: dict[str, LLMProviderConfig] = {}
 
     def get_provider(self, model: str | None = None) -> ProviderConfig:
         provider, model_name = (model or self.default_provider).split("/")

@@ -1,8 +1,9 @@
 import pytest
 
-from pystonic.common import conf
+from dotenv import load_dotenv
 
 
 @pytest.fixture(scope="session", autouse=True)
 def config():
-    return conf.BaseAppConfig.model_validate({})
+    load_dotenv()
+

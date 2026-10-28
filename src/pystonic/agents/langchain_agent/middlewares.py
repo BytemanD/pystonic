@@ -13,9 +13,9 @@ from langchain_core.messages import AIMessageChunk, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.types import Command
 from loguru import logger
-from pydantic import SecretStr
 
-from pystonic.agent.langchain_agent.objects import RuntimeContext
+from pystonic.agents.langchain_agent.exceptions import AllModelsFailed, ModelsIsEmpty
+from pystonic.agents.langchain_agent.objects import RuntimeContext
 
 
 class ReasoningChatOpenAI(ChatOpenAI):
@@ -53,12 +53,14 @@ class RuntimeAgentMiddleware(AgentMiddleware[AgentState, RuntimeContext]):
             hasattr(e, "status_code") and e.status_code in (402, 429, 403)
         )
 
-    def _get_runtime_model(self, ctx: RuntimeContext, model_name: str) -> ChatOpenAI:
+    def _get_runtime_model(
+        self, ctx: RuntimeContext, base_url: str, api_key: str, model: str
+    ) -> ChatOpenAI:
         return ReasoningChatOpenAI(
-            model=model_name,
-            api_key=SecretStr(ctx.model_api_key),
-            base_url=ctx.model_base_url,
-            temperature=ctx.agent_config.temperature,
+            api_key=api_key,
+            base_url=base_url,
+            model=model,
+            temperature=ctx.temperature,
             stream_usage=True,
             model_kwargs={"stream_options": {"include_usage": True}},
             # use_responses_api=True,
@@ -72,40 +74,43 @@ class RuntimeAgentMiddleware(AgentMiddleware[AgentState, RuntimeContext]):
         handler: Callable[[ToolCallRequest], Awaitable[ModelResponse]],
     ):
         ctx: RuntimeContext = request.runtime.context  # type: ignore
-        logger.info(
-            "runtime tools: {}, knowledge bases: {}",
-            [x.name for x in ctx.tools or []],
-            [x.name for x in ctx.knowledge_bases],
-        )
-        if ctx.model:
-            ctx.selected_model = ctx.model
-            return await handler(
-                request.override(
-                    model=self._get_runtime_model(ctx, ctx.model),
-                    tools=ctx.tools,  # type: ignore
-                    system_message=SystemMessage(content=ctx.system_prompt),
-                )
-            )
-        else:
-            last_error = None
-            for model_name in ctx.models:
+        logger.trace("runtime context: {}", ctx)
+        errors: list[str] = []
+        for name, provider in ctx.providers.items():
+            if not provider.models:
+                logger.warning("provider({}) models is empty", name)
+                continue
+            for model_name in provider.models:
                 try:
-                    ctx.selected_model = model_name
+                    ctx.selected_model = f"{name}/{provider.models}"
+                    runtime_model = self._get_runtime_model(
+                        ctx,
+                        provider.base_url,
+                        provider.api_key.get_secret_value(),
+                        model_name,
+                    )
+                    logger.debug(
+                        "runtime llm: base_url={}, model_name={}",
+                        runtime_model.openai_api_base,
+                        runtime_model.model_name,
+                    )
+
                     return await handler(
                         request.override(
-                            model=self._get_runtime_model(ctx, model_name),
+                            model=runtime_model,
                             tools=ctx.tools,  # type: ignore
                             system_message=SystemMessage(content=ctx.system_prompt),
                         )
                     )
                 except Exception as e:
-                    if self.is_quota_error(e):  # 自己判断 429/402
-                        last_error = e
-                        continue
-                    raise
-            if last_error:
-                ctx.selected_model = ""
-                raise last_error
+                    errors.append(f"model {model_name}: {e}")
+                    continue
+
+        if errors:
+            ctx.selected_model = ""
+            raise AllModelsFailed(errors)
+        else:
+            raise ModelsIsEmpty()
 
     def _override_tools(self, request: ToolCallRequest):
         ctx: RuntimeContext = request.runtime.context  # type: ignore

@@ -1,38 +1,20 @@
 import sqlite3
 from typing import Any
 
-from agents import function_tool
-
-# 全局数据库连接（在 Agent 对话期间保持）
-_global_conn = None
+from langchain_core.tools import tool
 
 
-@function_tool
-def connect_db(db_path: str = ":memory:") -> str:
-    """
-    建立 SQLite 数据库连接，并保存为全局连接（供后续 execute_sql 使用）。
+@tool
+def execute_sql(
+    db_path: str, sql: str, parameters: tuple[Any, ...] = ()
+) -> dict[str, Any]:
+    """SQLite 查询工具
 
-    Args:
-        db_path: 数据库文件路径，默认为内存数据库（:memory:）
-
-    Returns:
-        状态信息，例如 "Connected to database: test.db"
-    """
-    global _global_conn
-    if _global_conn:
-        _global_conn.close()
-    _global_conn = sqlite3.connect(db_path)
-    _global_conn.row_factory = sqlite3.Row
-    return f"Connected to database: {db_path}"
-
-
-@function_tool
-def execute_sql(sql: str, parameters: tuple[Any, ...] = ()) -> dict[str, Any]:
-    """
     执行任意 SQL 语句（SELECT / INSERT / UPDATE / DELETE / CREATE TABLE 等）。
     自动提交事务，如果尚未连接则自动连接内存数据库。
 
     Args:
+        db_path: 数据库文件路径
         sql: SQL 语句，使用 ? 或 :name 占位符防止注入
         parameters: 可选参数，与占位符匹配
 
@@ -45,12 +27,10 @@ def execute_sql(sql: str, parameters: tuple[Any, ...] = ()) -> dict[str, Any]:
         execute_sql("INSERT INTO users (name) VALUES (?)", ("Alice",))
         result = execute_sql("SELECT * FROM users")  # 得到查询结果
     """
-    # global _global_conn
-    if _global_conn is None:
-        # 未调用 connect 时自动连接内存数据库
-        connect_db()
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
 
-    cursor = _global_conn.cursor()
+    cursor = conn.cursor()
     try:
         cursor.execute(sql, parameters or ())
 
@@ -58,12 +38,12 @@ def execute_sql(sql: str, parameters: tuple[Any, ...] = ()) -> dict[str, Any]:
         if sql.strip().upper().startswith("SELECT"):
             return {"rows": [dict(x) for x in cursor.fetchall()]}
         else:
-            _global_conn.commit()
+            conn.commit()
             last_id = cursor.lastrowid
             return {
                 "affected_rows": cursor.rowcount,
                 "last_row_id": last_id if last_id != 0 else None,
             }
     except Exception as e:
-        _global_conn.rollback()
+        conn.rollback()
         raise RuntimeError(f"SQL execution failed: {e}") from e
