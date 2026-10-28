@@ -30,6 +30,10 @@ _engine: Engine = create_engine(
 )
 
 
+def engine_name():
+    return _engine.dialect.name
+
+
 @contextlib.contextmanager
 def get_session():
     with Session(_engine) as session:

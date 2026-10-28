@@ -28,11 +28,9 @@ pretty = [
     "rich>=14.3.3",
     "prettytable>=3.17.0",
 ]
-
 orm = [
     "sqlmodel>=0.0.38",
 ]
-
 mcp = [
     "fastmcp==3.4.2",
     "nacos-sdk-python==2.0.9",
@@ -43,6 +41,13 @@ asgi = [
     "uvicorn>=0.52.1",
 ]
 agent = [
+    "langchain>=1.4.7",
+    "langchain-chroma>=1.1.0",
+    "langchain-community>=0.4.2",
+    "langchain-mcp-adapters>=0.3.2",
+    "langchain-openai>=1.7.3",
+    "langgraph-checkpoint-mysql[asyncmy]>=3.0.0",
+    "langgraph-checkpoint-sqlite>=3.1.2",
     "openai>=2.52.0",
     "openai-agents>=0.18.3",
 ]

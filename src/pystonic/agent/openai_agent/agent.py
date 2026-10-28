@@ -14,7 +14,7 @@ from openai.types.responses import (
     ResponseCompletedEvent,
 )
 
-from pystonic.agent.session import SessionHisotry
+from pystonic.agent.openai_agent.session import SessionHisotry
 from pystonic.common.conf import CONF
 
 # from openai.types.

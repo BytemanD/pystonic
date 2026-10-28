@@ -177,6 +177,7 @@ class AgentConfig(FrozenBaseModel):
         ),
     }
     disable_tracing: bool = True
+    checkpoint_driver: Literal['auto', "sqlite", "mysql"] = "auto"
 
     def get_provider(self, model: str | None = None) -> ProviderConfig:
         provider, model_name = (model or self.default_provider).split("/")
