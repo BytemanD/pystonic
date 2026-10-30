@@ -14,13 +14,13 @@ from pydantic_settings import (
     TomlConfigSettingsSource,
 )
 
-from pystonic import app_name
+from pystonic.utils.system import user_app_data
 
 dotenv.load_dotenv()
 
 DEFAULT_CONF_FILE = [
     Path("etc", "app.toml"),
-    Path.home().joinpath(".config", app_name(), "app.toml"),
+    user_app_data().joinpath("app.toml"),
 ]
 DEFAULT_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
@@ -200,7 +200,7 @@ class AgentConfig(FrozenBaseModel):
     checkpoint_driver: Literal["auto", "sqlite", "mysql"] = "auto"
     providers: dict[str, LLMProviderConfig] = {}
 
-    def get_provider(self, model: str | None = None) -> ProviderConfig:
+    def get_provider(self, model: str | None = None):
         provider, model_name = (model or self.default_provider).split("/")
 
         if provider not in self.providers:
@@ -324,11 +324,7 @@ class BaseAppConfig(BaseSettings):
         )
 
     def save(self, exclude_defaults=False, encoding="utf-8"):
-        file_path = self.get_conf_file()
-        if not file_path:
-            logger.warning("No configuration file specified, skipping save")
-            return
-
+        file_path = DEFAULT_CONF_FILE[-1]
         logger.debug("saving config: {}", self.model_dump_json())
         file_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info("保存配置 {}", file_path)
@@ -336,20 +332,6 @@ class BaseAppConfig(BaseSettings):
             toml.dump(
                 self.model_dump(mode="json", exclude_defaults=exclude_defaults), f
             )
-
-    @classmethod
-    def get_conf_file(cls) -> Path | None:
-        files = cls.model_config.get("toml_file") or []
-        if not files:
-            return None
-
-        if isinstance(files, (Path, str)):
-            return Path(files)
-        for file in files:
-            if Path(file).exists():
-                return Path(file)
-
-        return Path(files[0])
 
     @classmethod
     def get_init_settings(cls) -> dict:

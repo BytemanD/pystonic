@@ -21,7 +21,7 @@ from pystonic.utils.dateutil import utcnow
 
 @contextlib.asynccontextmanager
 async def get_agent():
-    async with get_checkpointer_saver(sqlite_memory=True) as saver:
+    async with get_checkpointer_saver() as saver:
         yield AsyncAgent(saver)
 
 
@@ -68,8 +68,9 @@ def list_models():
 
 async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str | None = None):
     ctx = RuntimeContext(
-        providers=CONF.agent.providers, thread_id=session_id or "default",
-        tools=builtin.WorkToolkit().get_tools()
+        providers=CONF.agent.providers,
+        thread_id=session_id or "default",
+        tools=builtin.WorkToolkit().get_tools(),
     )
     reasoning = False
     async for event in agent.astream(ctx, intput):

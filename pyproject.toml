@@ -22,7 +22,7 @@ dependencies = [
 
 [project.scripts]
 pystonic = "pystonic.cmd.main:main"
-pystonic-tools = "pystonic.cmd.main:main"
+
 [project.optional-dependencies]
 pretty = [
     "rich>=14.3.3",

@@ -11,6 +11,8 @@ import distro
 from loguru import logger
 from pydantic import BaseModel
 
+from pystonic import app_name
+
 
 def is_windows():
     return platform.system() == "Windows"
@@ -93,12 +95,20 @@ def execute(
     return process.returncode, process.stdout, process.stderr
 
 
-def app_data(app_name: str) -> Path:
+def global_app_data(name: str | None = None) -> Path:
     """获取数据目录下的文件路径"""
     appdir = os.getenv("APPDATA")
     if not appdir:
         appdir = "/usr/share"
-    return Path(appdir, app_name)
+    return Path(appdir, name or app_name())
+
+
+def user_app_data(name: str | None = None) -> Path:
+    """获取数据目录下的文件路径"""
+    appdir = os.getenv("APPDATA")
+    if not appdir:
+        appdir = "/usr/share"
+    return home_path().joinpath(f".{name or app_name()}")
 
 
 class PlatformInfo(BaseModel):

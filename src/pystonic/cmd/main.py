@@ -1,6 +1,7 @@
 import click
 import dotenv
 
+from pystonic import set_app_name
 from pystonic.cmd import agent, code, gitstats, pip
 from pystonic.common.log import setup_logger
 
@@ -8,6 +9,7 @@ from pystonic.common.log import setup_logger
 @click.group()
 def root():
     dotenv.load_dotenv()
+    set_app_name("pystonic")
     setup_logger(remove=True)
 
 

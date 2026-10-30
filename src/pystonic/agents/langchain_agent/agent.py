@@ -1,11 +1,9 @@
 import contextlib
-from pathlib import Path
 from typing import Sequence, Tuple, Type
 
-from langchain.agents import create_agent
+from langchain.agents import AgentState, create_agent
 from langchain.messages import AIMessage
 from langchain_core.callbacks import BaseCallbackHandler
-from langchain_core.messages import AIMessageChunk
 from langchain_core.runnables.config import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langchain.agents.middleware.types import AgentMiddleware
@@ -19,6 +17,7 @@ from pystonic.agents.langchain_agent.middlewares import RuntimeAgentMiddleware
 from pystonic.agents.langchain_agent.objects import Message, RuntimeContext
 from pystonic.common.conf import CONF
 from pystonic.orm.database import engine_name
+from pystonic.utils.system import user_app_data
 
 
 @contextlib.asynccontextmanager
@@ -40,7 +39,7 @@ async def get_checkpointer_saver(sqlite_memory=False):
         raise RuntimeError('checkpoint driver is "mysql" but db config is not mysql ')
 
     logger.info("use sqlite checkpoint saver")
-    saver_path = Path(CONF.store, "checkpoint.sqlite")
+    saver_path = user_app_data().joinpath("agent", "checkpoint.sqlite")
     saver_path.parent.mkdir(parents=True, exist_ok=True)
     async with AsyncSqliteSaver.from_conn_string(str(saver_path)) as saver:
         yield saver
@@ -51,7 +50,7 @@ class AsyncAgent:
         self,
         saver: BaseCheckpointSaver,
         context_schema: Type[RuntimeContext] = RuntimeContext,
-        middleware: Sequence[AgentMiddleware] | None = None,
+        middleware: Sequence[AgentMiddleware[AgentState, RuntimeContext]] | None = None,
         tools: list | None = None,
     ):
         self._saver = saver
@@ -69,7 +68,7 @@ class AsyncAgent:
         query: str,
         callbacks: Sequence[BaseCallbackHandler] | None = None,
         config: dict | None = None,
-        event_types: Tuple[Type[AIMessage]] | None = None
+        event_types: Tuple[Type[AIMessage]] | None = None,
     ):
         config = config or {}
         stream = self._agent.astream(
