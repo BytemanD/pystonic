@@ -48,6 +48,8 @@ class LogConfig(FrozenBaseModel):
     enqueue: bool = True
     intercept_logging: bool = False
 
+    console_verbose: int = 0
+
 
 class HTTPClientConfig(FrozenBaseModel):
     log_response_detail: bool = True
@@ -57,7 +59,7 @@ class HTTPClientConfig(FrozenBaseModel):
 
 class DBConfig(FrozenBaseModel):
     # connection: str = "mysql+pymysql://{user}:{password}@{host}:{port}/{database}?charset={charset}"
-    connection: str = "sqlite:///./data/develop.db"
+    connection: str = f"sqlite:///{user_app_data().joinpath('db.sqlite')}"
     host: str = "localhost"
     port: int = 3306
     user: str = "root"
@@ -197,7 +199,10 @@ class AgentConfig(FrozenBaseModel):
     #     ),
     # }
     disable_tracing: bool = True
-    checkpoint_driver: Literal["auto", "sqlite", "mysql"] = "auto"
+    # Usage: db_config, mysql+pymysql://xxxx, sqlite:///xxxx
+    checkpoint_connection: str = (
+        f"sqlite:///{user_app_data().joinpath('agent', 'checkpoint.sqlite')}"
+    )
     providers: dict[str, LLMProviderConfig] = {}
 
     def get_provider(self, model: str | None = None):

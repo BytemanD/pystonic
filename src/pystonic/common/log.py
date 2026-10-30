@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -21,11 +20,11 @@ def setup_logger(remove: bool = False):
     """Setup logging configuration."""
     if remove:
         logger.remove()
-    verbose = os.getenv("LOG_VERBOSE", "0")
-    versbose = int(verbose) if verbose is not None else 1
+    # verbose = os.getenv("LOG_VERBOSE", "0")
+    # versbose = int(verbose) if verbose is not None else 1
     logger.add(
         sys.stdout,
-        level=VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, versbose)],
+        level=VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, CONF.log.console_verbose)],
         format=CONF.log.format,
         colorize=True,
         enqueue=CONF.log.enqueue,

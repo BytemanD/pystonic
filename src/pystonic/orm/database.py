@@ -44,10 +44,8 @@ def create_all_tables():
     if engine_name() == "sqlite":
         db_path = _engine.url.database
         if db_path and db_path != ":memory:":
-            db_dir = Path(db_path).parent
-            if db_dir.name:
-                db_dir.mkdir(parents=True, exist_ok=True)
-                logger.info(f"Ensured SQLite database directory exists: {db_dir}")
+            Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Ensured SQLite database directory exists: {db_path}")
 
     logger.info("Creating all tables...")
     SQLModel.metadata.create_all(bind=_engine)

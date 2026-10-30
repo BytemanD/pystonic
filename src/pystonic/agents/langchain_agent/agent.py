@@ -1,4 +1,5 @@
 import contextlib
+from pathlib import Path
 from typing import Sequence, Tuple, Type
 
 from langchain.agents import AgentState, create_agent
@@ -16,33 +17,32 @@ from pydantic import SecretStr
 from pystonic.agents.langchain_agent.middlewares import RuntimeAgentMiddleware
 from pystonic.agents.langchain_agent.objects import Message, RuntimeContext
 from pystonic.common.conf import CONF
-from pystonic.orm.database import engine_name
-from pystonic.utils.system import user_app_data
 
 
 @contextlib.asynccontextmanager
-async def get_checkpointer_saver(sqlite_memory=False):
-    if sqlite_memory:
-        async with AsyncSqliteSaver.from_conn_string(":memory:") as saver:
-            yield saver
-        return
+async def get_checkpointer_saver():
+    if CONF.agent.checkpoint_connection == "db_config":
+        conn_string = CONF.db.url
+    else:
+        conn_string = CONF.agent.checkpoint_connection
 
-    if CONF.agent.checkpoint_driver in ["auto", "mysql"] and engine_name() == "mysql":
+    if conn_string.startswith(("mysql:", "mysql+pymysql:")):
         logger.info("use mysql checkpoint saver")
         async with AsyncMySaver.from_conn_string(CONF.db.url) as saver:
             logger.debug("setup saver: {}", saver)
             await saver.setup()
             yield saver
         return
-
-    if CONF.agent.checkpoint_driver == "mysql":
-        raise RuntimeError('checkpoint driver is "mysql" but db config is not mysql ')
-
-    logger.info("use sqlite checkpoint saver")
-    saver_path = user_app_data().joinpath("agent", "checkpoint.sqlite")
-    saver_path.parent.mkdir(parents=True, exist_ok=True)
-    async with AsyncSqliteSaver.from_conn_string(str(saver_path)) as saver:
-        yield saver
+    elif conn_string.startswith("sqlite:"):
+        sqlite_path = conn_string.removeprefix("sqlite:///")
+        logger.info("use sqlite checkpoint saver")
+        logger.debug("sqlite path: {}", sqlite_path)
+        if sqlite_path == ":memory:":
+            Path(sqlite_path).parent.mkdir(parents=True, exist_ok=True)
+        async with AsyncSqliteSaver.from_conn_string(sqlite_path) as saver:
+            yield saver
+        return
+    raise RuntimeError("checkpoint connection is inavlid")
 
 
 class AsyncAgent:
@@ -66,21 +66,23 @@ class AsyncAgent:
         self,
         ctx: RuntimeContext,
         query: str,
-        callbacks: Sequence[BaseCallbackHandler] | None = None,
-        config: dict | None = None,
+        callbacks: list[BaseCallbackHandler] | None = None,
+        # config: dict | None = None,
         event_types: Tuple[Type[AIMessage]] | None = None,
+        max_concurrency: int | None = None,
+        recursion_limit: int = 25,
     ):
-        config = config or {}
         stream = self._agent.astream(
             {"messages": [{"role": "user", "content": query}]},
             stream_mode="messages",
-            config={
-                "configurable": {"thread_id": ctx.thread_id},
-                "callbacks": callbacks or [],
-                **config,
-            },
-            # version="v3"
             context=ctx,
+            # version="v3"
+            config=RunnableConfig(
+                configurable={"thread_id": ctx.thread_id},
+                callbacks=callbacks or [],
+                max_concurrency=max_concurrency,
+                recursion_limit=recursion_limit,
+            ),
         )
 
         async for event in stream:
