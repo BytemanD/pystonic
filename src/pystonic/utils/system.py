@@ -96,7 +96,7 @@ def execute(
 
 
 def global_app_data(name: str | None = None) -> Path:
-    """获取数据目录下的文件路径"""
+    """获取全局数据目录"""
     appdir = os.getenv("APPDATA")
     if not appdir:
         appdir = "/usr/share"
@@ -104,10 +104,7 @@ def global_app_data(name: str | None = None) -> Path:
 
 
 def user_app_data(name: str | None = None) -> Path:
-    """获取数据目录下的文件路径"""
-    appdir = os.getenv("APPDATA")
-    if not appdir:
-        appdir = "/usr/share"
+    """获取用户级数据目录"""
     return home_path().joinpath(f".{name or app_name()}")
 
 

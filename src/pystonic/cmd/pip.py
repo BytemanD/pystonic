@@ -47,4 +47,5 @@ def set_repo(repo: str):
     logger.success("set pip repo ({}) success", index_url)
     cmd_prefix = ["python", "-m", "pip", "config", "set"]
     execute(*cmd_prefix, "global.index-url", index_url, check=True)
-    execute(*cmd_prefix, "global.trusted-host", result.hostname, check=True)
+    if result.hostname:
+        execute(*cmd_prefix, "global.trusted-host", result.hostname, check=True)

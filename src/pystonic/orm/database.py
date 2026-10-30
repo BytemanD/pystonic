@@ -34,12 +34,12 @@ def get_session():
 
 
 def create_all_tables():
-    if engine_name() == "sqlite" and not CONF.db.disable_warning:
-        logger.warning(
-            "SQLite is currently in use. SQLite is not suitable for production workloads; "
-            "please switch to MySQL, PostgreSQL, or another production-grade database "
-            "before deploying."
-        )
+    # if engine_name() == "sqlite" and not CONF.db.disable_warning:
+    #     logger.warning(
+    #         "SQLite is currently in use. SQLite is not suitable for production workloads; "
+    #         "please switch to MySQL, PostgreSQL, or another production-grade database "
+    #         "before deploying."
+    #     )
 
     if engine_name() == "sqlite":
         db_path = _engine.url.database

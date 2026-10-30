@@ -39,7 +39,7 @@ async def get_checkpointer_saver():
         sqlite_path = conn_string.removeprefix("sqlite:///")
         logger.info("use sqlite checkpoint saver")
         logger.debug("sqlite path: {}", sqlite_path)
-        if sqlite_path == ":memory:":
+        if sqlite_path != ":memory:":
             Path(sqlite_path).parent.mkdir(parents=True, exist_ok=True)
         async with AsyncSqliteSaver.from_conn_string(sqlite_path) as saver:
             yield saver
@@ -112,7 +112,8 @@ class AsyncAgent:
             if msg.type in ["human", "ai"]
         ]
 
-    def create_session(self, title: str, user: str = "", agent: str = ""):
+    @classmethod
+    def create_session(cls, title: str, user: str = "", agent: str = ""):
         session = AgentSession(
             user=user,
             agent=agent,
@@ -122,32 +123,38 @@ class AsyncAgent:
         logger.trace("create session: {}", session)
         return session
 
-    def update_session(self, session: AgentSession, title: str):
+    @classmethod
+    def update_session(cls, session: AgentSession, title: str):
         session.title = title[:20]
         session.save()
 
-    def list_session(self, user: str = "", agent: str = ""):
+    @classmethod
+    def list_session(cls, user: str = "", agent: str = ""):
         return AgentSession.query(
             AgentSession.user == user, AgentSession.agent == agent
         )
 
-    def delete_session(self, session_id: str):
+    @classmethod
+    def delete_session(cls, session_id: str):
         return AgentSession.delete_by_uuid(session_id)
 
-    def get_session(self, session_id: str, user: str = "", agent: str = ""):
+    @classmethod
+    def get_session(cls, session_id: str, user: str = "", agent: str = ""):
         return AgentSession.get_first(
             AgentSession.uuid == session_id,
             AgentSession.user == user,
             AgentSession.agent == agent,
         )
 
-    def get_last_session(self, user: str = "", agent: str = ""):
+    @classmethod
+    def get_last_session(cls, user: str = "", agent: str = ""):
         return AgentSession.get_last(
             AgentSession.user == user, AgentSession.agent == agent
         )
 
+    @classmethod
     def get_or_create_session(
-        self,
+        cls,
         session_id: str | None = None,
         last: bool = False,
         user: str = "",
@@ -156,12 +163,12 @@ class AsyncAgent:
     ):
         session = None
         if session_id:
-            session = self.get_session(session_id, user=user, agent=agent)
+            session = cls.get_session(session_id, user=user, agent=agent)
             if not session:
                 raise SessionNotFount(session_id)
             return session
         if last:
-            session = self.get_last_session()
+            session = cls.get_last_session()
         if not session:
-            session = self.create_session(title, user=user, agent=agent)
+            session = cls.create_session(title, user=user, agent=agent)
         return session

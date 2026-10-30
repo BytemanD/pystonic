@@ -1,8 +1,8 @@
 import click
 import dotenv
+from importlib import import_module
 
 from pystonic import set_app_name
-from pystonic.cmd import agent, code, gitstats, pip
 from pystonic.common.log import setup_logger
 
 
@@ -14,10 +14,16 @@ def root():
 
 
 def main():
-    root.add_command(agent.root)
-    root.add_command(gitstats.root)
-    root.add_command(pip.root)
-    root.add_command(code.root)
+    for cmd in ["agent", "code", "gitstats", "pip"]:
+        try:
+            m = import_module(f"pystonic.cmd.{cmd}")
+        except ImportError:
+            continue
+        subcmd = getattr(m, "root", None)
+
+        if isinstance(subcmd, (click.Group, click.Command)):
+            root.add_command(subcmd)
+
     root()
 
 
