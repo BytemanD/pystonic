@@ -16,6 +16,8 @@ from pystonic.agents.langchain_agent.objects import RuntimeContext
 # from pystonic.agents.langchain_agent.tools import builtin
 from pystonic.agents.langchain_agent.tools import builtin
 from pystonic.common.conf import CONF
+from pystonic.orm import database
+from pystonic.pretty import output
 from pystonic.utils.dateutil import utcnow
 
 
@@ -27,7 +29,7 @@ async def get_agent():
 
 @click.group("agent")
 def root():
-    pass
+    database.create_all_tables()
 
 
 @root.group()
@@ -35,41 +37,35 @@ def session():
     """agent sessions"""
 
 
-# @session.command("list")
-# def list_sesions():
-#     """List agent sessions."""
-#     sessions = get_agent().get_agent_sessions()
-#     output.print_models(sessions)
+async def _list_sessions():
+    async with get_agent() as agent:
+        sessions = agent.list_session()
+        output.print_models(sessions, fields=["created_at", "uuid", "title"])
+
+
+async def _delete_session(session_ids: list[str]):
+    async with get_agent() as agent:
+        for session_id in session_ids:
+            agent.delete_session(session_id)
+
+
+@session.command("list")
+def list_sesions():
+    """List agent sessions."""
+    asyncio.run(_list_sessions())
 
 
 @session.command("delete")
 @click.argument("sessions", required=False, nargs=-1)
 def delete_session(sessions: list[str]):
     """List agent sessions."""
-    if not sessions:
-        raise click.ClickException("session is required")
-
-    for x in sessions:
-        asyncio.run(get_agent().delete_agent_session(x))
-        click.secho(f"delete {x} success", fg="green")
+    asyncio.run(_delete_session(sessions))
 
 
-@root.group()
-def model():
-    """agent models"""
-
-
-@model.command("list")
-def list_models():
-    """List models."""
-    for m in get_agent().list_models():
-        click.echo(m)
-
-
-async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str | None = None):
+async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str):
     ctx = RuntimeContext(
         providers=CONF.agent.providers,
-        thread_id=session_id or "default",
+        thread_id=session_id,
         tools=builtin.WorkToolkit().get_tools(),
     )
     reasoning = False
@@ -86,25 +82,30 @@ async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str | None 
     click.secho()
 
 
-async def _do_run(intput: str, session_id: str | None = None):
+async def _do_run(input: str, session_id: str | None = None, last: bool = False):
     async with get_agent() as agent:
-        await _agent_astream(agent, intput, session_id=session_id)
+        session = agent.get_or_create_session(
+            session_id=session_id, last=last, title=input
+        )
+        await _agent_astream(agent, input, session_id=session.uuid)
 
 
 @root.command()
 @click.argument("intput")
-@click.option("--session", "-c", default=None, help="Session to use for the agent")
-def run(intput: str, session: str | None = None):
+@click.option("--session", "-s", default=None, help="Session to use for the agent")
+@click.option("--continue", "-c", "last", default=None, help="Continue last session")
+def run(intput: str, session: str | None = None, is_flag=True, last: bool = False):
     """Chat with the agent."""
     try:
-        asyncio.run(_do_run(intput, session_id=session))
+        asyncio.run(_do_run(intput, session_id=session, last=last))
     except APIConnectionError:
         click.secho("api connection error", fg="red")
 
 
-async def _do_chat(session: str | None = None):
+async def _do_chat(session_id: str | None = None, last=False):
     console = Console()
     async with get_agent() as agent:
+        session = agent.get_or_create_session(session_id=session_id, last=last)
         console.print(Rule(utcnow().isoformat(sep=" "), style="cyan"))
         while True:
             user_input = Prompt.ask(Text("请输入您的意图", style="white on cyan"))
@@ -113,14 +114,17 @@ async def _do_chat(session: str | None = None):
             if user_input in ["exit", "quit", "q"]:
                 break
             try:
-                await _agent_astream(agent, user_input, session_id=session)
+                await _agent_astream(agent, user_input, session_id=session.uuid)
             except APIConnectionError:
                 click.secho("api connection error", fg="red")
             click.echo()
+            if not session.title:
+                agent.update_session(session, user_input)
 
 
 @root.command()
 @click.option("--session", "-s", default=None, help="Session to use for the agent")
-def chat(session: str | None = None):
+@click.option("--continue", "-c", "last", is_flag=True, help="Continue last session")
+def chat(session: str | None = None, last: bool = False):
     """交互模式"""
-    asyncio.run(_do_chat(session=session))
+    asyncio.run(_do_chat(session_id=session, last=last))

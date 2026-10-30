@@ -11,3 +11,8 @@ class AllModelsFailed(Exception):
 class PermissionDeny(Exception):
     def __init__(self, detail: str):
         super().__init__("permission deny: {}", detail)
+
+
+class SessionNotFount(Exception):
+    def __init__(self, session_id: str):
+        super().__init__("session not found: {}", session_id)

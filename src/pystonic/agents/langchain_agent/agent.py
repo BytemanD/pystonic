@@ -14,6 +14,8 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from loguru import logger
 
 from pydantic import SecretStr
+from pystonic.agents.db.models import AgentSession
+from pystonic.agents.langchain_agent.exceptions import SessionNotFount
 from pystonic.agents.langchain_agent.middlewares import RuntimeAgentMiddleware
 from pystonic.agents.langchain_agent.objects import Message, RuntimeContext
 from pystonic.common.conf import CONF
@@ -109,3 +111,57 @@ class AsyncAgent:
             for msg in item.checkpoint.get("channel_values", {}).get("messages", [])
             if msg.type in ["human", "ai"]
         ]
+
+    def create_session(self, title: str, user: str = "", agent: str = ""):
+        session = AgentSession(
+            user=user,
+            agent=agent,
+            title=title[:20],
+        )
+        session.create()
+        logger.trace("create session: {}", session)
+        return session
+
+    def update_session(self, session: AgentSession, title: str):
+        session.title = title[:20]
+        session.save()
+
+    def list_session(self, user: str = "", agent: str = ""):
+        return AgentSession.query(
+            AgentSession.user == user, AgentSession.agent == agent
+        )
+
+    def delete_session(self, session_id: str):
+        return AgentSession.delete_by_uuid(session_id)
+
+    def get_session(self, session_id: str, user: str = "", agent: str = ""):
+        return AgentSession.get_first(
+            AgentSession.uuid == session_id,
+            AgentSession.user == user,
+            AgentSession.agent == agent,
+        )
+
+    def get_last_session(self, user: str = "", agent: str = ""):
+        return AgentSession.get_last(
+            AgentSession.user == user, AgentSession.agent == agent
+        )
+
+    def get_or_create_session(
+        self,
+        session_id: str | None = None,
+        last: bool = False,
+        user: str = "",
+        agent: str = "",
+        title: str = "",
+    ):
+        session = None
+        if session_id:
+            session = self.get_session(session_id, user=user, agent=agent)
+            if not session:
+                raise SessionNotFount(session_id)
+            return session
+        if last:
+            session = self.get_last_session()
+        if not session:
+            session = self.create_session(title, user=user, agent=agent)
+        return session
