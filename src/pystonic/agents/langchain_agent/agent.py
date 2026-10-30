@@ -1,8 +1,9 @@
 import contextlib
 from pathlib import Path
-from typing import Sequence, Type
+from typing import Sequence, Tuple, Type
 
 from langchain.agents import create_agent
+from langchain.messages import AIMessage
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import AIMessageChunk
 from langchain_core.runnables.config import RunnableConfig
@@ -68,6 +69,7 @@ class AsyncAgent:
         query: str,
         callbacks: Sequence[BaseCallbackHandler] | None = None,
         config: dict | None = None,
+        event_types: Tuple[Type[AIMessage]] | None = None
     ):
         config = config or {}
         stream = self._agent.astream(
@@ -83,10 +85,12 @@ class AsyncAgent:
         )
 
         async for event in stream:
-            if isinstance(event, tuple) and isinstance(event[0], AIMessageChunk):
+            if not isinstance(event, tuple):
+                continue
+            if not event_types or isinstance(event[0], event_types):
                 yield event[0]
                 continue
-            logger.warning("unknowd event: {}", event)
+            logger.debug("skip event: {}", event)
 
     async def list_messages(self, thread_id: str):
         config = RunnableConfig(configurable={"thread_id": thread_id})

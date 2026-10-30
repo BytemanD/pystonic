@@ -6,8 +6,9 @@ import pytest_asyncio
 from pystonic.agents.langchain_agent.agent import AsyncAgent, get_checkpointer_saver
 from pystonic.agents.langchain_agent.exceptions import AllModelsFailed, ModelsIsEmpty
 from pystonic.agents.langchain_agent.objects import RuntimeContext
+from pystonic.agents.langchain_agent.tools import builtin
 from pystonic.common.conf import CONF, LLMProviderConfig
-
+from langchain_core.messages.tool import ToolMessage
 
 pytestmark = pytest.mark.skipif(
     not CONF.agent.providers, reason="env TEST_LLM_BASE_URL is missing, skip"
@@ -48,6 +49,26 @@ async def test_astream(agent: AsyncAgent):
     assert messages[1].type == "ai"
     assert messages[1].content == response_content
 
+
+@pytest.mark.asyncio
+async def test_astream_with_tools(agent: AsyncAgent):
+    ctx = RuntimeContext(
+        providers=CONF.agent.providers,
+        thread_id="11111111111",
+        system_prompt="你是一个智能助手.",
+        tools=builtin.WorkToolkit(
+            enable_read=False,
+            enable_write=False,
+            enable_execute_shell=False,
+            enable_web_get=False,
+            enable_get_platform_info=False,
+        ).get_tools()
+    )
+
+    got_events = set()
+    async for event in agent.astream(ctx, "当前时间"):
+        got_events.add(type(event))
+    assert ToolMessage in got_events
 
 @pytest.mark.asyncio
 async def test_astream_with_provider_empty(agent: AsyncAgent):

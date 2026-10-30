@@ -14,6 +14,7 @@ from pystonic.agents.langchain_agent.objects import RuntimeContext
 
 # from pystonic.agents.langchain_agent.tools import sqlite
 # from pystonic.agents.langchain_agent.tools import builtin
+from pystonic.agents.langchain_agent.tools import builtin
 from pystonic.common.conf import CONF
 from pystonic.utils.dateutil import utcnow
 
@@ -67,7 +68,8 @@ def list_models():
 
 async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str | None = None):
     ctx = RuntimeContext(
-        providers=CONF.agent.providers, thread_id=session_id or "default"
+        providers=CONF.agent.providers, thread_id=session_id or "default",
+        tools=builtin.WorkToolkit().get_tools()
     )
     reasoning = False
     async for event in agent.astream(ctx, intput):
@@ -85,7 +87,7 @@ async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str | None 
 
 async def _do_run(intput: str, session_id: str | None = None):
     async with get_agent() as agent:
-        await _agent_astream(agent, intput, session_id=session)
+        await _agent_astream(agent, intput, session_id=session_id)
 
 
 @root.command()
@@ -94,7 +96,7 @@ async def _do_run(intput: str, session_id: str | None = None):
 def run(intput: str, session: str | None = None):
     """Chat with the agent."""
     try:
-        asyncio.run(_do_run(intput, session_id=session or "default"))
+        asyncio.run(_do_run(intput, session_id=session))
     except APIConnectionError:
         click.secho("api connection error", fg="red")
 
