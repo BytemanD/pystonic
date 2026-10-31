@@ -1,6 +1,8 @@
 import os
+import socket
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Literal, Sequence, Union, get_args, get_origin
+from typing import Literal, Union, get_args, get_origin
 from urllib.parse import quote_plus
 
 import dotenv
@@ -156,19 +158,6 @@ class McpConfig(FrozenBaseModel):
     proxy: McpProxyConfig | None = None
 
 
-class ProviderConfig(FrozenBaseModel):
-    base_url: HttpUrl
-    api_key: str = ""
-    models: list[str] = []
-    openai_use_responses: bool = True
-    extra_body: dict = {}
-
-    def set_enable_thinking(self, enable: bool):
-        if not self.extra_body:
-            self.extra_body = {}
-        self.extra_body["enable_thinking"] = enable
-
-
 class AgentSessionConfig(FrozenBaseModel):
     store: str | None = None
 
@@ -191,8 +180,8 @@ class AgentConfig(FrozenBaseModel):
     providers: dict[str, LLMProviderConfig] = {}
 
 
-class TaskWrokerConfig(FrozenBaseModel):
-    max_workers: int = 10
+class SchedulerConfig(FrozenBaseModel):
+    background_max_workers: int = 10
 
 
 class S3Config(FrozenBaseModel):
@@ -247,7 +236,7 @@ class BaseAppConfig(BaseSettings):
         frozen=True,
         toml_file=os.getenv("CONF_FILE") or DEFAULT_CONF_FILES,
     )
-
+    hostname: str = socket.gethostname()
     # global config
     store: str = "data"
 
@@ -264,7 +253,7 @@ class BaseAppConfig(BaseSettings):
     chroma: ChromaConfig = ChromaConfig()
     agent: AgentConfig = AgentConfig()
 
-    task_worker: TaskWrokerConfig = TaskWrokerConfig()
+    scheduler: SchedulerConfig = SchedulerConfig()
 
     @classmethod
     def settings_customise_sources(

@@ -8,8 +8,8 @@ FORMAT_TIME = "%H:%M:%S"
 FORMAT_DATETIME = f"{FORMAT_DATE} {FORMAT_TIME}"
 
 
-def utcnow():
-    return datetime.now(UTC)
+def utcnow(delta: timedelta | None = None):
+    return datetime.now(UTC) + (delta or timedelta())
 
 
 def day_range(days_offset=0, date: datetime | None = None):
