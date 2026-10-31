@@ -8,11 +8,12 @@ from langchain.agents.middleware import (
     ModelResponse,
     ToolCallRequest,
 )
-from langchain_core.exceptions import ModelRateLimitError
+from langchain_core.exceptions import ModelError, ModelRateLimitError
 from langchain_core.messages import AIMessageChunk, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.types import Command
 from loguru import logger
+from pydantic import SecretStr
 
 from pystonic.agents.langchain_agent.exceptions import AllModelsFailed, ModelsIsEmpty
 from pystonic.agents.langchain_agent.objects import RuntimeContext
@@ -54,7 +55,7 @@ class RuntimeAgentMiddleware(AgentMiddleware[AgentState, RuntimeContext]):
         )
 
     def _get_runtime_model(
-        self, ctx: RuntimeContext, base_url: str, api_key: str, model: str
+        self, ctx: RuntimeContext, base_url: str, api_key: SecretStr, model: str
     ) -> ChatOpenAI:
         return ReasoningChatOpenAI(
             api_key=api_key,
@@ -81,20 +82,19 @@ class RuntimeAgentMiddleware(AgentMiddleware[AgentState, RuntimeContext]):
                 logger.warning("provider({}) models is empty", name)
                 continue
             for model_name in provider.models:
+                ctx.selected_model = f"{name}/{provider.models}"
+                runtime_model = self._get_runtime_model(
+                    ctx,
+                    provider.base_url,
+                    provider.api_key,
+                    model_name,
+                )
+                logger.debug(
+                    "runtime llm: base_url={}, model_name={}",
+                    runtime_model.openai_api_base,
+                    runtime_model.model_name,
+                )
                 try:
-                    ctx.selected_model = f"{name}/{provider.models}"
-                    runtime_model = self._get_runtime_model(
-                        ctx,
-                        provider.base_url,
-                        provider.api_key.get_secret_value(),
-                        model_name,
-                    )
-                    logger.debug(
-                        "runtime llm: base_url={}, model_name={}",
-                        runtime_model.openai_api_base,
-                        runtime_model.model_name,
-                    )
-
                     return await handler(
                         request.override(
                             model=runtime_model,
@@ -102,7 +102,7 @@ class RuntimeAgentMiddleware(AgentMiddleware[AgentState, RuntimeContext]):
                             system_message=SystemMessage(content=ctx.system_prompt),
                         )
                     )
-                except Exception as e:
+                except ModelError as e:
                     errors.append(f"model {model_name}: {e}")
                     continue
 

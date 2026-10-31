@@ -9,8 +9,8 @@ class AuthFailed(Exception):
 
 
 class ResourceNotFound(Exception):
-    def __init__(self, detail: str = "Resource not found") -> None:
-        super().__init__(detail)
+    def __init__(self, resource: str) -> None:
+        super().__init__("Resource not found: {}")
 
 
 class PermissionDeny(Exception):

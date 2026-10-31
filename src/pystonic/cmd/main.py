@@ -1,6 +1,7 @@
+from importlib import import_module
+
 import click
 import dotenv
-from importlib import import_module
 
 from pystonic import set_app_name
 from pystonic.common.log import setup_logger

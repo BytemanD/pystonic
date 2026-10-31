@@ -183,37 +183,11 @@ class AgentConfig(FrozenBaseModel):
     max_turns: int = 100
     openai_timeout: int = 180
     session: AgentSessionConfig = AgentSessionConfig()
-    # stream: bool = True
-    default_provider: str = "zipu/glm-4.7-flash"
-    # providers: dict[str, ProviderConfig] = {
-    #     "alibaba": ProviderConfig(
-    #         base_url=HttpUrl("https://dashscope.aliyuncs.com/compatible-mode/v1"),
-    #         api_key="",
-    #         models=["qwen-plus"],
-    #     ),
-    #     "zipu": ProviderConfig(
-    #         base_url=HttpUrl("https://open.bigmodel.cn/api/paas/v4"),
-    #         models=["glm-4.7-flash"],
-    #         openai_use_responses=False,
-    #         api_key="",
-    #     ),
-    # }
-    disable_tracing: bool = True
     # Usage: db_config, mysql+pymysql://xxxx, sqlite:///xxxx
     checkpoint_connection: str = (
         f"sqlite:///{user_app_data().joinpath('agent', 'checkpoint.sqlite')}"
     )
     providers: dict[str, LLMProviderConfig] = {}
-
-    def get_provider(self, model: str | None = None):
-        provider, model_name = (model or self.default_provider).split("/")
-
-        if provider not in self.providers:
-            raise ValueError(f"Provider '{provider}' not found in configuration")
-        if model_name not in self.providers[provider].models:
-            raise ValueError(f"model '{model_name}' not found in configuration")
-
-        return self.providers[provider]
 
 
 class HueyConfig(FrozenBaseModel):

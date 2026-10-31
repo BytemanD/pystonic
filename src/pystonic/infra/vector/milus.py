@@ -1,10 +1,9 @@
+from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 from loguru import logger
 from pymilvus import MilvusClient
 
 from pystonic.common.conf import CONF, MilvusConfig
 from pystonic.infra.vector.objects import VectorDocument
-
-from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 
 
 class ChromaOnnxEmbeddingFunction:
@@ -78,7 +77,7 @@ class MilvusVector:
     def add_document(
         self,
         content: str,
-        collection: str = None,
+        collection: str | None = None,
         metadata: dict | None = None,
     ):
         collection = collection or self.default_collection

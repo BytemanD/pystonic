@@ -5,6 +5,7 @@ from pydantic import PrivateAttr
 from sqlalchemy import event
 from sqlmodel import Field, SQLModel, col, delete, desc, func, select, update
 
+from pystonic.common.exceptions import ResourceNotFound
 from pystonic.orm.database import get_session
 from pystonic.utils.dateutil import utcnow
 
@@ -75,7 +76,7 @@ class DBModel(SQLModel):
         items = cls.query(cls.id == id)
         if not items:
             if raise_if_not_exists:
-                raise ValueError(f"{cls} with uuid {id} not exists")
+                raise ResourceNotFound(f"{cls.__name__}<{id}>")
             else:
                 return None
         return items[0]
@@ -99,7 +100,7 @@ class DBModel(SQLModel):
     def get_by_uuid(cls, uuid: str):
         items = cls.query(cls.uuid == uuid)
         if not items:
-            raise ValueError(f"{cls} with uuid {uuid} not exists")
+            raise ResourceNotFound(f"{cls.__name__}<{uuid}>")
         return items[0]
 
     @classmethod

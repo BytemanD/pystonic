@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 
 import click
-
 from openai import APIConnectionError
 from rich.console import Console
 from rich.prompt import Prompt

@@ -1,13 +1,12 @@
-from loguru import logger
-
-from pystonic.common.conf import CONF, ChromaConfig
 from langchain_chroma import Chroma
 from langchain_core.documents import Document as RawDocument
 from langchain_text_splitters import (
     MarkdownHeaderTextSplitter,
     RecursiveCharacterTextSplitter,
 )
+from loguru import logger
 
+from pystonic.common.conf import CONF, ChromaConfig
 from pystonic.infra.vector.objects import VectorDocument
 
 
@@ -31,7 +30,7 @@ class ChromaVector:
     def add_document(
         self,
         content: str,
-        collection: str = None,
+        collection: str | None = None,
         metadata: dict | None = None,
     ):
         metadata = metadata or {}

@@ -1,6 +1,11 @@
 from collections.abc import Sequence
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langchain_mcp_adapters.sessions import (
+    SSEConnection,
+    StreamableHttpConnection,
+    WebsocketConnection,
+)
 from pydantic import BaseModel
 
 
@@ -11,17 +16,38 @@ class MCP(BaseModel):
     api_key: str | None = None
 
 
+def _get_connection(
+    transport: str,
+    url: str,
+    api_key: str | None = None,
+    session_kwargs: dict | None = None,
+):
+    if transport == "sse":
+        return SSEConnection(
+            transport="sse",
+            url=url,
+            headers={"Authorization": f"Bearer {api_key}"} if api_key else {},
+        )
+    elif transport == "streamable_http":
+        return StreamableHttpConnection(
+            transport="streamable_http",
+            url=url,
+            headers={"Authorization": f"Bearer {api_key}"} if api_key else {},
+        )
+    elif transport == "websocket":
+        return WebsocketConnection(
+            transport="websocket",
+            url=url,
+            session_kwargs=session_kwargs,
+        )
+    raise ValueError("unsupport transport: {}", transport)
+
+
 async def get_mcp_server_info(
     name: str, url: str, transport: str, api_key: str | None = None
 ):
     client = MultiServerMCPClient(
-        {
-            name: {
-                "url": url,
-                "transport": transport,
-                "headers": {"Authorization": f"Bearer {api_key}"} if api_key else {},
-            }
-        }
+        connections={name: _get_connection(transport, url, api_key=api_key)}
     )
     return await client.get_server_info()
 
@@ -29,16 +55,9 @@ async def get_mcp_server_info(
 async def get_tools(mcps: Sequence[MCP]):
     client = MultiServerMCPClient(
         {
-            # 用 uuid 而非 name 作 key：不同 MCP 可能重名（测试库里就有两个
-            # 叫 Math 的），用 name 会互相覆盖导致工具静默丢失。
-            # key 只作连接标识，工具名来自 MCP server，不受影响。
-            mcp.uuid: {
-                "url": mcp.url,
-                "transport": mcp.transport,
-                "headers": {"Authorization": f"Bearer {mcp.api_key}"}
-                if mcp.api_key
-                else {},
-            }
+            mcp.name or mcp.url: _get_connection(
+                mcp.transport, mcp.url, api_key=mcp.api_key
+            )
             for mcp in mcps
         }
     )

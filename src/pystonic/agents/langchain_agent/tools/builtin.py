@@ -1,8 +1,8 @@
-from datetime import datetime
 import os
-from pathlib import Path
 import subprocess
 import tempfile
+from datetime import datetime
+from pathlib import Path
 
 import httpx
 from langchain.tools import ToolRuntime
@@ -98,14 +98,12 @@ def write_file(
     content: str,
     encoding="utf-8",
     overwrite=False,
-) -> Path:
+):
     """创建文本文件, 并写入数据
     Args:
         path: 文件路径
         content: 文件内容
         encoding: 文件编码，默认 utf-8
-    Returns:
-        文件路径
     """
     path = runtime.context.workspace.joinpath(file_path)
     if not runtime.context.allow_outside_workspace and not path.relative_to(
@@ -175,6 +173,7 @@ def web_get(
 class WorkToolkit(BaseToolkit):
     enable_read: bool = True
     enable_write: bool = True
+    enable_list_dir: bool = True
     enable_execute_shell: bool = True
     enable_web_get: bool = True
     enable_get_platform_info: bool = True
@@ -182,9 +181,9 @@ class WorkToolkit(BaseToolkit):
     def get_tools(self) -> list:
         tools = [
             get_iso_datetime,
-            read_file,
-            write_file,
         ]
+        if self.enable_read:
+            tools.append(list_dir)
         if self.enable_read:
             tools.append(read_file)
         if self.enable_write:

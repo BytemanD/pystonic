@@ -1,19 +1,19 @@
 import contextlib
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence, Tuple, Type
 
 from langchain.agents import AgentState, create_agent
+from langchain.agents.middleware.types import AgentMiddleware
 from langchain.messages import AIMessage
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.runnables.config import RunnableConfig
 from langchain_openai import ChatOpenAI
-from langchain.agents.middleware.types import AgentMiddleware
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.mysql.asyncmy import AsyncMySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from loguru import logger
-
 from pydantic import SecretStr
+
 from pystonic.agents.db.models import AgentSession
 from pystonic.agents.langchain_agent.exceptions import SessionNotFount
 from pystonic.agents.langchain_agent.middlewares import RuntimeAgentMiddleware
@@ -51,7 +51,7 @@ class AsyncAgent:
     def __init__(
         self,
         saver: BaseCheckpointSaver,
-        context_schema: Type[RuntimeContext] = RuntimeContext,
+        context_schema: type[RuntimeContext] = RuntimeContext,
         middleware: Sequence[AgentMiddleware[AgentState, RuntimeContext]] | None = None,
         tools: list | None = None,
     ):
@@ -70,7 +70,7 @@ class AsyncAgent:
         query: str,
         callbacks: list[BaseCallbackHandler] | None = None,
         # config: dict | None = None,
-        event_types: Tuple[Type[AIMessage]] | None = None,
+        event_types: tuple[type[AIMessage]] | None = None,
         max_concurrency: int | None = None,
         recursion_limit: int = 25,
     ):
