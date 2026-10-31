@@ -1,4 +1,6 @@
 import os
+import shlex
+import subprocess  # nosec B404 - 执行 ruff/pytest/bandit 等开发命令
 import sys
 from pathlib import Path
 
@@ -48,7 +50,7 @@ def check_code(
         if not is_package_installed("bandit"):
             print("❌ Error: bandit is not installed. Please install it first.")
             return
-        commands.append(f"bandit -r {source_arg}")
+        commands.append(f"bandit -c pyproject.toml -r {source_arg}")
 
     for command in commands:
         click.secho(f"🚀 {command}", fg="magenta")
@@ -111,10 +113,17 @@ def check(
         if not is_package_installed("bandit"):
             print("❌ Error: bandit is not installed. Please install it first.")
             return
-        commands.append(f"bandit -r {source_arg}")
+        commands.append(f"bandit -c pyproject.toml -r {source_arg}")
 
     for command in commands:
         click.secho(f"🚀 {command}", fg="magenta")
-        os.system(command)
+        result = subprocess.run(
+            shlex.split(command),  # nosec B603 - 命令为本工具自身拼装的 ruff/pytest/bandit，静态可控
+            check=False,  # 退出码由下方手动判断并转为 Exit
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+        )
         # click.echo(output)
         print()
+        if result.returncode != 0:
+            raise click.exceptions.Exit(result.returncode)

@@ -41,8 +41,9 @@ class RedisMessaingQueue:
 
             if not results:
                 continue
-            logger.debug("receive {} results", len(results))
-            for stream_name, messages in results:
+            logger.debug("receive {} streams", len(results))
+            # redis-py 8.x: XREADGROUP 返回 dict[stream_name, list[(msg_id, fields)]]
+            for messages in results.values():
                 for msg_id, fields in messages:
                     try:
                         item = (
@@ -52,6 +53,8 @@ class RedisMessaingQueue:
                         )
                     except ValidationError:
                         logger.error("invalid {}: {}", response_model, fields)
+                        # 毒丸消息：无法通过校验、永远不会被正确消费，ack 丢弃防止滞留 PEL
+                        self.redis.client.xack(name, self.group_name, msg_id)
                         continue
                     yield item
                     logger.debug("ack {}", msg_id)

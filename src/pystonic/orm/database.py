@@ -53,7 +53,8 @@ def create_all_tables():
 
 
 def get_all_databases() -> list[str]:
-    assert _engine is not None
+    if _engine is None:
+        raise RuntimeError("database engine not initialized")
 
     dialect_name = _engine.dialect.name
     if dialect_name == "sqlite":
@@ -75,14 +76,16 @@ def get_all_databases() -> list[str]:
 
 
 def get_all_tables() -> list[str]:
-    assert _engine is not None
+    if _engine is None:
+        raise RuntimeError("database engine not initialized")
 
     inspector = inspect(_engine)
     return inspector.get_table_names()
 
 
 def get_table_structure(table_name: str) -> list[TableColumn]:
-    assert _engine is not None
+    if _engine is None:
+        raise RuntimeError("database engine not initialized")
 
     inspector = inspect(_engine)
     columns = inspector.get_columns(table_name)

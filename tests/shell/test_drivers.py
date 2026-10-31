@@ -1,3 +1,4 @@
+import subprocess
 import tempfile
 from unittest.mock import MagicMock, patch
 
@@ -52,10 +53,10 @@ class TestPowershellDriver:
         assert "powershell -Command \"Write-Host 'Hello World'\"" in result
 
     def test_powershell_file_command(self):
-        """测试 PowerShell 文件命令"""
+        """测试 PowerShell 文件命令（返回参数列表，shell=False 执行）"""
         driver = PowershellDriver()
         result = driver.file_command("script.ps1")
-        assert result == 'powershell -File "script.ps1"'
+        assert result == ["powershell", "-File", "script.ps1"]
 
     def test_powershell_execute(self):
         """测试 PowerShell 执行代码块"""
@@ -64,8 +65,14 @@ class TestPowershellDriver:
 
         with (
             patch(
-                "subprocess.getstatusoutput", return_value=(0, "foo")
-            ) as mock_getstatusoutput,
+                "subprocess.run",
+                return_value=subprocess.CompletedProcess(
+                    args=["powershell", "-File", "test.ps1"],
+                    returncode=0,
+                    stdout="foo",
+                    stderr="",
+                ),
+            ) as mock_run,
             patch("os.remove") as mock_remove,
             patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile,
         ):
@@ -79,8 +86,10 @@ class TestPowershellDriver:
             # 执行代码块
             driver.execute("Write-Host 'Test'")
 
-            # 验证调用了 os.system
-            assert mock_getstatusoutput.called
+            # 验证以参数列表方式调用了 subprocess.run
+            assert mock_run.called
+            args = mock_run.call_args.args[0]
+            assert args == ["powershell", "-File", "test.ps1"]
             # 验证清理了临时文件
             assert mock_remove.called
 
@@ -101,10 +110,10 @@ class TestCmdDriver:
         assert result == 'call "dir"'
 
     def test_cmd_file_command(self):
-        """测试 CMD 文件命令"""
+        """测试 CMD 文件命令（返回参数列表，shell=False 执行）"""
         driver = CmdDriver()
         result = driver.file_command("script.bat")
-        assert result == 'call "script.bat"'
+        assert result == ["cmd", "/C", "call", "script.bat"]
 
     def test_cmd_execute(self):
         """测试 CMD 执行代码块"""
@@ -112,8 +121,14 @@ class TestCmdDriver:
 
         with (
             patch(
-                "subprocess.getstatusoutput", return_value=(0, "foo")
-            ) as mock_getstatusoutput,
+                "subprocess.run",
+                return_value=subprocess.CompletedProcess(
+                    args=["cmd", "/C", "call", "test.bat"],
+                    returncode=0,
+                    stdout="foo",
+                    stderr="",
+                ),
+            ) as mock_run,
             patch("os.remove") as mock_remove,
             patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile,
         ):
@@ -125,7 +140,9 @@ class TestCmdDriver:
 
             driver.execute("echo Hello")
 
-            assert mock_getstatusoutput.called
+            assert mock_run.called
+            args = mock_run.call_args.args[0]
+            assert args == ["cmd", "/C", "call", "test.bat"]
             assert mock_remove.called
 
 
@@ -151,10 +168,10 @@ class TestBashDriver:
         assert "bash -c \"grep 'pattern' file.txt\"" in result
 
     def test_bash_file_command(self):
-        """测试 Bash 文件命令"""
+        """测试 Bash 文件命令（返回参数列表，shell=False 执行）"""
         driver = BashDriver()
         result = driver.file_command("/path/to/script.sh")
-        assert result == 'bash "/path/to/script.sh"'
+        assert result == ["bash", "/path/to/script.sh"]
 
     def test_bash_execute(self):
         """测试 Bash 执行代码块"""
@@ -162,8 +179,14 @@ class TestBashDriver:
 
         with (
             patch(
-                "subprocess.getstatusoutput", return_value=(0, "foo")
-            ) as mock_getstatusoutput,
+                "subprocess.run",
+                return_value=subprocess.CompletedProcess(
+                    args=["bash", "test.sh"],
+                    returncode=0,
+                    stdout="foo",
+                    stderr="",
+                ),
+            ) as mock_run,
             patch("os.remove") as mock_remove,
             patch.object(tempfile, "NamedTemporaryFile") as mock_tempfile,
         ):
@@ -175,7 +198,9 @@ class TestBashDriver:
 
             driver.execute("echo 'Test'")
 
-            assert mock_getstatusoutput.called
+            assert mock_run.called
+            args = mock_run.call_args.args[0]
+            assert args == ["bash", "test.sh"]
             assert mock_remove.called
 
 

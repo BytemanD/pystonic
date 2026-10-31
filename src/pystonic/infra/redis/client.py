@@ -22,7 +22,7 @@ class RedisClient:
         self.client.set(name, value, ex=ex)
 
     def get(self, name: str):
-        value = self.client.aget(name)
+        value = self.client.get(name)
         if not value:
             return value
         if isinstance(value, bytes):

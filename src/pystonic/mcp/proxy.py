@@ -32,7 +32,7 @@ class NacosMCPProxy:
 
         ip = (
             get_first_non_loopback_ip()
-            if self.conf.host == "0.0.0.0"
+            if self.conf.host == "0.0.0.0"  # nosec B104 - 与配置的默认监听地址保持一致
             else self.conf.host
         )
         if not ip:

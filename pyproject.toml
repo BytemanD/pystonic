@@ -24,22 +24,14 @@ dependencies = [
 pystonic = "pystonic.cmd.main:main"
 
 [project.optional-dependencies]
-pretty = [
-    "rich>=14.3.3",
-    "prettytable>=3.17.0",
-]
-orm = [
-    "sqlmodel>=0.0.38",
-]
+pretty = ["rich>=14.3.3", "prettytable>=3.17.0"]
+orm = ["sqlmodel>=0.0.38"]
 mcp = [
     "fastmcp==3.4.2",
     "nacos-sdk-python==2.0.9",
     "nacos-maintainer-sdk-python==0.1.2",
 ]
-asgi = [
-    "fastapi>=0.162.0",
-    "uvicorn>=0.52.1",
-]
+asgi = ["fastapi>=0.162.0", "uvicorn>=0.52.1"]
 agent = [
     "langchain>=1.4.7",
     "langchain-chroma>=1.1.0",
@@ -49,11 +41,7 @@ agent = [
     "langgraph-checkpoint-mysql[asyncmy]>=3.0.0",
     "langgraph-checkpoint-sqlite>=3.1.2",
 ]
-huey = [
-    "huey[peewee,redis,sql,sqlite]>=3.4.0",
-    "peewee>=4.4.0",
-    "pymysql>=1.2.0",
-]
+
 # cmd = [
 #     "click>=8.4.2",
 # ]
@@ -61,12 +49,10 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.15.1",
-    "ruff>=0.15.4",
+    "ruff>=0.17.2",
     "bandit>=1.9.4",
 ]
-apscheduler = [
-    "apscheduler>=3.11.3",
-]
+apscheduler = ["apscheduler>=3.11.3"]
 infra = [
     "boto3>=1.43.117",
     "docker>=7.2.0",
@@ -75,10 +61,7 @@ infra = [
     "redis>=8.1.0",
     "gitpython>=3.1.46",
 ]
-milvus = [
-    "chroma>=0.2.0",
-    "pymilvus[model]>=3.0.2",
-]
+milvus = ["chroma>=0.2.0", "pymilvus[model]>=3.0.2"]
 chroma = [
     "langchain-chroma>=1.1.0",
     "langchain-core>=1.7.0",
@@ -108,7 +91,15 @@ explicit = true
 minversion = "9.0"
 addopts = ["-ra"]
 
+[tool.pytest_env]
+AGENT__CHECKPOINT_CONNECTION = "sqlite:///:memory:"
+
+[tool.bandit]
+# B404: 本库 shell/subprocess 封装模块（pystonic.shell、utils.system）核心即子进程能力，
+# 不导入 subprocess 无法实现；实际子进程调用已全部改为参数列表（非 shell 串），故跳过导入告警
+skips = ["B404"]
+
 [dependency-groups]
 dev = [
-    "pytest-asyncio>=1.4.1",
+    "pytest-env>=1.7.1",
 ]

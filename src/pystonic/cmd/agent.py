@@ -92,8 +92,15 @@ async def _do_run(input: str, session_id: str | None = None, last: bool = False)
 @root.command()
 @click.argument("intput")
 @click.option("--session", "-s", default=None, help="Session to use for the agent")
-@click.option("--continue", "-c", "last", default=None, help="Continue last session")
-def run(intput: str, session: str | None = None, is_flag=True, last: bool = False):
+@click.option(
+    "--continue",
+    "-c",
+    "last",
+    is_flag=True,
+    default=False,
+    help="Continue last session",
+)
+def run(intput: str, session: str | None = None, last: bool = False):
     """Chat with the agent."""
     try:
         asyncio.run(_do_run(intput, session_id=session, last=last))

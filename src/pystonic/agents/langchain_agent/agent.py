@@ -1,4 +1,5 @@
 import contextlib
+import json
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -30,7 +31,7 @@ async def get_checkpointer_saver():
 
     if conn_string.startswith(("mysql:", "mysql+pymysql:")):
         logger.info("use mysql checkpoint saver")
-        async with AsyncMySaver.from_conn_string(CONF.db.url) as saver:
+        async with AsyncMySaver.from_conn_string(conn_string) as saver:
             logger.debug("setup saver: {}", saver)
             await saver.setup()
             yield saver
@@ -105,7 +106,11 @@ class AsyncAgent:
             Message(
                 id=msg.id,
                 type=msg.type,
-                content=msg.content,
+                content=(
+                    msg.content
+                    if isinstance(msg.content, str)
+                    else json.dumps(msg.content, ensure_ascii=False)
+                ),
                 thinking=msg.additional_kwargs.get("reasoning_content"),
             )
             for msg in item.checkpoint.get("channel_values", {}).get("messages", [])
@@ -168,7 +173,7 @@ class AsyncAgent:
                 raise SessionNotFount(session_id)
             return session
         if last:
-            session = cls.get_last_session()
+            session = cls.get_last_session(user=user, agent=agent)
         if not session:
             session = cls.create_session(title, user=user, agent=agent)
         return session

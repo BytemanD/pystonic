@@ -98,14 +98,26 @@ class MilvusVector:
     ):
         collection = collection or self.default_collection
         self._makesure_collection(collection)
-        res = self.client.query(
-            collection,
-            filter=metedata_to_filter(metadata),
-            output_fields=["text", "metadata"],
-            ids=ids,
-            limit=100,
-            consistency_level=self.consistency_level,
-        )
+        flt = metedata_to_filter(metadata)
+        # pymilvus 3.x: filter 与 ids 不能同时传
+        if metadata and ids:
+            res = self.client.query(
+                collection,
+                filter=flt,
+                output_fields=["text", "metadata"],
+                limit=100,
+                consistency_level=self.consistency_level,
+            )
+            res = [x for x in res if x.get("id") in ids]
+        else:
+            res = self.client.query(
+                collection,
+                filter=flt,
+                output_fields=["text", "metadata"],
+                ids=ids if not metadata else None,
+                limit=100,
+                consistency_level=self.consistency_level,
+            )
         return [
             VectorDocument(
                 id=x.get("id"), content=x.get("text"), metadata=x.get("metadata")
@@ -140,8 +152,8 @@ class MilvusVector:
             VectorDocument(
                 id=x["id"],
                 score=1 - x["distance"],
-                content=x.get("entity", {}).pop("text"),
-                metadata=x.get("metadata", {}),
+                content=(x.get("entity") or {}).get("text"),
+                metadata=(x.get("entity") or {}).get("metadata") or {},
             )
             for x in res[0]
         ]

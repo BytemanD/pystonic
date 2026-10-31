@@ -43,7 +43,7 @@ def set_repo(repo: str):
     if not index_url:
         raise click.ClickException(f"invalid repo: {repo}")
 
-    result = parse.urlparse(repo_map[repo])
+    result = parse.urlparse(index_url)
     logger.success("set pip repo ({}) success", index_url)
     cmd_prefix = ["python", "-m", "pip", "config", "set"]
     execute(*cmd_prefix, "global.index-url", index_url, check=True)

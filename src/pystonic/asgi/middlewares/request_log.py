@@ -1,5 +1,3 @@
-import time
-
 from fastapi import Request, Response
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -17,14 +15,21 @@ async def _get_request_body(req: Request):
 
 def _get_response_body(resp: Response):
     content_type = resp.headers.get("content-type") or ""
-    if (
-        resp.body
-        and isinstance(resp.body, bytes)
-        and "application/json" in content_type
-    ):
-        return text_shorten(resp.body.decode())
+    if "event-stream" in content_type:
+        # 流式响应不读 body，避免破坏流
+        return f"<stream {content_type}>"
+    body = getattr(resp, "body", None)
+    if body and isinstance(body, bytes) and "application/json" in content_type:
+        return text_shorten(body.decode())
 
     return f"<omit {content_type}>"
+
+
+def _redact(headers: dict) -> str:
+    sensitive = {"authorization", "cookie", "set-cookie"}
+    return "\n".join(
+        f"{k.title()}: {v}" for k, v in headers.items() if k.lower() not in sensitive
+    )
 
 
 class DetailedRequestLoggingMiddleware(BaseHTTPMiddleware):
@@ -41,54 +46,50 @@ class DetailedRequestLoggingMiddleware(BaseHTTPMiddleware):
         self.max_body_length = max_body_length
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):  # type: ignore
-        start_time = time.time()
-        request_id = request.headers.get("X-Request-ID", f"{int(start_time * 1000)}")
-
-        client_ip = request.client.host if request.client else "unknown"
-        method = request.method
-        url = str(request.url)
-        headers = dict(request.headers)
-
-        request_body = None
-        if self.log_request_body and method in ["POST", "PUT", "PATCH"]:
-            try:
+        request_body = "<omit>"
+        try:
+            # 必须在 call_next 之前读取请求体，否则会触发 "Stream consumed"
+            if self.log_request_body:
+                request_body = await _get_request_body(request)
                 body = await request.body()
                 if body:
-                    # 限制记录长度
-                    body_str = body.decode("utf-8")
-                    if len(body_str) > self.max_body_length:
-                        body_str = body_str[: self.max_body_length] + "... (truncated)"
-                    request_body = body_str
-
                     # 重新设置请求体，以便后续处理
                     async def receive():
-                        return {"type": "http.request", "body": body}
+                        return {
+                            "type": "http.request",
+                            "body": body,
+                            "more_body": False,
+                        }
 
                     request._receive = receive
-            except Exception as e:  # noqa: BLE001
-                logger.warning(f"无法读取请求体: {e}")
-                request_body = "<无法读取>"
-
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"无法读取请求体: {e}")
+            request_body = "<无法读取>"
         # 记录请求日志
-        log_data = {
-            "request_id": request_id,
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "client_ip": client_ip,
-            "method": method,
-            "url": url,
-            "user_agent": headers.get("user-agent", ""),
-            "referer": headers.get("referer", ""),
-            "headers": {
-                k: v
-                for k, v in headers.items()
-                if k.lower() not in ["authorization", "cookie"]
-            },
-        }
-
-        if request_body:
-            log_data["request_body"] = request_body
-
         response = await call_next(request)
+
+        resp_body = f"<omit {response.headers.get('content-type') or ''}>"
+        if self.log_response_body:
+            content_type = response.headers.get("content-type") or ""
+            try:
+                if (
+                    "application/json" in content_type
+                    and "event-stream" not in content_type
+                ):
+                    # 捕获后原样重放，不破坏响应流
+                    raw = b""
+                    async for chunk in response.body_iterator:
+                        raw += chunk
+
+                    async def replay():
+                        yield raw
+
+                    response.body_iterator = replay()
+                    resp_body = text_shorten(raw.decode("utf-8", errors="replace"))
+            except Exception as e:  # noqa: BLE001
+                logger.warning(f"无法读取响应体: {e}")
+                resp_body = "<无法读取>"
+
         detail = """
         {req_headers}
 
@@ -101,19 +102,19 @@ class DetailedRequestLoggingMiddleware(BaseHTTPMiddleware):
 
         logger.log(
             "INFO"
-            if response.status_code <= 400
-            else "ERRORASGI Request: {} {} -> {}\n{}",
+            if response.status_code < 400
+            else "WARNING"
+            if response.status_code < 500
+            else "ERROR",
+            "ASGI Request: {} {} -> {}\n{}",
             request.method,
             request.url,
             response.status_code,
             detail.format(
-                req_headers="\n".join(
-                    [f"{k.title()}: {v}" for k, v in request.headers.items()]
-                ),
-                req_body=await _get_request_body(request),
-                resp_headers="\n".join(
-                    [f"{k.title()}: {v}" for k, v in response.headers.items()]
-                ),
-                resp_body=_get_response_body(response),
+                req_headers=_redact(dict(request.headers)),
+                req_body=request_body,
+                resp_headers=_redact(dict(response.headers)),
+                resp_body=resp_body,
             ),
         )
+        return response

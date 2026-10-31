@@ -71,7 +71,7 @@ def month_range(month_offset: int = 0, date: datetime | None = None):
     if month_offset != 0:
         date = date + relativedelta(months=month_offset)
 
-    first_day = datetime(date.year, date.month, 1, 0, 0, 0)
+    first_day = datetime(date.year, date.month, 1, 0, 0, 0, tzinfo=date.tzinfo)
     last_day = first_day + relativedelta(
         days=calendar.monthrange(date.year, date.month)[1] - 1,
         hours=23,

@@ -4,6 +4,8 @@ import httpx
 from loguru import logger
 from pydantic import BaseModel, ConfigDict
 
+from pystonic.common.conf import CONF
+
 TYPE_WWW_FORM = "application/x-www-form-urlencoded"
 TYPE_JSON = "application/json"
 TYPE_TEXT_HTML = "text/html"
@@ -30,7 +32,12 @@ class HTTPClientConfig(BaseModel):
     retries: int = 0
 
 
-_DEFAULT_CONF: HTTPClientConfig = HTTPClientConfig()
+def _default_conf() -> HTTPClientConfig:
+    try:
+        return CONF.http_client
+    except Exception:  # noqa: BLE001
+        # conf 不可用时回退默认值（如测试/独立使用本模块）
+        return HTTPClientConfig()
 
 
 def format_headers(headers: httpx.Headers):
@@ -60,7 +67,12 @@ def _log_response(resp: httpx.Response) -> None:
 
 
 def _log_response_detail(resp: httpx.Response):
-    if _text_regex.match(resp.headers.get("Content-Type", "")):
+    content_type = resp.headers.get("Content-Type", "")
+    if "event-stream" in content_type:
+        # 流式响应不读 body，避免破坏流
+        logger.trace("resp {}/stream", resp.status_code)
+        return
+    if _text_regex.match(content_type):
         resp.read()
         content = resp.text
         elapsed = resp.elapsed.total_seconds()
@@ -97,12 +109,13 @@ def default_client(
         "request": [_log_request],
         "response": [_log_response],
     }
-    if _DEFAULT_CONF.log_response_detail:
+    conf = _default_conf()
+    if conf.log_response_detail:
         event_hooks["response"].append(_log_response_detail)
     if raise_for_status:
         event_hooks["response"].append(_raise_for_status)
-    timeout = timeout or _DEFAULT_CONF.timeout
-    retries = retries or _DEFAULT_CONF.retries
+    timeout = conf.timeout if timeout is None else timeout
+    retries = conf.retries if retries is None else retries
     kwargs = {}
     if timeout:
         kwargs["timeout"] = timeout

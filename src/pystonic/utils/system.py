@@ -3,7 +3,7 @@ import os
 import platform
 import shutil
 import socket
-import subprocess
+import subprocess  # nosec B404 - execute() 封装子进程执行
 import sys
 from pathlib import Path
 
@@ -77,7 +77,6 @@ def get_first_non_loopback_ip(default: str | None = None):
 
 def execute(
     *args: str,
-    shell=False,
     check=False,
     text=True,
     stdout=subprocess.PIPE,
@@ -85,8 +84,8 @@ def execute(
 ):
     logger.debug("Run: {}", args)
     process = subprocess.run(
-        [x for x in args],
-        shell=shell,
+        args,  # nosec B603 - 封装层仅透传调用方显式提供的参数列表，不拼接用户输入
+        shell=False,  # noqa: B602 - 仅支持参数列表，不透传 shell 开关，避免命令注入
         text=text,
         check=check,
         stdout=stdout,

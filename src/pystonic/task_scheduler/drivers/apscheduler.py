@@ -14,14 +14,14 @@ from loguru import logger
 
 from pystonic.common.conf import CONF
 from pystonic.common.exceptions import GetDBLockTimeout
-from pystonic.orm import database
+from pystonic.infra.lock.db import get_lock as get_db_lock
 from pystonic.utils.dateutil import utcnow
 
 
 class DistributedThreadPoolExecutor(ThreadPoolExecutor):
     def submit_job(self, job: Job, run_times):
         try:
-            with database.db_lock(job.id):
+            with get_db_lock(f"apscheduler-{job.id}"):
                 return super().submit_job(job, run_times)
         except GetDBLockTimeout:
             event = JobEvent(EVENT_JOB_MISSED, job.id, job._jobstore_alias)

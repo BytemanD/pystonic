@@ -1,13 +1,9 @@
-import os
-import subprocess
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
 import httpx
 from langchain.tools import ToolRuntime
 from langchain_core.tools import BaseToolkit, tool
-from loguru import logger
 
 from pystonic.agents.langchain_agent.exceptions import PermissionDeny
 from pystonic.agents.langchain_agent.objects import RuntimeContext
@@ -66,6 +62,17 @@ def list_dir(
     return [str(x.relative_to(find_path)) for x in filter(_filter, children)]
 
 
+def _safe_path(runtime, file_path: str) -> Path:
+    """解析文件路径并校验 workspace 边界"""
+    path = runtime.context.workspace.joinpath(file_path)
+    if not runtime.context.allow_outside_workspace:
+        try:
+            path.resolve().relative_to(runtime.context.workspace.resolve())
+        except ValueError:
+            raise PermissionDeny(f"No permission to access file: {file_path}") from None
+    return path
+
+
 @tool
 def read_file(
     runtime: ToolRuntime[RuntimeContext], file_path: str, encoding: str = "utf-8"
@@ -79,11 +86,7 @@ def read_file(
     Returns:
         文件内容
     """
-    path = runtime.context.workspace.joinpath(file_path)
-    if not runtime.context.allow_outside_workspace and not path.relative_to(
-        runtime.context.workspace
-    ):
-        raise PermissionDeny("No permission to access file: {file_path}")
+    path = _safe_path(runtime, file_path)
     if not path.exists():
         raise FileNotFoundError(f"path {path} not exists")
     if not path.is_file():
@@ -105,38 +108,16 @@ def write_file(
         content: 文件内容
         encoding: 文件编码，默认 utf-8
     """
-    path = runtime.context.workspace.joinpath(file_path)
-    if not runtime.context.allow_outside_workspace and not path.relative_to(
-        runtime.context.workspace
-    ):
-        raise PermissionDeny("No permission to access file: {file_path}")
+    path = _safe_path(runtime, file_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    if overwrite and path.exists():
-        raise FileExistsError("file {} already exists", file_path)
+    if not overwrite and path.exists():
+        raise FileExistsError(f"file {file_path} already exists")
     path.write_text(content, encoding=encoding)
 
 
 class ShellWrapper(Shell):
     def execute(self, code: str):
-        logger.debug("code block: {}", code)
-        with tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=self.driver.SCRIPT_SUFFIX
-        ) as file:
-            file.write(code)
-            file.flush()
-            file.close()
-            logger.debug("Run file: {}", file.name)
-            try:
-                _, output = subprocess.getstatusoutput(
-                    self.driver.file_command(file.name)
-                )
-            except subprocess.CalledProcessError as e:
-                logger.exception("Failed to run code block")
-                output = str(e)
-            finally:
-                logger.debug("Remove file: {}", file.name)
-                os.remove(file.name)
-        return output
+        return super().execute(code)
 
 
 executor = ShellWrapper()
@@ -165,7 +146,7 @@ def web_get(
     Returns:
         网页内容
     """
-    resp = httpx.get(url, params=params, timeout=timeout)
+    resp = httpx.get(url, params=params, headers=headers, timeout=timeout)
     resp.raise_for_status()
     return resp.text
 
@@ -182,7 +163,7 @@ class WorkToolkit(BaseToolkit):
         tools = [
             get_iso_datetime,
         ]
-        if self.enable_read:
+        if self.enable_list_dir:
             tools.append(list_dir)
         if self.enable_read:
             tools.append(read_file)

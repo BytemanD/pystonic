@@ -216,8 +216,8 @@ def test_ip_address_fallback():
 
 
 def test_execute_success():
-    """测试执行成功命令"""
-    returncode, stdout, stderr = execute("echo", "hello", shell=True)
+    """测试执行成功命令（参数列表方式，非 shell）"""
+    returncode, stdout, stderr = execute("echo", "hello")
 
     assert returncode == 0
     assert isinstance(stdout, str)
@@ -227,8 +227,8 @@ def test_execute_success():
 
 
 def test_execute_failed():
-    """测试执行成功命令"""
-    returncode, stdout, stderr = execute("invalid_cmd", "hello", shell=True)
+    """测试执行失败命令（退出码非零）"""
+    returncode, stdout, stderr = execute("ls", "/nonexistent-path-for-pystonic-test")
 
     assert returncode != 0
     assert isinstance(stdout, str)
@@ -240,37 +240,38 @@ def test_execute_failed():
 def test_execute_with_check_true():
     """测试 check=True 时失败命令抛出异常"""
     with pytest.raises(subprocess.CalledProcessError):
-        execute("invalid_cmd", check=True, shell=True)
+        execute("ls", "/nonexistent-path-for-pystonic-test", check=True)
 
 
 def test_execute_with_check_false():
     """测试 check=False 时失败命令不抛异常"""
     with patch("subprocess.run") as mock_run:
         mock_result = subprocess.CompletedProcess(
-            args="invalid_cmd", returncode=1, stdout=b"", stderr=b"error"
+            args=("ls", "x"), returncode=1, stdout="", stderr="error"
         )
         mock_run.return_value = mock_result
 
         # check=False 时不应该抛异常
-        returncode, _, stderr = execute("invalid_cmd", check=False, shell=True)
+        returncode, _, stderr = execute("ls", "x", check=False)
 
         assert returncode == 1
-        assert stderr == b"error"
+        assert stderr == "error"
 
 
 def test_execute_shell_false():
-    """测试 shell=False 时的命令执行"""
+    """测试固定 shell=False 的调用方式（防命令注入）"""
     with patch("subprocess.run") as mock_run:
         mock_result = subprocess.CompletedProcess(
-            args=["ls", "-l"], returncode=0, stdout=b"file list", stderr=b""
+            args=("ls", "-l"), returncode=0, stdout="file list", stderr=""
         )
         mock_run.return_value = mock_result
 
-        code, stdout, _ = execute("ls", "-l", shell=False)
+        code, stdout, _ = execute("ls", "-l")
 
         assert code == 0
-        assert stdout == b"file list"
-        # 验证 subprocess.run 被正确调用
+        assert stdout == "file list"
+        # 验证 subprocess.run 被正确调用，且以参数列表 + shell=False 执行
         mock_run.assert_called_once()
         call_args = mock_run.call_args
+        assert list(call_args.args[0]) == ["ls", "-l"]
         assert call_args.kwargs["shell"] is False

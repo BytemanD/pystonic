@@ -15,34 +15,44 @@ class S3Storage:
     def __init__(self, config: S3Config | None = None):
         config = config or CONF.s3
         self.bucket = config.bucket
+        creds = {
+            "aws_access_key_id": config.access_key_id,
+            "aws_secret_access_key": config.secret_access_key,
+            "aws_session_token": config.session_token,
+        }
+        # 空值不显式传入，保留 botocore 默认凭据链（环境变量/实例角色）
+        kwargs = {k: v for k, v in creds.items() if v}
         self.client = boto3.client(
             "s3",
             endpoint_url=config.endpoint_url,
             region_name=config.region,
-            aws_access_key_id=config.access_key_id,
-            aws_secret_access_key=config.secret_access_key,
-            aws_session_token=config.session_token,
+            **kwargs,
         )
 
     def list_files(self, directory: str | None = None):
-        items = self.client.list_objects_v2(Bucket=self.bucket, Prefix=directory or "")
-        return [
-            FilePath(
-                name=os.path.basename(x.get("Key")),
-                path=x.get("Key"),
-                size=x.get("Size"),
-                is_dir=False,
-                modify_time=x.get("LastModified"),
+        files = []
+        paginator = self.client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=self.bucket, Prefix=directory or ""):
+            items = page.get("Contents", [])
+            files.extend(
+                FilePath(
+                    name=os.path.basename(x.get("Key")),
+                    path=x.get("Key"),
+                    size=x.get("Size"),
+                    is_dir=False,
+                    modify_time=x.get("LastModified"),
+                )
+                for x in items
             )
-            for x in items.get("Contents", [])
-        ]
+        return files
 
     def get_file(self, path: str):
         try:
             response = self.client.head_object(Bucket=self.bucket, Key=path)
         except ClientError as e:
-            if type(e).__name__ == "NoSuchKey":
-                raise FileNotFoundError(f"file {path} not exists")
+            code = e.response.get("Error", {}).get("Code", "")
+            if code in ("404", "NotFound", "NoSuchKey"):
+                raise FileNotFoundError(f"file {path} not exists") from e
             raise
         return FilePath(
             name=os.path.basename(path),

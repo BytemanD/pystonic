@@ -41,7 +41,7 @@ class Container:
             status=container.status or "",
             image=container.attrs.get("Config", {}).get("Image", ""),
             command=container.attrs.get("Config", {}).get("Cmd", []),
-            autoRemove=container.attrs.get("HostConfig", {}).get("AutoRemove", []),
+            autoRemove=container.attrs.get("HostConfig", {}).get("AutoRemove"),
         )
 
 
@@ -109,7 +109,7 @@ class DockerManager:
             "gpu_supported": bool(info.get("Runtimes", {}).get("nvidia")),
             "containers_running": info["ContainersRunning"],
             "containers_stopped": info["ContainersStopped"],
-            "containers_paursed": info["ContainersPaused"],
+            "containers_paursed": info.get("ContainersPaused", 0),
             "images": info["Images"],
             "containers": info["Containers"],
         }
@@ -119,7 +119,10 @@ class DockerManager:
         return [Container.from_raw_object(container) for container in containers]
 
     def _get_container(self, id_or_name: str) -> docker_containers.Container:
-        container = self.client.containers.get(id_or_name)
+        try:
+            container = self.client.containers.get(id_or_name)
+        except docker.errors.NotFound as e:
+            raise ContainerNotExists(id_or_name) from e
         if not container:
             raise ContainerNotExists(id_or_name)
         return container

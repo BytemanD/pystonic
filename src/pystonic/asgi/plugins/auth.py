@@ -48,7 +48,7 @@ def setup(
         exclude_routes: 需要排除认证的路由
     """
     auth_router = APIRouter(tags=["Auth"])
-    exclude_routes = exclude_routes or set()
+    exclude_routes = set(exclude_routes or ())
     exclude_routes.add(("POST", f"{auth_router_prefix}/login"))
 
     # ============= auth router =============
@@ -65,7 +65,10 @@ def setup(
 
     @auth_router.post("/token", response_model=RefreshResponse)
     def _refresh_token(req: Request):
-        token = JWT_SERVICE.encode(context.getvar("account"))
+        account = context.account()
+        if not account:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        token = JWT_SERVICE.encode(account)
         logger.success("create token success")
         return RefreshResponse(token=token)
 

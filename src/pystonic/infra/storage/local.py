@@ -15,8 +15,15 @@ class LocalStorage:
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
 
+    def _resolve(self, path: str | Path) -> Path:
+        """解析路径并校验不超出 root（防绝对路径/.. 穿越与符号链接逃逸）"""
+        abs_path = self.root.joinpath(path)
+        if not abs_path.resolve().is_relative_to(self.root.resolve()):
+            raise ValueError(f"path {path} is outside of root {self.root}")
+        return abs_path
+
     def list_files(self, directory: str | Path | None = None):
-        list_path = self.root if not directory else self.root.joinpath(directory)
+        list_path = self._resolve(directory) if directory else self.root
 
         def _make_file(name: str):
             abs_path = list_path.joinpath(name)
@@ -32,7 +39,7 @@ class LocalStorage:
         return [_make_file(x) for x in os.listdir(list_path)]
 
     def get_file(self, path: str | Path):
-        abs_path = self.root.joinpath(path)
+        abs_path = self._resolve(path)
         if not abs_path.exists():
             raise FileNotFoundError(f"file/path {path} not exists")
         return FilePath(
@@ -45,7 +52,7 @@ class LocalStorage:
         )
 
     def write(self, path: str | Path, content: bytes | str, encoding="utf-8"):
-        abs_path = self.root.joinpath(path)
+        abs_path = self._resolve(path)
         abs_path.parent.mkdir(parents=True, exist_ok=True)
         logger.debug("write file: {}", path)
         if isinstance(content, bytes):
@@ -54,11 +61,11 @@ class LocalStorage:
             abs_path.write_text(content, encoding=encoding)
 
     def read(self, path: str | Path):
-        abs_path = self.root.joinpath(path)
+        abs_path = self._resolve(path)
         return abs_path.read_bytes()
 
     def delete(self, path: str | Path):
-        abs_path = self.root.joinpath(path)
+        abs_path = self._resolve(path)
         if not abs_path.exists():
             return
         logger.debug("delete path: {}", path)

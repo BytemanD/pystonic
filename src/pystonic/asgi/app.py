@@ -50,12 +50,12 @@ def create_app(
     @app.exception_handler(ResourceNotFound)
     async def exception_resource_not_found(request: Request, exc: ResourceNotFound):
         return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN, content={"error": str(exc)}
+            status_code=status.HTTP_404_NOT_FOUND, content={"error": str(exc)}
         )
 
     @app.exception_handler(Exception)
     async def exception_handler(request: Request, exc: Exception):
-        logger.exception("unexcept exception")
-        return JSONResponse(status_code=500, content={"error": str(exc)})
+        logger.exception("unexpected exception")
+        return JSONResponse(status_code=500, content={"error": "Internal Server Error"})
 
     return app

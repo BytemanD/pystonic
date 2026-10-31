@@ -108,25 +108,29 @@ class DBModel(SQLModel):
         """根据 id 删除记录"""
         stm = delete(cls).where(cls.id == id)  # type: ignore
         with get_session() as session:
-            deleted_count = session.exec(stm)
-            if not deleted_count and raise_if_not_exists:
-                raise ValueError(f"id {id} not exists")
+            result = session.exec(stm)
+            deleted_count = result.rowcount or 0
             session.commit()
+        if deleted_count == 0 and raise_if_not_exists:
+            raise ResourceNotFound(f"{cls.__name__}<id:{id}>")
 
     @classmethod
     def delete_by_uuid(cls, uuid: str, raise_if_not_exists=False) -> None:
-        """根据 id 删除记录"""
+        """根据 uuid 删除记录"""
         stm = delete(cls).where(cls.uuid == uuid)  # type: ignore
         with get_session() as session:
-            delete_count = session.exec(stm)
-            if not delete_count and raise_if_not_exists:
-                raise ValueError(f"id {id} not exists")
+            result = session.exec(stm)
+            deleted_count = result.rowcount or 0
             session.commit()
+        if deleted_count == 0 and raise_if_not_exists:
+            raise ResourceNotFound(f"{cls.__name__}<uuid:{uuid}>")
 
     @classmethod
     def update_by_uuid(cls, uuid: str, **kwargs) -> None:
-        """根据 id 删除记录"""
-        stm = update(cls).where(cls.uuid == uuid).values(**kwargs)  # type: ignore
+        """根据 uuid 更新记录"""
+        stm = (
+            update(cls).where(cls.uuid == uuid).values(updated_at=utcnow(), **kwargs)  # type: ignore
+        )
         with get_session() as session:
             session.exec(stm)
             session.commit()
@@ -139,7 +143,9 @@ class DBModel(SQLModel):
         if not changes:
             return
         stm = (
-            update(self.__class__).where(self.__class__.id == self.id).values(**changes)  # type: ignore
+            update(self.__class__)
+            .where(self.__class__.id == self.id)
+            .values(updated_at=utcnow(), **changes)  # type: ignore
         )
         with get_session() as session:
             session.exec(stm)

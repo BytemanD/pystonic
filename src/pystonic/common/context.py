@@ -22,7 +22,7 @@ def getvar(key: str, default=None) -> Any:
     # global _context_vars
 
     if key not in _context_vars:
-        return None
+        return default
     return _context_vars[key].get(default)
 
 

@@ -1,8 +1,7 @@
 import asyncio
-from collections.abc import Sequence
 
 from fastmcp.server import create_proxy
-from fastmcp.server.proxy import ProxyTool
+from fastmcp.server.server import Transport
 from loguru import logger
 from pydantic import BaseModel
 from v2.nacos import (
@@ -53,18 +52,18 @@ class NacosMCPProxy:
         name: str,
         nacos_settings: NacosSettings,
         group_name: str = "DEFAULT_GROUP",
-        transport: str = "streamable-http",
+        transport: Transport = "streamable-http",
         **kwargs,
     ):
         self.nacos_settings = nacos_settings
-        self.transport = transport
+        self.transport: Transport = transport
         self.group_name = group_name
         self.client_config = self._create_nacos_client_config()
 
         self.backend = create_proxy(target, name=name)
-        self._tools: Sequence[ProxyTool] = []
+        self._tools = []
 
-    async def _load_backend_tools(self) -> Sequence[ProxyTool]:
+    async def _load_backend_tools(self):
         self._tools = await self.backend.list_tools()
 
     def _create_nacos_client_config(self):
@@ -96,7 +95,11 @@ class NacosMCPProxy:
 
     def run(self, port: int = 18002):
         asyncio.run(self.register_to_nacos(port=port))
-        self.backend.run(transport=self.transport, host="0.0.0.0", port=port)
+        self.backend.run(
+            transport=self.transport,
+            host="0.0.0.0",  # nosec B104 - MCP 代理服务端默认监听所有网卡
+            port=port,
+        )
 
     async def _get_mcp_server_detail_info(self):
         server_detail_info = None

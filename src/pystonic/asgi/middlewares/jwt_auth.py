@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import jwt
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from starlette.authentication import (
     AuthCredentials,
     AuthenticationBackend,
@@ -59,7 +59,7 @@ class JWTBackend(AuthenticationBackend):
                 token = JWT_SERVICE.verify(token=auth_header.split(maxsplit=1)[1])
                 context.set_account(token.sub)
                 return AuthCredentials(["authenticated"]), SimpleUser(token.sub)
-            except jwt.exceptions.PyJWTError as e:
+            except (jwt.exceptions.PyJWTError, ValidationError) as e:
                 logger.error("auth faield: {}", e)
                 raise AuthenticationError("Invalid token")
         raise AuthenticationError("Invalid token")

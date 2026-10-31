@@ -1,5 +1,5 @@
-from loguru import logger
 import pytest
+from loguru import logger
 
 from pystonic.common.conf import CONF
 from pystonic.infra.vector.milus import MilvusVector

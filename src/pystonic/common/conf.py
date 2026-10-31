@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Sequence, Union, get_args, get_origin
 from urllib.parse import quote_plus
 
 import dotenv
 import toml
 from loguru import logger
 from pydantic import BaseModel, HttpUrl, SecretStr
+from pydantic_core import PydanticUndefined
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -18,7 +19,7 @@ from pystonic.utils.system import user_app_data
 
 dotenv.load_dotenv()
 
-DEFAULT_CONF_FILE = [
+DEFAULT_CONF_FILES = [
     Path("etc", "app.toml"),
     user_app_data().joinpath("app.toml"),
 ]
@@ -147,7 +148,7 @@ class McpConfig(FrozenBaseModel):
     transport: Literal["stdio", "http", "sse", "streamable-http"] = "streamable-http"
     version: str = "1.0.0"
 
-    host: str = "0.0.0.0"
+    host: str = "0.0.0.0"  # nosec B104 - 服务端默认监听所有网卡，部署时可显式收敛
     port: int = 18000
 
     enable_nacos: bool = False
@@ -188,25 +189,6 @@ class AgentConfig(FrozenBaseModel):
         f"sqlite:///{user_app_data().joinpath('agent', 'checkpoint.sqlite')}"
     )
     providers: dict[str, LLMProviderConfig] = {}
-
-
-class HueyConfig(FrozenBaseModel):
-    name: str = "huey app"
-    storage: Literal["db"] = "db"
-    database: str | None = None
-    workers: int = 1
-    periodic: bool = True
-    backoff: float = 1.15
-    max_delay: float = 10
-    scheduler_interval: int = 1
-    # initial_delay: float = 0.1
-    # worker_type: str = WORKER_THREAD
-    # check_worker_health: bool = True
-    # health_check_interval: int = 10
-    # flush_locks: bool = False
-    # max_tasks: int = None
-    # shutdown_timeout: int | None = None
-    # graceful_signal: str = "INT"
 
 
 class TaskWrokerConfig(FrozenBaseModel):
@@ -263,7 +245,7 @@ class BaseAppConfig(BaseSettings):
         env_nested_delimiter="__",
         extra="ignore",
         frozen=True,
-        toml_file=os.getenv("CONF_FILE") or DEFAULT_CONF_FILE,
+        toml_file=os.getenv("CONF_FILE") or DEFAULT_CONF_FILES,
     )
 
     # global config
@@ -282,7 +264,6 @@ class BaseAppConfig(BaseSettings):
     chroma: ChromaConfig = ChromaConfig()
     agent: AgentConfig = AgentConfig()
 
-    huey: HueyConfig = HueyConfig()
     task_worker: TaskWrokerConfig = TaskWrokerConfig()
 
     @classmethod
@@ -294,41 +275,89 @@ class BaseAppConfig(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ):
+        # 优先级（先者优先）：init > 环境变量 > .env > toml > file_secret
+        # 环境变量出问题（如 shell 中存在 AGENT=1）将直接抛 ValidationError，
+        # 由调用方处理；.env 走独立 dotenv 源，同样严格：值不合法直接抛错
         return (
+            init_settings,
             env_settings,
             dotenv_settings,
-            file_secret_settings,
             TomlConfigSettingsSource(settings_cls),
-            init_settings,
+            file_secret_settings,
         )
 
+    def get_conf_files(self):
+        """获取当前生效的配置文件路径（setup(toml_file=...) 指定的或默认文件）"""
+        file_paths = []
+        configured = self.model_config.get("toml_file") or []
+        if isinstance(configured, (str, Path)):
+            file_paths = [Path(configured)]
+        elif configured and isinstance(configured, (list, Sequence)):
+            file_paths = [Path(str(x)) for x in configured if os.path.exists(str(x))]
+
+        if not file_paths:
+            file_paths.append(DEFAULT_CONF_FILES[-1])
+        return file_paths
+
     def save(self, exclude_defaults=False, encoding="utf-8"):
-        file_path = DEFAULT_CONF_FILE[-1]
+        file_paths = self.get_conf_files()
+        if not file_paths:
+            raise ValueError("conf file not exists")
+        file_path = file_paths[0]
+        # debug 日志仍走 model_dump_json（SecretStr 保持掩码）
         logger.debug("saving config: {}", self.model_dump_json())
         file_path.parent.mkdir(parents=True, exist_ok=True)
         logger.info("保存配置 {}", file_path)
         with open(file_path, "w", encoding=encoding) as f:
             toml.dump(
-                self.model_dump(mode="json", exclude_defaults=exclude_defaults), f
+                _plain_data(self, exclude_defaults=exclude_defaults),
+                f,
             )
 
-    @classmethod
-    def get_init_settings(cls) -> dict:
-        return getattr(cls, "_init_settings", {})
 
-    @classmethod
-    def setup(
-        cls,
-        init_settings: dict | None = None,
-        toml_file: Path | list[Path] | None = None,
-    ):
-        """初始化配置"""
-        if init_settings is not None:
-            cls._init_settings = init_settings
-        if toml_file is not None:
-            cls.model_config["toml_file"] = (
-                toml_file if isinstance(toml_file, list) else [toml_file]
-            )
+def _strip_optional(annotation):
+    if get_origin(annotation) is Union:
+        args = [a for a in get_args(annotation) if a is not type(None)]
+        if len(args) == 1:
+            return args[0]
+    return annotation
+
+
+def _plain_value(value, annotation, exclude_defaults: bool):
+    """递归展开 model_dump(mode="json") 的等价物，但 SecretStr 输出真实值"""
+    annotation = _strip_optional(annotation)
+    if isinstance(value, SecretStr):
+        return value.get_secret_value()
+    if isinstance(value, BaseModel):
+        return _plain_data(value, exclude_defaults=exclude_defaults)
+    if isinstance(value, dict):
+        inner = _inner_annotation(annotation)
+        return {k: _plain_value(v, inner, exclude_defaults) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        inner = _inner_annotation(annotation)
+        return [_plain_value(v, inner, exclude_defaults) for v in value]
+    return value
+
+
+def _inner_annotation(annotation):
+    if get_origin(annotation) in (dict, list, tuple, set):
+        args = get_args(annotation)
+        if args:
+            return args[-1]
+    return type(None)
+
+
+def _plain_data(model: BaseModel, exclude_defaults: bool = False) -> dict:
+    """导出可写回 toml 的 dict：SecretStr 还原真实值，其余与 model_dump(mode="json") 一致"""
+    plain = {}
+    for name, field in type(model).model_fields.items():
+        raw = getattr(model, name, None)
+        if exclude_defaults:
+            default = field.default
+            if default is not PydanticUndefined and raw == default:
+                continue
+        plain[name] = _plain_value(raw, field.annotation, exclude_defaults)
+    return plain
 
 
 CONF = BaseAppConfig()
