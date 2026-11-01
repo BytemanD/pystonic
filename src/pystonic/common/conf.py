@@ -8,7 +8,7 @@ from urllib.parse import quote_plus
 import dotenv
 import toml
 from loguru import logger
-from pydantic import BaseModel, HttpUrl, SecretStr
+from pydantic import BaseModel, SecretStr
 from pydantic_core import PydanticUndefined
 from pydantic_settings import (
     BaseSettings,
@@ -30,6 +30,7 @@ DEFAULT_FORMAT = (
     "<level>{level: <8}</level> | "
     "<cyan>{name}:{line}</cyan> <level>[{extra[context]}]</level> - <level>{message}</level>"
 )
+VERBOSE_LEVELS = ["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"]
 
 
 class FrozenBaseModel(BaseModel):
@@ -51,7 +52,12 @@ class LogConfig(FrozenBaseModel):
     enqueue: bool = True
     intercept_logging: bool = False
 
-    console_verbose: int = 0
+    console_verbose: int = 1
+
+    def console_level(self):
+        if self.console_verbose < 0:
+            return None
+        return VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, self.console_verbose)]
 
 
 class HTTPClientConfig(FrozenBaseModel):

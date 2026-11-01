@@ -7,7 +7,7 @@ from loguru import logger
 from pystonic.common import context
 from pystonic.common.conf import CONF
 
-VERBOSE_LEVELS = ["WARNING", "INFO", "DEBUG", "TRACE"]
+VERBOSE_LEVELS = ["ERROR", "WARNING", "INFO", "DEBUG", "TRACE"]
 
 
 class InterceptHandler(logging.Handler):
@@ -20,13 +20,14 @@ def setup_logger(remove: bool = False):
     """Setup logging configuration."""
     if remove:
         logger.remove()
-    logger.add(
-        sys.stdout,
-        level=VERBOSE_LEVELS[min(len(VERBOSE_LEVELS) - 1, CONF.log.console_verbose)],
-        format=CONF.log.format,
-        colorize=True,
-        enqueue=CONF.log.enqueue,
-    )
+    if console_level := CONF.log.console_level():
+        logger.add(
+            sys.stdout,
+            level=console_level,
+            format=CONF.log.format,
+            colorize=True,
+            enqueue=CONF.log.enqueue,
+        )
     if CONF.log.file:
         Path(CONF.log.file).parent.mkdir(parents=True, exist_ok=True)
         logger.add(

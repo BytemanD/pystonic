@@ -12,6 +12,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from pystonic import app_name
+from pystonic.shell import Shell
 
 
 def is_windows():
@@ -30,7 +31,7 @@ def reset_encoding(encoding="utf-8"):
 
 
 def home_path():
-    return Path(os.path.expanduser("~"))
+    return Path.home()
 
 
 def dot_config():
@@ -75,23 +76,9 @@ def get_first_non_loopback_ip(default: str | None = None):
     return ips[0] if ips else default
 
 
-def execute(
-    *args: str,
-    check=False,
-    text=True,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-):
+def execute(*args: str, check=True):
     logger.debug("Run: {}", args)
-    process = subprocess.run(
-        args,  # nosec B603 - 封装层仅透传调用方显式提供的参数列表，不拼接用户输入
-        shell=False,  # noqa: B602 - 仅支持参数列表，不透传 shell 开关，避免命令注入
-        text=text,
-        check=check,
-        stdout=stdout,
-        stderr=stderr,
-    )
-    return process.returncode, process.stdout, process.stderr
+    return Shell().execute(*args, check=check)
 
 
 def global_app_data(name: str | None = None) -> Path:

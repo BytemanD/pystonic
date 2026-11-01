@@ -1,3 +1,4 @@
+import os
 import threading
 
 import httpx
@@ -7,8 +8,6 @@ from pystonic.utils import httpclient
 
 
 def start_http_server():
-    import os
-
     os.system("python -m http.server 80")
 
 

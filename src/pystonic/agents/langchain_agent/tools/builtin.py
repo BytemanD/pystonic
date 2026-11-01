@@ -7,8 +7,7 @@ from langchain_core.tools import BaseToolkit, tool
 
 from pystonic.agents.langchain_agent.exceptions import PermissionDeny
 from pystonic.agents.langchain_agent.objects import RuntimeContext
-from pystonic.shell import Shell
-from pystonic.utils.system import platform_info
+from pystonic.utils.system import execute, platform_info
 
 
 @tool
@@ -115,18 +114,20 @@ def write_file(
     path.write_text(content, encoding=encoding)
 
 
-class ShellWrapper(Shell):
-    def execute(self, code: str):
-        return super().execute(code)
-
-
-executor = ShellWrapper()
-
-
 @tool
-def execute_command(command: str) -> str:
-    """执行 Shell/Bash/Cmd/Powershell 命令"""
-    return executor.execute(command)
+def execute_command(command: str, check: bool = True) -> str:
+    """执行 Shell/Bash/Cmd/Powershell 命令
+
+    当需要执行系统指令时使用, 如何命令执行失败，抛出异常
+
+    Args:
+        command: 系统命令，例如: ls, ls -l, cat /file/path
+        check: 是否检查命令执行结果(设为True时, 执行错误将抛出异常)
+
+    Returns:
+        执行结果
+    """
+    return execute(command, check=check)
 
 
 @tool
@@ -159,10 +160,8 @@ class WorkToolkit(BaseToolkit):
     enable_web_get: bool = True
     enable_get_platform_info: bool = True
 
-    def get_tools(self) -> list:
-        tools = [
-            get_iso_datetime,
-        ]
+    def get_tools(self):
+        tools = [get_iso_datetime]
         if self.enable_list_dir:
             tools.append(list_dir)
         if self.enable_read:

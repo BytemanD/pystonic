@@ -34,5 +34,8 @@ class Shell:
         else:
             self.driver = BashDriver()
 
-    def execute(self, code: str):
-        return self.driver.execute(code)
+    def execute(self, *args: str, check=True):
+        return self.driver.execute(*args, check=check)
+
+    def execute_file(self, code: str, check=True):
+        return self.driver.execute_file(code, check=check)

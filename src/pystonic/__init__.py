@@ -1,4 +1,5 @@
 import setproctitle
+import warnings
 
 # 稳定的应用名：不随进程标题（完整 argv）变化。
 # 不能用 setproctitle.getproctitle() 兜底——未显式 setName 前，标题就是完整命令行，

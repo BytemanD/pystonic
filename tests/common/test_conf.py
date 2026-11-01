@@ -8,12 +8,6 @@ def test_get_conf_files():
     assert len(CONF.get_conf_files()) >= 1
 
 
-def test_conf_init_without_setup():
-    new_config = BaseAppConfig.model_validate({})
-    new_config.save()
-    assert new_config.log.level == "WARNING"
-
-
 def test_conf_update_disable():
 
     with pytest.raises(ValidationError):

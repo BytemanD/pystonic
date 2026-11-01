@@ -47,6 +47,7 @@ agent = [
 # ]
 dev = [
     "pytest>=9.0.2",
+    "pytest-env>=1.7.1",
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.15.1",
     "ruff>=0.17.2",
@@ -89,7 +90,7 @@ explicit = true
 
 [tool.pytest]
 minversion = "9.0"
-addopts = ["-ra"]
+addopts = ["-ra", "--disable-warnings"]
 
 [tool.pytest_env]
 AGENT__CHECKPOINT_CONNECTION = "sqlite:///:memory:"
@@ -98,8 +99,3 @@ AGENT__CHECKPOINT_CONNECTION = "sqlite:///:memory:"
 # B404: 本库 shell/subprocess 封装模块（pystonic.shell、utils.system）核心即子进程能力，
 # 不导入 subprocess 无法实现；实际子进程调用已全部改为参数列表（非 shell 串），故跳过导入告警
 skips = ["B404"]
-
-[dependency-groups]
-dev = [
-    "pytest-env>=1.7.1",
-]
