@@ -5,14 +5,14 @@ class ModelsIsEmpty(Exception):
 
 class AllModelsFailed(Exception):
     def __init__(self, errors: list[str]):
-        super().__init__("all models failed, errors: {}", errors)
+        super().__init__(f"all models failed, errors: {errors}")
 
 
 class PermissionDeny(Exception):
     def __init__(self, detail: str):
-        super().__init__("permission deny: {}", detail)
+        super().__init__(f"permission deny: {detail}")
 
 
 class SessionNotFount(Exception):
     def __init__(self, session_id: str):
-        super().__init__("session not found: {}", session_id)
+        super().__init__(f"session not found: {session_id}")
