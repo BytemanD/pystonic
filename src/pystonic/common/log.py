@@ -16,11 +16,11 @@ class InterceptHandler(logging.Handler):
         logger_opt.log(record.levelname, record.getMessage())
 
 
-def setup_logger(remove: bool = False):
+def setup_logger(remove: bool = False, disable_console_log=False):
     """Setup logging configuration."""
     if remove:
         logger.remove()
-    if console_level := CONF.log.console_level():
+    if not disable_console_log and (console_level := CONF.log.console_level()):
         logger.add(
             sys.stdout,
             level=console_level,

@@ -12,6 +12,7 @@ from pystonic.agents.langchain_agent.objects import RuntimeContext
 from pystonic.agents.langchain_agent.tools import builtin
 from pystonic.cmd.console_agent.app import ConsoleAgentApp
 from pystonic.common.conf import CONF
+from pystonic.common.log import setup_logger
 from pystonic.orm import database
 from pystonic.pretty import output
 
@@ -88,26 +89,6 @@ def list(detail: bool):
     console.print(table)
 
 
-async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str):
-    ctx = RuntimeContext(
-        providers=CONF.agent.providers,
-        thread_id=session_id,
-        tools=builtin.WorkToolkit().get_tools(),
-    )
-    reasoning = False
-    async for event in agent.astream(ctx, intput):
-        reasoning_content = event.additional_kwargs.get("reasoning_content")
-        if reasoning_content:
-            reasoning = True
-            click.secho(reasoning_content, fg="black", nl=False)
-            continue
-        if reasoning:
-            click.secho()
-        click.secho(event.content, nl=False)
-        reasoning = False
-    click.secho()
-
-
 async def _do_run(input: str, session_id: str | None = None, last: bool = False):
     async with get_agent() as agent:
         await ConsoleAgentApp(agent).call_once(input, session_id=session_id, last=last)
@@ -140,4 +121,5 @@ async def _do_chat(session_id: str | None = None, last=False):
 @root.command()
 def console(session: str | None = None, last: bool = False):
     """交互模式"""
+    setup_logger(remove=True, disable_console_log=True)
     asyncio.run(_do_chat(session_id=session, last=last))
