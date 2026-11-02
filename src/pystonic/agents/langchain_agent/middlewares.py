@@ -82,7 +82,7 @@ class RuntimeAgentMiddleware(AgentMiddleware[AgentState, RuntimeContext]):
                 logger.warning("provider({}) models is empty", name)
                 continue
             for model_name in provider.models:
-                ctx.selected_model = f"{name}/{provider.models}"
+                ctx.selected_model = f"{name}/{model_name}"
                 runtime_model = self._get_runtime_model(
                     ctx,
                     provider.base_url,

@@ -53,6 +53,8 @@ async def get_mcp_server_info(
 
 
 async def get_tools(mcps: Sequence[MCP]):
+    if not mcps:
+        return []
     client = MultiServerMCPClient(
         {
             mcp.name or mcp.url: _get_connection(
