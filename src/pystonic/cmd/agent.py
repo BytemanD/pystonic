@@ -2,22 +2,18 @@ import asyncio
 import contextlib
 
 import click
+import toml
 from openai import APIConnectionError
 from rich.console import Console
-from rich.prompt import Prompt
-from rich.rule import Rule
-from rich.text import Text
+from rich.table import Table
 
 from pystonic.agents.langchain_agent.agent import AsyncAgent, get_checkpointer_saver
 from pystonic.agents.langchain_agent.objects import RuntimeContext
-
-# from pystonic.agents.langchain_agent.tools import sqlite
-# from pystonic.agents.langchain_agent.tools import builtin
 from pystonic.agents.langchain_agent.tools import builtin
+from pystonic.cmd.console_agent.app import ConsoleAgentApp
 from pystonic.common.conf import CONF
 from pystonic.orm import database
 from pystonic.pretty import output
-from pystonic.utils.dateutil import utcnow
 
 
 @contextlib.asynccontextmanager
@@ -61,6 +57,37 @@ def delete_session(sessions: list[str]):
     asyncio.run(_delete_session(sessions))
 
 
+@click.group()
+def provider():
+    """模型提供商管理"""
+
+
+@provider.command()
+@click.option("--detail", is_flag=True, help="显示详细配置")
+def list(detail: bool):
+    """查看提供商"""
+
+    console = Console()
+    table = Table(header_style="bold")
+    table.add_column("Name")
+    table.add_column("Config" if detail else "URL")
+    for name, provider in CONF.agent.providers.items():
+        if detail:
+            content = toml.dumps(
+                provider.model_dump(mode="json", exclude_none=True, exclude={"name"})
+            )
+        else:
+            content = str(provider.base_url)
+
+        table.add_row(
+            name,
+            content.strip(),
+            # style="cyan" if provider.name == CONF.ai_shell.use_provider else None,
+        )
+
+    console.print(table)
+
+
 async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str):
     ctx = RuntimeContext(
         providers=CONF.agent.providers,
@@ -83,10 +110,7 @@ async def _agent_astream(agent: AsyncAgent, intput: str, session_id: str):
 
 async def _do_run(input: str, session_id: str | None = None, last: bool = False):
     async with get_agent() as agent:
-        session = agent.get_or_create_session(
-            session_id=session_id, last=last, title=input
-        )
-        await _agent_astream(agent, input, session_id=session.uuid)
+        await ConsoleAgentApp(agent).call_once(input, session_id=session_id, last=last)
 
 
 @root.command()
@@ -109,28 +133,11 @@ def run(intput: str, session: str | None = None, last: bool = False):
 
 
 async def _do_chat(session_id: str | None = None, last=False):
-    console = Console()
     async with get_agent() as agent:
-        session = agent.get_or_create_session(session_id=session_id, last=last)
-        console.print(Rule(utcnow().isoformat(sep=" "), style="cyan"))
-        while True:
-            user_input = Prompt.ask(Text("请输入您的意图", style="white on cyan"))
-            if not user_input:
-                break
-            if user_input in ["exit", "quit", "q"]:
-                break
-            try:
-                await _agent_astream(agent, user_input, session_id=session.uuid)
-            except APIConnectionError:
-                click.secho("api connection error", fg="red")
-            click.echo()
-            if not session.title:
-                agent.update_session(session, user_input)
+        await ConsoleAgentApp(agent).run_async()
 
 
 @root.command()
-@click.option("--session", "-s", default=None, help="Session to use for the agent")
-@click.option("--continue", "-c", "last", is_flag=True, help="Continue last session")
-def chat(session: str | None = None, last: bool = False):
+def console(session: str | None = None, last: bool = False):
     """交互模式"""
     asyncio.run(_do_chat(session_id=session, last=last))

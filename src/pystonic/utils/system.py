@@ -3,7 +3,6 @@ import os
 import platform
 import shutil
 import socket
-import subprocess  # nosec B404 - execute() 封装子进程执行
 import sys
 from pathlib import Path
 

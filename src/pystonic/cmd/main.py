@@ -2,6 +2,7 @@ from importlib import import_module
 
 import click
 import dotenv
+from loguru import logger
 
 from pystonic import set_app_name
 from pystonic.common.log import setup_logger
@@ -18,7 +19,8 @@ def main():
     for cmd in ["agent", "code", "gitstats", "pip"]:
         try:
             m = import_module(f"pystonic.cmd.{cmd}")
-        except ImportError:
+        except ImportError as e:
+            logger.warning("import cli {} failed: {}", cmd, e)
             continue
         subcmd = getattr(m, "root", None)
 

@@ -54,8 +54,8 @@ def check_code(
 
     for command in commands:
         click.secho(f"🚀 {command}", fg="magenta")
-        execute(command.split(), stdout=sys.stdout, stderr=sys.stderr)
-        # click.echo(output)
+        output = execute(command)
+        click.echo(output)
         print()
 
 

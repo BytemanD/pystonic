@@ -231,6 +231,10 @@ class ChromaConfig(FrozenBaseModel):
     splite_thresold: int = 1000
 
 
+class ConsoleAgentConfig(BaseModel):
+    welcome_text: str = "你好！我是 Shell 助手。选择左侧会话或直接输入消息开始对话。"
+
+
 class BaseAppConfig(BaseSettings):
     """Base App Configuration"""
 
@@ -260,6 +264,8 @@ class BaseAppConfig(BaseSettings):
     agent: AgentConfig = AgentConfig()
 
     scheduler: SchedulerConfig = SchedulerConfig()
+
+    console_agent: ConsoleAgentConfig = ConsoleAgentConfig()
 
     @classmethod
     def settings_customise_sources(
