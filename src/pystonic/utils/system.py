@@ -11,7 +11,6 @@ from loguru import logger
 from pydantic import BaseModel
 
 from pystonic import app_name
-from pystonic.shell import Shell
 
 
 def is_windows():
@@ -19,7 +18,11 @@ def is_windows():
 
 
 def is_linux():
-    return platform.system() == "Linux"
+    return platform.system()
+
+
+def is_darwin():
+    return platform.system() == "Darwin"
 
 
 def reset_encoding(encoding="utf-8"):
@@ -73,11 +76,6 @@ def get_first_non_loopback_ip(default: str | None = None):
     if not ips and not default:
         raise ValueError("No non-loopback IP found")
     return ips[0] if ips else default
-
-
-def execute(*args: str, check=True):
-    logger.debug("Run: {}", args)
-    return Shell().execute(*args, check=check)
 
 
 def global_app_data(name: str | None = None) -> Path:

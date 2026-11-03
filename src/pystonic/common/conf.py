@@ -82,6 +82,7 @@ class DBConfig(FrozenBaseModel):
     pool_timeout: int = 30
     pool_recycle: int = 3600
     echo: bool = False
+    null_pool: bool = False
 
     disable_warning: bool = False
 

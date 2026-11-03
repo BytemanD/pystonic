@@ -1,9 +1,10 @@
+import atexit
 import contextlib
 from pathlib import Path
 
 from loguru import logger
 from pydantic import BaseModel
-from sqlalchemy import Engine
+from sqlalchemy import Engine, NullPool
 from sqlmodel import Session, SQLModel, create_engine, inspect, text
 
 from pystonic.common.conf import CONF
@@ -20,7 +21,11 @@ class TableColumn(BaseModel):
     unique: bool = False
 
 
-_engine: Engine = create_engine(CONF.db.url, **CONF.db.engine_params())
+_engine: Engine = create_engine(
+    CONF.db.url,
+    poolclass=NullPool if CONF.db.null_pool else None,
+    **CONF.db.engine_params(),
+)
 
 
 def engine_name():
@@ -83,6 +88,10 @@ def get_all_tables() -> list[str]:
     return inspector.get_table_names()
 
 
+def drop_all_tables():
+    SQLModel.metadata.drop_all(_engine)
+
+
 def get_table_structure(table_name: str) -> list[TableColumn]:
     if _engine is None:
         raise RuntimeError("database engine not initialized")
@@ -130,3 +139,6 @@ if engine_name() == "sqlite" and not CONF.db.disable_warning:
         "please switch to MySQL, PostgreSQL, or another production-grade database "
         "before deploying."
     )
+
+
+atexit.register(_engine.dispose)

@@ -144,7 +144,7 @@ class DBModel(SQLModel):
             return
         stm = (
             update(self.__class__)
-            .where(self.__class__.id == self.id)
+            .where(col(self.__class__.id) == self.id)
             .values(updated_at=utcnow(), **changes)  # type: ignore
         )
         with get_session() as session:
