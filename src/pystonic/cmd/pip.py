@@ -1,3 +1,4 @@
+import sys
 from urllib import parse
 
 import click
@@ -5,7 +6,7 @@ from loguru import logger
 from pydantic import BaseModel
 
 from pystonic.pretty import output
-from pystonic.utils.system import execute
+from pystonic.shell.executor import execute
 
 
 class PipRepo(BaseModel):
@@ -44,8 +45,9 @@ def set_repo(repo: str):
         raise click.ClickException(f"invalid repo: {repo}")
 
     result = parse.urlparse(index_url)
-    logger.success("set pip repo ({}) success", index_url)
-    cmd_prefix = ["python", "-m", "pip", "config", "set"]
+
+    cmd_prefix = (sys.executable, "-m", "pip", "config", "set")
     execute(*cmd_prefix, "global.index-url", index_url, check=True)
     if result.hostname:
         execute(*cmd_prefix, "global.trusted-host", result.hostname, check=True)
+    logger.success("set pip repo ({}) success", index_url)

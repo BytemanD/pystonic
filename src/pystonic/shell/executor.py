@@ -36,7 +36,7 @@ class ShellExecutor:
             self.backend = Bash()
 
     def _execute(self, *args: str, check=True, timeout: float | None = 300):
-        logger.debug("Run: {}", args)
+        logger.debug("Run: {}", " ".join(args))
         p = subprocess.run(
             args,
             check=check,

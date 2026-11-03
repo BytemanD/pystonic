@@ -231,6 +231,7 @@ class ConsoleAgentApp(App):
 
         self.current_session = item
         await self._refresh_chat_view()
+        self.widget_chat_view.scroll_end(animate=False)
 
     async def _refresh_chat_view(self):
         if not self.current_session:
@@ -278,6 +279,7 @@ class ConsoleAgentApp(App):
             logger.error("call llm failed: {}", e)
         finally:
             self.widget_input.disabled = False
+            self.widget_input.focus()
 
     async def _call_llm(self, user_input: str):
         reasoning_message = ChatMessage("思考中 ...", classes="ai-msg-reasoning")
@@ -285,8 +287,6 @@ class ConsoleAgentApp(App):
         await self.widget_chat_view.mount(reasoning_message)
         await self.widget_chat_view.mount(resonse_message)
 
-        content = ""
-        reasoning_content = ""
         session_id = self.current_session
         if self.current_session:
             session_id = self.current_session.uuid
@@ -301,18 +301,25 @@ class ConsoleAgentApp(App):
             thread_id=session_id,
             tools=builtin.WorkToolkit().get_tools(),
         )
+        content = ""
+        reasoning_content = ""
         async for chat_event in self.agent.astream(ctx, user_input):
-            if not isinstance(chat_event, AIMessage):
-                continue
-            reasoning_delta = chat_event.additional_kwargs.get("reasoning_content")
-            if reasoning_delta:
-                reasoning_content += reasoning_delta
-                reasoning_message.update(reasoning_content)
+            if isinstance(chat_event, ToolMessage):
+                logger.info("调用工具: {}", chat_event.name)
+                reasoning_content += (
+                    f"\n> 调用工具: {chat_event.name} {chat_event.status}\n\n"
+                )
+            elif isinstance(chat_event, AIMessage):
+                reasoning_delta = chat_event.additional_kwargs.get("reasoning_content")
+                if reasoning_delta:
+                    reasoning_content += reasoning_delta
+                    reasoning_message.update(reasoning_content)
+                else:
+                    content += str(chat_event.content) or ""
+                    resonse_message.update(content)
             else:
-                content += str(chat_event.content) or ""
-                resonse_message.update(content)
-
-            self.widget_chat_view.scroll_end(animate=False)
+                continue
+            self.widget_chat_view.scroll_end()
 
     async def call_once(
         self, user_input: str, session_id: str | None = None, last: bool = False

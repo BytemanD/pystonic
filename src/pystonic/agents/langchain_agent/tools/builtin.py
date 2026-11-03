@@ -7,7 +7,8 @@ from langchain_core.tools import BaseToolkit, tool
 
 from pystonic.agents.langchain_agent.exceptions import PermissionDeny
 from pystonic.agents.langchain_agent.objects import RuntimeContext
-from pystonic.utils.system import execute, platform_info
+from pystonic.shell.executor import execute_code
+from pystonic.utils.system import platform_info
 
 
 @tool
@@ -121,13 +122,13 @@ def execute_command(command: str, check: bool = True) -> str:
     当需要执行系统指令时使用, 如何命令执行失败，抛出异常
 
     Args:
-        command: 系统命令，例如: ls, ls -l, cat /file/path
+        command: 系统命令，可以是多行命令组成的代码快, 例如: `ls`, `ls -l; cat /file/path`
         check: 是否检查命令执行结果(设为True时, 执行错误将抛出异常)
 
     Returns:
         执行结果
     """
-    return execute(command, check=check)
+    return execute_code(command, check=check)
 
 
 @tool

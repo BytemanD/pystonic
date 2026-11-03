@@ -6,19 +6,8 @@ from pathlib import Path
 
 import click
 
+from pystonic.shell.executor import execute
 from pystonic.utils.pkg import is_package_installed
-from pystonic.utils.system import execute
-
-
-def _get_source_paths() -> list[str | Path]:
-    """查找python代码所在的目录"""
-    source_paths: list[str | Path] = []
-    for path in ["src", "tests"]:
-        if os.path.exists(path):
-            source_paths.append(path)
-    if not source_paths:
-        source_paths.append(".")
-    return source_paths
 
 
 def check_code(
@@ -30,31 +19,43 @@ def check_code(
     bandit=False,
 ):
     source_arg = " ".join([str(x) for x in source_paths])
-    commands = [f"ruff check --fix {source_arg}", f"ruff format {source_arg}"]
+    commands: list[tuple[str, ...]] = [
+        ("ruff", "check", "--fix", source_arg),
+        ("ruff", "format", source_arg),
+    ]
+    # [f"ruff check --fix {source_arg}", f"ruff format {source_arg}"]
     if test and os.path.exists("tests"):
         # 检查 pytest 是否安装
         if not is_package_installed("pytest"):
             print("❌ Error: pytest is not installed. Please install it first.")
             return
-        pytest_cmd = "pytest"
+        pytest_cmd: list[str] = ["pytest"]
         # 如果启用覆盖率检查，验证 pytest-cov 是否安装
         if cover:
             if not is_package_installed("pytest_cov"):
                 print("❌ Error: pytest-cov is not installed. Please install it first.")
                 return
-            pytest_cmd += f" --cov={cover_path} --cov-report=term --cov-fail-under={cover_fail_under}"
+            pytest_cmd.extend(
+                [
+                    " --cov",
+                    cover_path,
+                    "--cov-report=term",
+                    " --cov-fail-under",
+                    str(cover_fail_under),
+                ]
+            )
 
-        commands.append(pytest_cmd)
+        commands.append(tuple(pytest_cmd))
 
     if bandit:
         if not is_package_installed("bandit"):
             print("❌ Error: bandit is not installed. Please install it first.")
             return
-        commands.append(f"bandit -c pyproject.toml -r {source_arg}")
+        commands.append(("bandit", "-c", "pyproject.toml", "-r", source_arg))
 
     for command in commands:
         click.secho(f"🚀 {command}", fg="magenta")
-        output = execute(command)
+        output = execute(*command)
         click.echo(output)
         print()
 

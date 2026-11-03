@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 
 import distro
-from loguru import logger
 from pydantic import BaseModel
 
 from pystonic import app_name
