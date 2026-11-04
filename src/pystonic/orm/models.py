@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pydantic import PrivateAttr
 from sqlalchemy import event
+from sqlalchemy.orm import Mapped
 from sqlmodel import Field, SQLModel, col, delete, desc, func, select, update
 
 from pystonic.common.exceptions import ResourceNotFound
@@ -43,11 +44,15 @@ class DBModel(SQLModel):
         return select(cls).where(*criterion).filter_by(**filters)
 
     @classmethod
-    def query(cls, *criterion, **filters):
+    def query(
+        cls, *criterion, _order_by: str | Mapped | None = None, _desc=False, **filters
+    ):
         """返回一个 QueryBuilder 用于链式查询"""
+        stm = cls._select(*criterion, **filters)
         with get_session() as session:
-            query = session.exec(cls._select(*criterion, **filters))
-            return query.all()
+            if _order_by:
+                stm = stm.order_by(desc(_order_by) if _desc else _order_by)
+            return session.exec(stm).all()
 
     @classmethod
     def get_first(cls, *criterion, **filters):

@@ -1,3 +1,5 @@
+import asyncio
+import functools
 import time
 from collections.abc import Callable
 from functools import wraps
@@ -13,5 +15,13 @@ def timeit(func: Callable) -> Callable:
         elapsed = time.perf_counter() - start_time
         logger.info(f"{func.__name__} took {elapsed:.4f} seconds")
         return result
+
+    return wrapper
+
+
+def async_cmd(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return asyncio.run(func(*args, **kwargs))
 
     return wrapper

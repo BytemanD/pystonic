@@ -185,6 +185,7 @@ class AgentConfig(FrozenBaseModel):
         f"sqlite:///{user_app_data().joinpath('agent', 'checkpoint.sqlite')}"
     )
     providers: dict[str, LLMProviderConfig] = {}
+    workspace: str = "./"
 
 
 class SchedulerConfig(FrozenBaseModel):

@@ -15,8 +15,8 @@ from langgraph.types import Command
 from loguru import logger
 from pydantic import SecretStr
 
-from pystonic.agents.langchain_agent.exceptions import AllModelsFailed, ModelsIsEmpty
-from pystonic.agents.langchain_agent.objects import RuntimeContext
+from pystonic.agents.deepagent.exceptions import AllModelsFailed, ModelsIsEmpty
+from pystonic.agents.deepagent.objects import RuntimeContext
 
 
 class ReasoningChatOpenAI(ChatOpenAI):
@@ -98,7 +98,7 @@ class RuntimeAgentMiddleware(AgentMiddleware[AgentState, RuntimeContext]):
                     return await handler(
                         request.override(
                             model=runtime_model,
-                            tools=ctx.tools,  # type: ignore
+                            tools=request.tools + ctx.tools,  # type: ignore
                             system_message=SystemMessage(content=ctx.system_prompt),
                         )
                     )

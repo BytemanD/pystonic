@@ -5,8 +5,8 @@ import httpx
 from langchain.tools import ToolRuntime
 from langchain_core.tools import BaseToolkit, tool
 
-from pystonic.agents.langchain_agent.exceptions import PermissionDeny
-from pystonic.agents.langchain_agent.objects import RuntimeContext
+from pystonic.agents.deepagent.exceptions import PermissionDeny
+from pystonic.agents.deepagent.objects import RuntimeContext
 from pystonic.shell.executor import execute_code
 from pystonic.utils.system import platform_info
 
@@ -154,25 +154,25 @@ def web_get(
 
 
 class WorkToolkit(BaseToolkit):
-    enable_read: bool = True
-    enable_write: bool = True
-    enable_list_dir: bool = True
-    enable_execute_shell: bool = True
-    enable_web_get: bool = True
-    enable_get_platform_info: bool = True
+    # enable_read: bool = True
+    # enable_write: bool = True
+    # enable_list_dir: bool = True
+    disable_get_platform_info: bool = False
+    disable_execute_shell: bool = False
+    disable_web_get: bool = False
 
     def get_tools(self):
         tools = [get_iso_datetime]
-        if self.enable_list_dir:
-            tools.append(list_dir)
-        if self.enable_read:
-            tools.append(read_file)
-        if self.enable_write:
-            tools.append(write_file)
-        if self.enable_execute_shell:
-            tools.append(execute_command)
-        if self.enable_web_get:
-            tools.append(web_get)
-        if self.enable_get_platform_info:
+        # if self.enable_list_dir:
+        #     tools.append(list_dir)
+        # if self.enable_read:
+        #     tools.append(read_file)
+        # if self.enable_write:
+        #     tools.append(write_file)
+        if not self.disable_get_platform_info:
             tools.append(get_platform_info)
+        if not self.disable_execute_shell:
+            tools.append(execute_command)
+        if not self.disable_web_get:
+            tools.append(web_get)
         return tools

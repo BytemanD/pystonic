@@ -8,9 +8,9 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.message import Message
 from textual.widgets import Button, Input, Label, ListItem, ListView, Markdown
 
-from pystonic.agents.langchain_agent.agent import AsyncAgent
-from pystonic.agents.langchain_agent.objects import RuntimeContext
-from pystonic.agents.langchain_agent.tools import builtin
+from pystonic.agents.deepagent.agent import Agent
+from pystonic.agents.deepagent.objects import RuntimeContext
+from pystonic.agents.deepagent.tools import builtin
 from pystonic.cmd.console_agent.constants import APP_CSS
 from pystonic.common.conf import CONF
 
@@ -75,7 +75,7 @@ class ChatMessage(Markdown):
 class ConsoleAgentApp(App):
     CSS = APP_CSS
 
-    def __init__(self, agent: AsyncAgent) -> None:
+    def __init__(self, agent: Agent) -> None:
         super().__init__()
         self._bindings._add_binding(
             Binding("escape", "close_context_menu", "关闭菜单", show=False)
@@ -112,7 +112,7 @@ class ConsoleAgentApp(App):
 
     async def on_mount(self) -> None:
         await self._refresh_chat_view()
-        self.sessions = [x for x in self.agent.list_session()]
+        self.sessions = list(self.agent.list_session(desc=True))
         await self._refresh_session_list()
         self.widget_input.focus()
 
@@ -171,7 +171,7 @@ class ConsoleAgentApp(App):
             await menu.remove()
 
     async def _delete_session(self, item: SessionItem) -> None:
-        self.agent.delete_session(item.uuid)
+        await self.agent.delete_session(item.uuid)
 
         self.sessions = [x for x in self.sessions if x.uuid != item.uuid]
         was_current = self.current_session is item
@@ -245,7 +245,9 @@ class ConsoleAgentApp(App):
             return
 
         self.widget_header.update(f"会话: {self.current_session.title}")
-        messages = await self.agent.list_messages(self.current_session.uuid)
+        messages = await self.agent.list_messages(
+            self.agent.get_session(self.current_session.uuid)
+        )
 
         self.widget_chat_view.remove_children()
         for message in messages:
@@ -287,23 +289,20 @@ class ConsoleAgentApp(App):
         await self.widget_chat_view.mount(reasoning_message)
         await self.widget_chat_view.mount(resonse_message)
 
-        session_id = self.current_session
         if self.current_session:
-            session_id = self.current_session.uuid
+            session = self.agent.get_session(self.current_session.uuid)
         else:
-            session = self.agent.get_or_create_session(title=user_input)
-            session_id = session.uuid
+            session = self.agent.create_session(user_input)
             item = await self._prepend_session(session)
             self.widget_header.update(f"会话: {item.title}")
 
         ctx = RuntimeContext(
             providers=CONF.agent.providers,
-            thread_id=session_id,
             tools=builtin.WorkToolkit().get_tools(),
         )
         content = ""
         reasoning_content = ""
-        async for chat_event in self.agent.astream(ctx, user_input):
+        async for chat_event in self.agent.astream(ctx, user_input, session=session):
             if isinstance(chat_event, ToolMessage):
                 logger.info("调用工具: {}", chat_event.name)
                 reasoning_content += (
@@ -325,16 +324,15 @@ class ConsoleAgentApp(App):
         self, user_input: str, session_id: str | None = None, last: bool = False
     ):
         session = self.agent.get_or_create_session(
-            session_id=session_id, title=user_input
+            session_id=session_id, title=user_input, last=last
         )
         ctx = RuntimeContext(
             providers=CONF.agent.providers,
-            thread_id=session.uuid,
             tools=builtin.WorkToolkit().get_tools(),
         )
         reasoning = False
         console = rich.console.Console()
-        async for event in self.agent.astream(ctx, user_input):
+        async for event in self.agent.astream(ctx, user_input, session=session):
             if isinstance(event, ToolMessage):
                 console.print(f"调用工具: {event.name}", style="magenta")
                 continue

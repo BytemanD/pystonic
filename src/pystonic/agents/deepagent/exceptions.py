@@ -1,3 +1,6 @@
+from pystonic.common.exceptions import ResourceNotFound
+
+
 class ModelsIsEmpty(Exception):
     def __init__(self):
         super().__init__("models is empty")
@@ -13,6 +16,6 @@ class PermissionDeny(Exception):
         super().__init__(f"permission deny: {detail}")
 
 
-class SessionNotFount(Exception):
+class SessionNotFound(ResourceNotFound):
     def __init__(self, session_id: str):
-        super().__init__(f"session not found: {session_id}")
+        super().__init__(f"Session({session_id})")
