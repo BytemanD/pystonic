@@ -242,6 +242,9 @@ class DoubanConfig(FrozenBaseModel):
     api_key: str = ""
     timeout: int = 60
 
+    frodo_base_url: str = "https://frodo.douban.com"
+    frodo_api_key: str = ""
+
 
 class OMDBConfig(FrozenBaseModel):
     base_url: str = "http://www.omdbapi.com/"

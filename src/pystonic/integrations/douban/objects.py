@@ -53,3 +53,34 @@ class MovieSubjectGet(Subject):
     aka: list[str] | None = None
     countries: list[str] | None = None
     summary: str | None = None
+
+
+class FrodoRating(BaseModel):
+    count: float | None = None
+    max: int | None = None
+    star_count: float | None = None
+    value: float | None = None
+
+
+class FrodoSubject(BaseModel):
+    id: str
+    title: str
+    year: str | None = None
+    directors: list[Director] = []
+    rating: FrodoRating | None = None
+    card_subtitle: str | None = None
+
+
+class FrodoSubjectsItem(BaseModel):
+    target: FrodoSubject | None = None
+    target_id: str | None = None
+    target_type: str | None = None
+    target_name: str | None = None
+
+
+class FrodoSubjects(BaseModel):
+    items: list[FrodoSubjectsItem] | None = []
+
+
+class FrodoSearchResult(BaseModel):
+    subjects: FrodoSubjects
