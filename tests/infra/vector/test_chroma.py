@@ -40,11 +40,11 @@ def test_retrieval(vector_driver: ChromaVector):
     )
     docs = vector_driver.retrieval("test retrival", k=1, collection=COLLECTION_NAME)
     assert len(docs) == 1
-    assert docs[0].score <= 0.1
+    assert docs[0].score and docs[0].score <= 0.1
 
     vector_driver.add_document(
         "long content," * 1000, collection="test", metadata={"doc_id": DOC_ID3}
     )
     docs = vector_driver.retrieval("long content", k=1, collection=COLLECTION_NAME)
     assert len(docs) == 1
-    assert docs[0].score <= 1
+    assert docs[0].score and docs[0].score <= 1

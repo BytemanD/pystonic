@@ -32,14 +32,6 @@ class HTTPClientConfig(BaseModel):
     retries: int = 0
 
 
-def _default_conf() -> HTTPClientConfig:
-    try:
-        return CONF.http_client
-    except Exception:  # noqa: BLE001
-        # conf 不可用时回退默认值（如测试/独立使用本模块）
-        return HTTPClientConfig()
-
-
 def format_headers(headers: httpx.Headers):
     return "\n".join(f"{k}: {v}" for k, v in headers.items())
 
@@ -109,13 +101,13 @@ def default_client(
         "request": [_log_request],
         "response": [_log_response],
     }
-    conf = _default_conf()
+    conf = CONF.http_client
     if conf.log_response_detail:
         event_hooks["response"].append(_log_response_detail)
     if raise_for_status:
         event_hooks["response"].append(_raise_for_status)
-    timeout = conf.timeout if timeout is None else timeout
-    retries = conf.retries if retries is None else retries
+    timeout = timeout or conf.timeout
+    retries = retries or conf.retries
     kwargs = {}
     if timeout:
         kwargs["timeout"] = timeout

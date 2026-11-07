@@ -237,6 +237,17 @@ class ConsoleAgentConfig(BaseModel):
     welcome_text: str = "你好！我是 Shell 助手。选择左侧会话或直接输入消息开始对话。"
 
 
+class DoubanConfig(FrozenBaseModel):
+    base_url: str = "http://api.douban.com"
+    api_key: str = ""
+    timeout: int = 60
+
+
+class OMDBConfig(FrozenBaseModel):
+    base_url: str = "http://www.omdbapi.com/"
+    api_key: str = ""
+
+
 class BaseAppConfig(BaseSettings):
     """Base App Configuration"""
 
@@ -268,6 +279,9 @@ class BaseAppConfig(BaseSettings):
     scheduler: SchedulerConfig = SchedulerConfig()
 
     console_agent: ConsoleAgentConfig = ConsoleAgentConfig()
+
+    omdb: OMDBConfig = OMDBConfig()
+    douban: DoubanConfig = DoubanConfig()
 
     @classmethod
     def settings_customise_sources(
